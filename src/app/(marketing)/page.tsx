@@ -363,7 +363,7 @@ export default function LandingPage() {
                   exactly what happened and when, and it can&apos;t be altered.
                 </p>
                 <p>
-                  The surveyor reviews it. Closes the inquiry. You move on.
+                  The surveyor reviews it. Your documentation speaks for itself.
                 </p>
               </div>
               <div className="mt-7 p-4 rounded-xl bg-blue-50 border border-blue-200">

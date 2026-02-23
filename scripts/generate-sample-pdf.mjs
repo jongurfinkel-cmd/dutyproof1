@@ -32,21 +32,24 @@ const styles = StyleSheet.create({
   sampleBannerText: { fontSize: 8, color: '#92400e', fontFamily: 'Helvetica-Bold', textAlign: 'center' },
 })
 
+// All times are America/New_York (EDT, UTC-4) on March 14, 2025 (after DST spring forward)
+// 8:00 AM EDT = 12:00 UTC, 8:30 AM EDT = 12:30 UTC, etc.
+const TZ = 'America/New_York'
 const checkIns = [
-  { id: '1', scheduled_time: '2025-03-14T08:00:00Z', completed_at: '2025-03-14T08:01:23Z', server_received_at: '2025-03-14T08:01:24Z', status: 'completed', latitude: 34.0521, longitude: -118.2437, gps_accuracy: 8 },
-  { id: '2', scheduled_time: '2025-03-14T08:30:00Z', completed_at: '2025-03-14T08:30:55Z', server_received_at: '2025-03-14T08:30:56Z', status: 'completed', latitude: 34.0522, longitude: -118.2436, gps_accuracy: 11 },
-  { id: '3', scheduled_time: '2025-03-14T09:00:00Z', completed_at: null, server_received_at: null, status: 'missed', latitude: null, longitude: null, gps_accuracy: null },
-  { id: '4', scheduled_time: '2025-03-14T09:30:00Z', completed_at: '2025-03-14T09:31:08Z', server_received_at: '2025-03-14T09:31:09Z', status: 'completed', latitude: 34.0520, longitude: -118.2438, gps_accuracy: 9 },
-  { id: '5', scheduled_time: '2025-03-14T10:00:00Z', completed_at: '2025-03-14T10:00:47Z', server_received_at: '2025-03-14T10:00:48Z', status: 'completed', latitude: 34.0521, longitude: -118.2437, gps_accuracy: 7 },
-  { id: '6', scheduled_time: '2025-03-14T10:30:00Z', completed_at: '2025-03-14T10:30:32Z', server_received_at: '2025-03-14T10:30:33Z', status: 'completed', latitude: 34.0523, longitude: -118.2436, gps_accuracy: 10 },
-  { id: '7', scheduled_time: '2025-03-14T11:00:00Z', completed_at: '2025-03-14T11:01:12Z', server_received_at: '2025-03-14T11:01:13Z', status: 'completed', latitude: 34.0521, longitude: -118.2437, gps_accuracy: 8 },
-  { id: '8', scheduled_time: '2025-03-14T11:30:00Z', completed_at: '2025-03-14T11:30:58Z', server_received_at: '2025-03-14T11:30:59Z', status: 'completed', latitude: 34.0522, longitude: -118.2437, gps_accuracy: 12 },
+  { id: '1', scheduled_time: '2025-03-14T12:00:00Z', completed_at: '2025-03-14T12:01:23Z', server_received_at: '2025-03-14T12:01:24Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 8 },
+  { id: '2', scheduled_time: '2025-03-14T12:30:00Z', completed_at: '2025-03-14T12:30:55Z', server_received_at: '2025-03-14T12:30:56Z', status: 'completed', latitude: 40.7129, longitude: -74.0059, gps_accuracy: 11 },
+  { id: '3', scheduled_time: '2025-03-14T13:00:00Z', completed_at: null, server_received_at: null, status: 'missed', latitude: null, longitude: null, gps_accuracy: null },
+  { id: '4', scheduled_time: '2025-03-14T13:30:00Z', completed_at: '2025-03-14T13:31:08Z', server_received_at: '2025-03-14T13:31:09Z', status: 'completed', latitude: 40.7127, longitude: -74.0061, gps_accuracy: 9 },
+  { id: '5', scheduled_time: '2025-03-14T14:00:00Z', completed_at: '2025-03-14T14:00:47Z', server_received_at: '2025-03-14T14:00:48Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 7 },
+  { id: '6', scheduled_time: '2025-03-14T14:30:00Z', completed_at: '2025-03-14T14:30:32Z', server_received_at: '2025-03-14T14:30:33Z', status: 'completed', latitude: 40.7130, longitude: -74.0059, gps_accuracy: 10 },
+  { id: '7', scheduled_time: '2025-03-14T15:00:00Z', completed_at: '2025-03-14T15:01:12Z', server_received_at: '2025-03-14T15:01:13Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 8 },
+  { id: '8', scheduled_time: '2025-03-14T15:30:00Z', completed_at: '2025-03-14T15:30:58Z', server_received_at: '2025-03-14T15:30:59Z', status: 'completed', latitude: 40.7129, longitude: -74.0060, gps_accuracy: 12 },
 ]
 
 function fmt(ts) {
   if (!ts) return '—'
   const d = new Date(ts)
-  return d.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
+  return d.toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
 }
 
 const completed = checkIns.filter(c => c.status === 'completed').length
@@ -73,7 +76,7 @@ const doc = React.createElement(
       React.createElement(Text, { style: styles.headerTitle }, 'DUTYPROOF'),
       React.createElement(Text, { style: styles.headerSubtitle }, 'Fire Watch Compliance Report'),
       React.createElement(Text, { style: styles.headerMeta },
-        'Report ID: A3F9C12B  |  Generated: Mar 14, 2025 12:15 PM  |  Immutable records — tamper-evident'
+        `Report ID: A3F9C12B  |  Generated: ${fmt('2025-03-14T16:00:00Z')}  |  Immutable records — tamper-evident`
       )
     ),
 
@@ -86,7 +89,7 @@ const doc = React.createElement(
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Address:'),
-        React.createElement(Text, { style: styles.value }, '4820 Maplewood Drive, Springfield, IL 62704')
+        React.createElement(Text, { style: styles.value }, '4820 Maplewood Drive, Newark, NJ 07102')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Location / Area:'),
@@ -94,7 +97,7 @@ const doc = React.createElement(
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Timezone:'),
-        React.createElement(Text, { style: styles.value }, 'America/Chicago')
+        React.createElement(Text, { style: styles.value }, TZ)
       )
     ),
 
@@ -115,11 +118,11 @@ const doc = React.createElement(
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Watch Started:'),
-        React.createElement(Text, { style: styles.value }, 'Mar 14, 2025  8:00:00 AM EST')
+        React.createElement(Text, { style: styles.value }, fmt('2025-03-14T12:00:00Z'))
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Watch Ended:'),
-        React.createElement(Text, { style: styles.value }, 'Mar 14, 2025 11:45:00 AM EST')
+        React.createElement(Text, { style: styles.value }, fmt('2025-03-14T15:45:00Z'))
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Duration:'),

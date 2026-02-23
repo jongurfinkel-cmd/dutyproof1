@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'What phone does the fire watch worker need?',
-    a: 'Any phone that can receive a text message. No smartphone required, no app to download, no login. DutyProof sends a secure SMS link. The worker taps it, their GPS is captured, and the check-in is recorded. Even a basic flip phone works if it can receive SMS.',
+    a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones and modern feature phones with browser-based location support. On basic devices without GPS capability, the check-in is still recorded with full timestamp and SMS delivery confirmation.',
   },
   {
     q: 'Is there a contract or long-term commitment?',
