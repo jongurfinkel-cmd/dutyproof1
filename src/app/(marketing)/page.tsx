@@ -189,7 +189,7 @@ export default function LandingPage() {
               <p className="text-slate-300 text-xl leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
                 When CMS arrives. When the state surveyor calls.
                 When a family files a complaint — your fire watch record
-                is either bulletproof or it isn&apos;t. DutyProof makes it bulletproof.
+                is either defensible or it isn&apos;t. DutyProof makes it inspection-ready.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-8">
@@ -200,10 +200,10 @@ export default function LandingPage() {
                   Start 14-Day Free Trial →
                 </Link>
                 <a
-                  href="#the-moment"
+                  href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
                   className="px-8 py-4 text-white/70 hover:text-white font-semibold rounded-xl text-base border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/8 transition-all"
                 >
-                  See the real scenario ↓
+                  Book a 15-min Demo →
                 </a>
               </div>
 
@@ -500,11 +500,19 @@ export default function LandingPage() {
             <h2 className="text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
               Simple, honest pricing
             </h2>
-            <p className="text-slate-500 text-lg">One plan. Everything included. Pay per facility.</p>
+            <p className="text-slate-500 text-lg">Start self-serve. Scale with us.</p>
+            <a
+              href="/sample-report.pdf"
+              download
+              className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:text-blue-700 text-sm font-semibold underline underline-offset-2 transition-colors"
+            >
+              ↓ Download a sample compliance report
+            </a>
           </RevealOnScroll>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Pricing card */}
+          {/* Pricing cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Single facility card */}
             <RevealOnScroll className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100">
               <div className="bg-blue-700 px-8 py-8 text-center">
                 <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Per Facility</div>
@@ -531,22 +539,72 @@ export default function LandingPage() {
                 >
                   Start 14-Day Free Trial →
                 </Link>
+                <a
+                  href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
+                  className="block text-center py-3 px-8 rounded-xl text-slate-600 hover:text-slate-900 font-semibold text-sm border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all mt-3"
+                >
+                  Book a 15-min Demo →
+                </a>
                 <p className="text-center text-slate-500 text-xs mt-3">
                   Cancel any time · No setup fees
                 </p>
               </div>
             </RevealOnScroll>
 
-            {/* Cost calculator */}
-            <RevealOnScroll delay={150}>
-              <CostCalculator />
-              <p className="text-slate-500 text-sm text-center mt-6">
-                One CMS immediate jeopardy finding costs{' '}
-                <span className="font-semibold text-slate-700">$21,393/day</span>.
-                DutyProof costs <span className="font-semibold text-slate-700">$149/month</span>.
-              </p>
+            {/* Multi-facility / chain card */}
+            <RevealOnScroll delay={100} className="rounded-3xl border-2 border-slate-200 bg-gradient-to-b from-slate-50 to-white overflow-hidden shadow-xl">
+              <div className="bg-slate-800 px-8 py-8 text-center">
+                <div className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-3">Multi-Facility / Chain</div>
+                <div className="text-5xl font-extrabold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>Custom</div>
+                <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                  Volume pricing for regional operators, chains, and management companies.
+                </p>
+              </div>
+              <div className="px-8 py-8">
+                <div className="grid grid-cols-1 gap-y-2.5 mb-8">
+                  {[
+                    'Everything in Per Facility',
+                    'Volume pricing — reduced per-facility rate',
+                    'Chain-level compliance dashboard',
+                    'Centralized PDF reporting across all locations',
+                    'Dedicated onboarding & account support',
+                    'Priority email & phone support',
+                    'Custom check-in intervals & escalation rules',
+                    'SSO / single sign-on (on request)',
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">✓</div>
+                      <span className="text-slate-700 text-sm">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <a
+                  href="mailto:jon@dutyproof.com?subject=DutyProof%20Multi-Facility%20Pricing"
+                  className="block text-center py-4 px-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5"
+                >
+                  Contact Sales →
+                </a>
+                <p className="text-center text-slate-500 text-xs mt-3">
+                  3+ facilities · Custom contract available
+                </p>
+              </div>
             </RevealOnScroll>
           </div>
+
+          {/* AHJ disclaimer */}
+          <p className="text-center text-slate-400 text-xs mb-10 max-w-2xl mx-auto">
+            DutyProof supports fire watch documentation workflows. Each facility remains responsible for compliance with local AHJ, CMS, and state regulatory requirements.
+          </p>
+
+          {/* Cost calculator */}
+          <RevealOnScroll delay={150}>
+            <CostCalculator />
+            <p className="text-slate-500 text-sm text-center mt-6">
+              One CMS immediate jeopardy finding costs{' '}
+              <span className="font-semibold text-slate-700">$21,393/day</span>.
+              DutyProof costs <span className="font-semibold text-slate-700">$149/month</span>.
+            </p>
+          </RevealOnScroll>
         </div>
       </section>
 
@@ -583,12 +641,20 @@ export default function LandingPage() {
           <p className="text-slate-400 text-sm mb-10">
             Then $149/facility/month — less than 10 minutes of a CMS penalty day.
           </p>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
-          >
-            Start 14-Day Free Trial →
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
+            >
+              Start 14-Day Free Trial →
+            </Link>
+            <a
+              href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
+              className="inline-flex items-center justify-center gap-2 px-9 py-5 text-white/70 hover:text-white font-semibold rounded-xl text-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/8 transition-all"
+            >
+              Book a 15-min Demo →
+            </a>
+          </div>
           <p className="mt-4 text-slate-500 text-xs">
             14-day free trial · No setup fees · Cancel any time before trial ends — no charge
           </p>

@@ -9,7 +9,7 @@ const FAQS = [
   },
   {
     q: 'Does DutyProof meet fire watch documentation requirements?',
-    a: 'Yes. Regulators — including CMS, state fire marshals, and local AHJs — require facilities to maintain a fire watch log when sprinkler or fire alarm systems are impaired. DutyProof generates timestamped, GPS-verified, carrier-confirmed records for every check-in, meeting and exceeding what inspectors and surveyors expect to see. Every entry is server-timestamped and immutable.',
+    a: 'DutyProof generates timestamped, GPS-verified, carrier-confirmed records for every check-in — the kind of documentation CMS surveyors, state fire marshals, and local AHJs look for when reviewing fire watch records. Every entry is server-timestamped and immutable. Note: DutyProof supports fire watch documentation workflows; each facility remains responsible for compliance with local AHJ, CMS, and applicable state requirements.',
   },
   {
     q: 'What check-in interval should we use for fire watches?',
