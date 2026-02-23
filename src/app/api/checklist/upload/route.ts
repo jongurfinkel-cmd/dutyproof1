@@ -8,8 +8,24 @@ export async function POST(req: NextRequest) {
     const watchId = formData.get('watch_id') as string | null
     const itemId = formData.get('item_id') as string | null
 
-    if (!file || !watchId || !itemId) {
-      return NextResponse.json({ error: 'file, watch_id, and item_id are required' }, { status: 400 })
+    const token = formData.get('checklist_token') as string | null
+
+    if (!file || !watchId || !itemId || !token) {
+      return NextResponse.json({ error: 'file, watch_id, item_id, and checklist_token are required' }, { status: 400 })
+    }
+
+    const admin = createAdminClient()
+
+    // Verify token belongs to this watch
+    const { data: watch } = await admin
+      .from('watches')
+      .select('id')
+      .eq('id', watchId)
+      .eq('checklist_token', token)
+      .single()
+
+    if (!watch) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
     }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
@@ -20,8 +36,6 @@ export async function POST(req: NextRequest) {
     if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json({ error: 'File size must be under 10 MB.' }, { status: 400 })
     }
-
-    const admin = createAdminClient()
 
     const ext = file.name.split('.').pop() ?? 'jpg'
     const path = `${watchId}/${itemId}/${Date.now()}.${ext}`
