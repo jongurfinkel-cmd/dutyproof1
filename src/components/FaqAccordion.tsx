@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts. Month-to-month billing at $99/site/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Your historical compliance reports remain downloadable for 12 months after cancellation.',
+    a: 'No contracts. Month-to-month billing at $99/site/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
   },
 ]
 

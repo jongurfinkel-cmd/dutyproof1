@@ -21,7 +21,7 @@ const TOPICS = [
   },
   {
     q: 'What happens to my data if I cancel?',
-    a: 'Your compliance records and PDF reports remain downloadable for 12 months after cancellation. After that period, data is deleted from our servers. We strongly recommend downloading reports for any watches that may be subject to future inspection before cancelling.',
+    a: 'Your records are retained for the life of your account. After cancellation, compliance records and PDF reports remain downloadable for 12 months. After that period, data is deleted from our servers. We strongly recommend downloading reports for any watches that may be subject to future inspection before cancelling.',
   },
   {
     q: 'I need to set up multiple simultaneous watches at the same job site.',

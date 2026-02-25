@@ -400,7 +400,7 @@ function PDFMockup() {
             </div>
             <div className="flex gap-1 text-slate-600">
               <span className="font-semibold text-slate-700 flex-shrink-0 w-14">Watcher:</span>
-              <span>D. Kim · (718) 555-0194</span>
+              <span>D. Kim · (718) 482-0194</span>
             </div>
             <div className="flex gap-1 text-slate-600">
               <span className="font-semibold text-slate-700 flex-shrink-0 w-14">Reason:</span>

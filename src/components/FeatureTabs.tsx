@@ -15,7 +15,7 @@ function SMSMockup() {
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DP</div>
         <div>
           <div className="text-white text-xs font-semibold">DutyProof</div>
-          <div className="text-slate-500 text-[10px]">+1 (888) 555-0190</div>
+          <div className="text-slate-500 text-[10px]">+1 (833) 389-7766</div>
         </div>
       </div>
       <div className="p-4 space-y-3">
@@ -60,7 +60,7 @@ function EscalationMockup() {
         <div className="text-xs text-slate-400 space-y-0.5">
           <div><span className="text-slate-600">Worker:</span> M. Rivera</div>
           <div><span className="text-slate-600">Alert fired:</span> 10:00:47 AM (47s elapsed)</div>
-          <div><span className="text-slate-600">Notified:</span> Supervisor · (555) 098-7654</div>
+          <div><span className="text-slate-600">Notified:</span> Supervisor · (347) 821-4567</div>
         </div>
       </div>
       <div className="rounded-xl bg-slate-900 border border-slate-700 p-4 shadow-xl">

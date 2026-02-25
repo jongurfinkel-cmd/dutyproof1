@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     // Validate phone numbers are E.164 format
     const e164Regex = /^\+[1-9]\d{1,14}$/
     if (!e164Regex.test(assigned_phone)) {
-      return NextResponse.json({ error: 'assigned_phone must be E.164 format (e.g. +15551234567)' }, { status: 400 })
+      return NextResponse.json({ error: 'assigned_phone must be E.164 format (e.g. +12125551234)' }, { status: 400 })
     }
     if (escalation_phone && !e164Regex.test(escalation_phone)) {
       return NextResponse.json({ error: 'escalation_phone must be E.164 format' }, { status: 400 })

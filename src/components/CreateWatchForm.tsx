@@ -280,11 +280,11 @@ export default function CreateWatchForm() {
           onChange={(e) => set('assigned_phone', e.target.value)}
           onBlur={() => handlePhoneBlur('assigned_phone')}
           required
-          placeholder="+1 (555) 000-0000"
+          placeholder="+1 (212) 000-0000"
           className={inputClass}
         />
         <p className="text-xs text-slate-400 mt-1.5">
-          Include country code, e.g. <span className="font-mono">+1 555 000 0000</span>. SMS check-in links go here.
+          Include country code, e.g. <span className="font-mono">+1 212 000 0000</span>. SMS check-in links go here.
         </p>
       </div>
 
@@ -403,7 +403,7 @@ export default function CreateWatchForm() {
                 value={form.escalation_phone}
                 onChange={(e) => set('escalation_phone', e.target.value)}
                 onBlur={() => handlePhoneBlur('escalation_phone')}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+1 (212) 000-0000"
                 className={inputClass}
               />
               <p className="text-xs text-slate-400 mt-1.5">Include country code. Alert SMS goes here.</p>

@@ -40,10 +40,10 @@ const protections = [
 ]
 
 const retention = [
-  { label: 'Watch logs & check-in records', value: 'Retained indefinitely' },
-  { label: 'PDF compliance reports', value: 'Generated on demand, always available' },
+  { label: 'Watch logs & check-in records', value: 'Life of account + 12 months after cancellation' },
+  { label: 'PDF compliance reports', value: 'Generated on demand, available for life of account + 12 months' },
   { label: 'SMS delivery receipts', value: 'Retained with each check-in record' },
-  { label: 'Missed check-in & escalation events', value: 'Retained indefinitely' },
+  { label: 'Missed check-in & escalation events', value: 'Life of account + 12 months after cancellation' },
   { label: 'Account & billing data', value: 'Retained per Stripe and legal requirements' },
 ]
 
@@ -160,7 +160,7 @@ export default function SecurityPage() {
               Record retention
             </h2>
             <p className="text-slate-500 text-sm sm:text-base">
-              OSHA and fire marshal audits can reference events from prior inspections. Records do not expire.
+              Records are retained for the life of your account plus 12 months after cancellation — long enough for any open inspection cycle.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 overflow-hidden">

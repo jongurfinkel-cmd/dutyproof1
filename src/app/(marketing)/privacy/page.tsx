@@ -137,7 +137,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>6. Data Retention</h2>
               <p className="mb-3">
-                We retain your data for as long as your account is active. If you cancel your subscription, your compliance records and PDF reports remain accessible for 12 months from the date of cancellation, after which your data is permanently deleted.
+                We retain your data for the life of your account. If you cancel your subscription, your compliance records and PDF reports remain accessible for 12 months from the date of cancellation, after which your data is permanently deleted.
               </p>
               <p>
                 If you request account deletion before the 12-month period, we will delete your data within 30 days of the request, except where retention is required by law.

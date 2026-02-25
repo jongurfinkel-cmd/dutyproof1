@@ -53,7 +53,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Free Trial</h2>
               <p className="mb-3">
-                We offer a 60-day free trial for new accounts. A valid payment method is required to begin the trial. You will not be charged during the trial period. If you cancel before the trial ends, your payment method will not be charged.
+                We offer a 60-day free trial for new accounts. No credit card is required to create an account. When you activate your trial through our billing page, your payment method is collected by Stripe but you will not be charged during the trial period. If you cancel before the trial ends, you will not be charged.
               </p>
               <p>
                 If you do not cancel before the trial ends, your subscription will automatically begin and your payment method will be charged the applicable fee. We reserve the right to modify or discontinue the free trial at any time.
@@ -116,7 +116,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>9. Disclaimer of Warranties</h2>
               <p>
-                To the fullest extent permitted by law, DutyProof disclaims all warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will meet your specific compliance requirements or that any documentation generated will satisfy the requirements of any particular regulatory authority, inspector, or surveyor.
+                To the fullest extent permitted by law, DutyProof disclaims all warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will meet your specific compliance requirements or that any documentation generated will satisfy the requirements of any particular regulatory authority, OSHA inspector, or fire marshal.
               </p>
             </div>
 
