@@ -203,7 +203,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         )}
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 relative z-0">{children}</main>
 
       {/* ── Footer ── */}
       <footer className="border-t border-slate-800 bg-slate-950">
