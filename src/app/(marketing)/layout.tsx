@@ -98,7 +98,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <LaunchCountdown />
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center">
             <BrandLogo className="w-[200px] sm:w-[280px] md:w-[340px] h-auto" variant="dark" />
