@@ -4,8 +4,8 @@ import { format, addMinutes } from 'date-fns'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
-  if (!token) {
-    return NextResponse.json({ error: 'Token required' }, { status: 400 })
+  if (!token || !/^[0-9a-f]{64}$/.test(token)) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
   }
 
   const admin = createAdminClient()
@@ -34,6 +34,14 @@ export async function GET(req: NextRequest) {
 
   if (checkIn.watches.status !== 'active') {
     return NextResponse.json({ error: 'This fire watch has ended.' }, { status: 410 })
+  }
+
+  // Gate: if this watch has a checklist, it must be completed before check-ins are accepted
+  if (checkIn.watches.checklist_token && !checkIn.watches.checklist_completed_at) {
+    return NextResponse.json(
+      { error: 'checklist_pending', message: 'You must complete the pre-watch safety checklist before checking in.' },
+      { status: 409 }
+    )
   }
 
   const nextTime = addMinutes(new Date(checkIn.scheduled_time), checkIn.watches.check_interval_min)

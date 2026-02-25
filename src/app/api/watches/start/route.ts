@@ -32,6 +32,59 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Validate check_interval_min is a safe integer in allowed range
+    if (!Number.isInteger(check_interval_min) || check_interval_min < 1 || check_interval_min > 1440) {
+      return NextResponse.json({ error: 'Check interval must be 1–1440 minutes' }, { status: 400 })
+    }
+
+    // Validate escalation_delay_min if provided
+    if (escalation_delay_min !== undefined && escalation_delay_min !== null) {
+      if (!Number.isInteger(escalation_delay_min) || escalation_delay_min < 0 || escalation_delay_min > 60) {
+        return NextResponse.json({ error: 'Escalation delay must be 0–60 minutes' }, { status: 400 })
+      }
+    }
+
+    // Validate phone numbers are E.164 format
+    const e164Regex = /^\+[1-9]\d{1,14}$/
+    if (!e164Regex.test(assigned_phone)) {
+      return NextResponse.json({ error: 'assigned_phone must be E.164 format (e.g. +15551234567)' }, { status: 400 })
+    }
+    if (escalation_phone && !e164Regex.test(escalation_phone)) {
+      return NextResponse.json({ error: 'escalation_phone must be E.164 format' }, { status: 400 })
+    }
+
+    // Validate assigned_name length
+    const trimmedName = assigned_name.trim()
+    if (!trimmedName || trimmedName.length > 100) {
+      return NextResponse.json({ error: 'Name must be 1–100 characters' }, { status: 400 })
+    }
+
+    // Validate start_time is a valid date
+    const startDate = new Date(start_time)
+    if (isNaN(startDate.getTime())) {
+      return NextResponse.json({ error: 'Invalid start_time' }, { status: 400 })
+    }
+
+    // Validate planned_end_time if provided
+    if (planned_end_time) {
+      const endDate = new Date(planned_end_time)
+      if (isNaN(endDate.getTime())) {
+        return NextResponse.json({ error: 'Invalid planned_end_time' }, { status: 400 })
+      }
+    }
+
+    // Validate checklist items if provided
+    if (Array.isArray(checklist_items) && checklist_items.length > 0) {
+      if (checklist_items.length > 50) {
+        return NextResponse.json({ error: 'Checklist cannot exceed 50 items' }, { status: 400 })
+      }
+      for (const item of checklist_items) {
+        if (typeof item.label !== 'string' || !item.label.trim() || item.label.length > 255) {
+          return NextResponse.json({ error: 'Checklist item labels must be 1–255 characters' }, { status: 400 })
+        }
+      }
+    }
+
     const admin = createAdminClient()
 
     // Verify facility belongs to this user
@@ -90,6 +143,9 @@ export async function POST(req: NextRequest) {
       const { error: itemsError } = await admin.from('watch_checklist_items').insert(items)
       if (itemsError) {
         console.error('Checklist items insert error:', itemsError)
+        // Delete the watch we just created so the admin can retry cleanly
+        await admin.from('watches').delete().eq('id', watch.id)
+        return NextResponse.json({ error: 'Failed to create checklist. Please try again.' }, { status: 500 })
       }
 
       // Send immediate checklist SMS
@@ -113,7 +169,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Create first check-in row
-    const scheduledTime = new Date(start_time)
+    // If there's a checklist, give the worker one full interval to complete it
+    // before the first check-in is due
+    const scheduledTime = hasChecklist
+      ? addMinutes(new Date(start_time), check_interval_min)
+      : new Date(start_time)
     const expiresAt = addMinutes(scheduledTime, check_interval_min)
     const token = generateToken()
     const checkInUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checkin/${token}`

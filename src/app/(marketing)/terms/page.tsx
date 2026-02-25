@@ -36,7 +36,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>1. Description of Service</h2>
               <p>
-                DutyProof is a fire watch compliance platform that automates SMS-based check-ins, escalates missed check-ins to designated supervisors, and generates compliance documentation for assisted living facilities, skilled nursing facilities, and other buildings subject to fire watch requirements. The Service is a documentation and notification tool. It does not constitute legal advice, and compliance with local, state, or federal fire safety regulations remains the sole responsibility of the customer.
+                DutyProof is a fire watch compliance platform that automates SMS-based check-ins, escalates missed check-ins to designated supervisors, and generates compliance documentation for welding contractors, pipefitters, mechanical contractors, and other businesses subject to hot work fire watch requirements. The Service is a documentation and notification tool. It does not constitute legal advice, and compliance with local, state, or federal fire safety regulations remains the sole responsibility of the customer.
               </p>
             </div>
 
@@ -53,7 +53,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Free Trial</h2>
               <p className="mb-3">
-                We offer a 14-day free trial for new accounts. A valid payment method is required to begin the trial. You will not be charged during the trial period. If you cancel before the trial ends, your payment method will not be charged.
+                We offer a 60-day free trial for new accounts. A valid payment method is required to begin the trial. You will not be charged during the trial period. If you cancel before the trial ends, your payment method will not be charged.
               </p>
               <p>
                 If you do not cancel before the trial ends, your subscription will automatically begin and your payment method will be charged the applicable fee. We reserve the right to modify or discontinue the free trial at any time.
@@ -63,7 +63,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>4. Subscription and Billing</h2>
               <p className="mb-3">
-                Subscriptions are billed monthly at $149 per facility. Billing applies to any facility you have registered in the Service, regardless of whether an active fire watch is running during that billing period.
+                Subscriptions are billed monthly at $99 per job site. Billing applies to any job site you have registered in the Service, regardless of whether an active fire watch is running during that billing period.
               </p>
               <p className="mb-3">
                 All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring monthly basis from the date your trial ends. Prices may change with 30 days&apos; notice.
@@ -86,7 +86,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>6. Your Data</h2>
               <p className="mb-3">
-                You retain ownership of all data you and your workers submit to the Service, including facility information, worker records, check-in logs, and compliance reports. We do not claim ownership of your data.
+                You retain ownership of all data you and your workers submit to the Service, including job site information, worker records, check-in logs, and compliance reports. We do not claim ownership of your data.
               </p>
               <p>
                 You grant us a limited license to store, process, and transmit your data as necessary to operate the Service and provide you with the features you use, including sending SMS messages to workers and generating PDF reports.

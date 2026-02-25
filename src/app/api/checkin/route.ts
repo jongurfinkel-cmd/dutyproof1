@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { token, latitude, longitude, gps_accuracy, device_time } = body
 
-    if (!token) {
-      return NextResponse.json({ error: 'Token required' }, { status: 400 })
+    if (!token || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Mark check-in as completed via the DB function (bypasses immutability RLS)
     const { error: completeError } = await admin.rpc('complete_checkin', {
       p_checkin_id: checkIn.id,
-      p_completed_at: device_time || serverTime,
+      p_completed_at: serverTime,
       p_server_received_at: serverTime,
       p_latitude: latitude ?? null,
       p_longitude: longitude ?? null,

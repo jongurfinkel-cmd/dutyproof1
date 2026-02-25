@@ -194,11 +194,11 @@ export function WatchReport({ watch, checkIns, alerts, adminEmail }: ReportData)
       React.createElement(
         View,
         { style: styles.section },
-        React.createElement(Text, { style: styles.sectionTitle }, 'FACILITY INFORMATION'),
+        React.createElement(Text, { style: styles.sectionTitle }, 'JOB SITE INFORMATION'),
         React.createElement(
           View,
           { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Facility Name:'),
+          React.createElement(Text, { style: styles.label }, 'Job Site / Company:'),
           React.createElement(Text, { style: styles.value }, watch.facilities.name)
         ),
         watch.facilities.address &&
@@ -229,7 +229,7 @@ export function WatchReport({ watch, checkIns, alerts, adminEmail }: ReportData)
         React.createElement(
           View,
           { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Assigned Personnel:'),
+          React.createElement(Text, { style: styles.label }, 'Fire Watcher:'),
           React.createElement(Text, { style: styles.value }, `${watch.assigned_name} (${watch.assigned_phone})`)
         ),
         React.createElement(

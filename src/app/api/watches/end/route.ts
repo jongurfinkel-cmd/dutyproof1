@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { watchId } = await req.json()
-    if (!watchId) return NextResponse.json({ error: 'watchId required' }, { status: 400 })
+    if (!watchId || typeof watchId !== 'string') return NextResponse.json({ error: 'watchId required' }, { status: 400 })
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(watchId)) {
+      return NextResponse.json({ error: 'Invalid watchId format' }, { status: 400 })
+    }
 
     const admin = createAdminClient()
 
@@ -65,9 +68,9 @@ export async function POST(req: NextRequest) {
     const duration = intervalToDuration({ start: startDate, end: endDate })
     const durationStr = formatDuration(duration, { format: ['hours', 'minutes'] }) || 'Less than a minute'
 
-    // Send summary SMS to admin (using their phone from the watch's assigned_phone as fallback)
-    // In production you'd store admin phone. For MVP, send to assigned person too.
     const reportUrl = `${process.env.NEXT_PUBLIC_APP_URL}/watches/${watchId}`
+
+    // Always notify the assigned worker
     await sendWatchSummarySMS(
       watch.assigned_phone,
       watch.facilities.name,
@@ -77,6 +80,19 @@ export async function POST(req: NextRequest) {
       missed,
       reportUrl
     )
+
+    // Also notify the supervisor/escalation contact if one was set and is different
+    if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
+      await sendWatchSummarySMS(
+        watch.escalation_phone,
+        watch.facilities.name,
+        durationStr,
+        total,
+        completed,
+        missed,
+        reportUrl
+      )
+    }
 
     // Log watch ended
     await admin.from('alerts').insert({

@@ -23,7 +23,7 @@ function SMSMockup() {
           <div className="bg-slate-700 rounded-2xl rounded-tl-sm px-3.5 py-2.5 max-w-[90%]">
             <p className="text-white text-xs leading-relaxed">
               <span className="font-semibold">DUTYPROOF</span><br /><br />
-              <span className="text-slate-300">Sunrise Gardens, Wing B</span><br />
+              <span className="text-slate-300">Ace Mechanical — Building D Weld</span><br />
               Fire watch check-in due now.<br /><br />
               <span className="text-blue-400 text-[10px] underline">dutyproof.com/c/m7f2e1d...</span>
             </p>
@@ -35,7 +35,7 @@ function SMSMockup() {
           <div className="bg-green-900/50 border border-green-700/40 rounded-2xl rounded-tl-sm px-3.5 py-2.5 max-w-[90%]">
             <p className="text-green-300 text-xs leading-relaxed">
               ✓ <span className="font-semibold">Confirmed</span><br />
-              Sunrise Gardens, Wing B<br />
+              Ace Mechanical — Building D Weld<br />
               <span className="text-green-400 text-[10px]">10:00:09 AM · GPS: 34.052° N</span><br /><br />
               Next check-in: <span className="font-medium">10:30 AM</span>
             </p>
@@ -55,10 +55,10 @@ function EscalationMockup() {
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
           <span className="text-red-400 text-[9px] font-bold tracking-widest uppercase">Missed Check-In</span>
         </div>
-        <div className="text-white text-sm font-bold mb-0.5">Sunrise Gardens — Wing B</div>
+        <div className="text-white text-sm font-bold mb-0.5">Ace Mechanical — Building D Weld</div>
         <div className="text-red-400 text-xs font-medium mb-3">OVERDUE — last check-in 47 min ago</div>
         <div className="text-xs text-slate-400 space-y-0.5">
-          <div><span className="text-slate-600">Worker:</span> R. Thompson</div>
+          <div><span className="text-slate-600">Worker:</span> M. Rivera</div>
           <div><span className="text-slate-600">Alert fired:</span> 10:00:47 AM (47s elapsed)</div>
           <div><span className="text-slate-600">Notified:</span> Supervisor · (555) 098-7654</div>
         </div>
@@ -69,8 +69,8 @@ function EscalationMockup() {
         </div>
         <p className="text-white text-xs leading-relaxed">
           🚨 <span className="text-red-400 font-semibold">MISSED CHECK-IN</span><br /><br />
-          <span className="text-slate-400">Watch:</span> Sunrise Gardens, Wing B<br />
-          <span className="text-slate-400">Worker:</span> R. Thompson<br />
+          <span className="text-slate-400">Watch:</span> Ace Mechanical — Building D Weld<br />
+          <span className="text-slate-400">Worker:</span> M. Rivera<br />
           <span className="text-slate-400">Was due:</span> 10:00 AM<br /><br />
           <span className="text-slate-300">Immediate action required.</span>
         </p>
@@ -86,12 +86,12 @@ function PDFMockup() {
         <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
         <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
         <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-        <span className="text-slate-500 text-[9px] ml-2 truncate">dutyproof-sunrisegardens-2025-06-14.pdf</span>
+        <span className="text-slate-500 text-[9px] ml-2 truncate">dutyproof-acemechanical-2026-03-02.pdf</span>
       </div>
       <div className="p-5 space-y-4">
         <div className="border-b border-slate-200 pb-3">
           <div className="text-xs font-bold text-slate-800 mb-1">DUTYPROOF COMPLIANCE REPORT</div>
-          <div className="text-[9px] text-slate-500">Sunrise Gardens · Wing B · Assisted Living</div>
+          <div className="text-[9px] text-slate-500">Ace Mechanical · Building D · Hot Work Watch</div>
           <div className="text-[9px] text-slate-500">Generated: Jun 14, 2025 · 14:38 UTC</div>
         </div>
         <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
@@ -113,7 +113,7 @@ function PDFMockup() {
           </div>
         </div>
         <div className="border-t border-slate-100 pt-3 text-[8px] text-slate-400 text-center">
-          CMS-ready · Tamper-proof · Server timestamps
+          OSHA-ready · Tamper-proof · Server timestamps
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ const TAB_CONTENT = [
     eyebrow: 'Zero-friction check-ins',
     headline: 'Workers check in\nfrom a text message.',
     body: [
-      'DutyProof sends a secure, one-time SMS link at every interval — 15 or 30 minutes, your choice. Your fire watch staff tap one button, no login, no app, no training required.',
+      'DutyProof sends a secure, one-time SMS link at every interval — 15 or 30 minutes, your choice. Your fire watch taps one button. No app, no login, no training required.',
       'If no one taps it in time, it automatically counts as missed. No manual oversight needed.',
     ],
     bullets: [
@@ -142,11 +142,11 @@ const TAB_CONTENT = [
     headline: 'A missed check-in triggers\nan alert in under 60 seconds.',
     body: [
       'When a check-in window closes without a response, DutyProof immediately marks it missed and fires an SMS to your supervisor, administrator, or any on-call contact you designate.',
-      'The miss is recorded permanently — immutable. CMS surveyors and state inspectors will see exactly what happened and when.',
+      'The miss is recorded permanently — immutable. OSHA inspectors, fire marshals, and insurance adjusters will see exactly what happened and when.',
     ],
     bullets: [
       'Escalation fires in < 60 seconds',
-      'Supervisor gets full context — facility, worker, due time',
+      'Supervisor gets full context — job site, worker, due time',
       'Miss recorded permanently, cannot be altered',
       'Next check-in cycle continues automatically',
     ],
@@ -155,15 +155,15 @@ const TAB_CONTENT = [
   },
   {
     eyebrow: 'Instant compliance proof',
-    headline: 'One click.\nCMS-ready PDF report.',
+    headline: 'One click.\nOSHA-ready PDF report.',
     body: [
-      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, SMS delivery receipts — formatted for CMS surveys, state inspections, and litigation.',
-      'This is the document you hand a surveyor when they walk through your door.',
+      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, SMS delivery receipts — formatted for OSHA inspections, fire marshal audits, and insurance claims.',
+      'This is the document you hand the fire marshal when they walk onto your job site.',
     ],
     bullets: [
       'Full timeline with GPS and dual timestamps',
       'Missed check-in log with escalation records',
-      'Compliance score, facility info, worker record',
+      'Compliance score, job site info, worker record',
       'Available the moment the watch ends',
     ],
     bulletColor: 'bg-slate-100 text-slate-700',

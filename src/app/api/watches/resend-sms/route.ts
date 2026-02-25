@@ -1,0 +1,82 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { sendCheckInSMS } from '@/lib/twilio'
+
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { watchId } = await req.json()
+    if (!watchId || typeof watchId !== 'string') return NextResponse.json({ error: 'watchId required' }, { status: 400 })
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(watchId)) {
+      return NextResponse.json({ error: 'Invalid watchId format' }, { status: 400 })
+    }
+
+    const admin = createAdminClient()
+
+    // Verify the watch belongs to this user and is active
+    const { data: watch, error: watchError } = await admin
+      .from('watches')
+      .select('*, facilities(*)')
+      .eq('id', watchId)
+      .eq('owner_id', user.id)
+      .eq('status', 'active')
+      .single()
+
+    if (watchError || !watch) {
+      return NextResponse.json({ error: 'Active watch not found' }, { status: 404 })
+    }
+
+    // Find the current pending check-in
+    const { data: checkIn, error: checkInError } = await admin
+      .from('check_ins')
+      .select('*')
+      .eq('watch_id', watchId)
+      .eq('status', 'pending')
+      .order('scheduled_time', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (checkInError || !checkIn) {
+      return NextResponse.json({ error: 'No pending check-in to resend' }, { status: 404 })
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    const checkInUrl = `${appUrl}/checkin/${checkIn.token}`
+
+    const sid = await sendCheckInSMS(
+      watch.assigned_phone,
+      watch.facilities.name,
+      watch.assigned_name,
+      checkInUrl,
+      new Date(checkIn.scheduled_time),
+      watch.facilities.timezone ?? 'America/New_York'
+    )
+
+    // Log the resend in alerts
+    await admin.from('alerts').insert({
+      watch_id: watchId,
+      check_in_id: checkIn.id,
+      alert_type: 'sms_sent',
+      recipient_phone: watch.assigned_phone,
+      recipient_name: watch.assigned_name,
+      message: `[RESEND] Check-in SMS resent manually`,
+      delivery_status: sid ? 'sent' : 'failed',
+      twilio_sid: sid,
+    })
+
+    if (!sid) {
+      return NextResponse.json({ error: 'SMS delivery failed — check Twilio config' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('Resend SMS error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

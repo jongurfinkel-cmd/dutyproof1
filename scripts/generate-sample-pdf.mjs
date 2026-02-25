@@ -36,14 +36,14 @@ const styles = StyleSheet.create({
 // 8:00 AM EDT = 12:00 UTC, 8:30 AM EDT = 12:30 UTC, etc.
 const TZ = 'America/New_York'
 const checkIns = [
-  { id: '1', scheduled_time: '2025-03-14T12:00:00Z', completed_at: '2025-03-14T12:01:23Z', server_received_at: '2025-03-14T12:01:24Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 8 },
-  { id: '2', scheduled_time: '2025-03-14T12:30:00Z', completed_at: '2025-03-14T12:30:55Z', server_received_at: '2025-03-14T12:30:56Z', status: 'completed', latitude: 40.7129, longitude: -74.0059, gps_accuracy: 11 },
+  { id: '1', scheduled_time: '2025-03-14T12:00:00Z', completed_at: '2025-03-14T12:01:23Z', server_received_at: '2025-03-14T12:01:24Z', status: 'completed', latitude: 40.7580, longitude: -73.8855, gps_accuracy: 8 },
+  { id: '2', scheduled_time: '2025-03-14T12:30:00Z', completed_at: '2025-03-14T12:30:55Z', server_received_at: '2025-03-14T12:30:56Z', status: 'completed', latitude: 40.7581, longitude: -73.8854, gps_accuracy: 11 },
   { id: '3', scheduled_time: '2025-03-14T13:00:00Z', completed_at: null, server_received_at: null, status: 'missed', latitude: null, longitude: null, gps_accuracy: null },
-  { id: '4', scheduled_time: '2025-03-14T13:30:00Z', completed_at: '2025-03-14T13:31:08Z', server_received_at: '2025-03-14T13:31:09Z', status: 'completed', latitude: 40.7127, longitude: -74.0061, gps_accuracy: 9 },
-  { id: '5', scheduled_time: '2025-03-14T14:00:00Z', completed_at: '2025-03-14T14:00:47Z', server_received_at: '2025-03-14T14:00:48Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 7 },
-  { id: '6', scheduled_time: '2025-03-14T14:30:00Z', completed_at: '2025-03-14T14:30:32Z', server_received_at: '2025-03-14T14:30:33Z', status: 'completed', latitude: 40.7130, longitude: -74.0059, gps_accuracy: 10 },
-  { id: '7', scheduled_time: '2025-03-14T15:00:00Z', completed_at: '2025-03-14T15:01:12Z', server_received_at: '2025-03-14T15:01:13Z', status: 'completed', latitude: 40.7128, longitude: -74.0060, gps_accuracy: 8 },
-  { id: '8', scheduled_time: '2025-03-14T15:30:00Z', completed_at: '2025-03-14T15:30:58Z', server_received_at: '2025-03-14T15:30:59Z', status: 'completed', latitude: 40.7129, longitude: -74.0060, gps_accuracy: 12 },
+  { id: '4', scheduled_time: '2025-03-14T13:30:00Z', completed_at: '2025-03-14T13:31:08Z', server_received_at: '2025-03-14T13:31:09Z', status: 'completed', latitude: 40.7579, longitude: -73.8856, gps_accuracy: 9 },
+  { id: '5', scheduled_time: '2025-03-14T14:00:00Z', completed_at: '2025-03-14T14:00:47Z', server_received_at: '2025-03-14T14:00:48Z', status: 'completed', latitude: 40.7580, longitude: -73.8855, gps_accuracy: 7 },
+  { id: '6', scheduled_time: '2025-03-14T14:30:00Z', completed_at: '2025-03-14T14:30:32Z', server_received_at: '2025-03-14T14:30:33Z', status: 'completed', latitude: 40.7582, longitude: -73.8853, gps_accuracy: 10 },
+  { id: '7', scheduled_time: '2025-03-14T15:00:00Z', completed_at: '2025-03-14T15:01:12Z', server_received_at: '2025-03-14T15:01:13Z', status: 'completed', latitude: 40.7580, longitude: -73.8855, gps_accuracy: 8 },
+  { id: '8', scheduled_time: '2025-03-14T15:30:00Z', completed_at: '2025-03-14T15:30:58Z', server_received_at: '2025-03-14T15:30:59Z', status: 'completed', latitude: 40.7578, longitude: -73.8857, gps_accuracy: 12 },
 ]
 
 function fmt(ts) {
@@ -80,20 +80,20 @@ const doc = React.createElement(
       )
     ),
 
-    // Facility Info
+    // Job Site Info
     React.createElement(View, { style: styles.section },
-      React.createElement(Text, { style: styles.sectionTitle }, 'FACILITY INFORMATION'),
+      React.createElement(Text, { style: styles.sectionTitle }, 'JOB SITE INFORMATION'),
       React.createElement(View, { style: styles.row },
-        React.createElement(Text, { style: styles.label }, 'Facility Name:'),
-        React.createElement(Text, { style: styles.value }, 'Sunrise Gardens Assisted Living')
+        React.createElement(Text, { style: styles.label }, 'Job Site / Company:'),
+        React.createElement(Text, { style: styles.value }, 'Ace Mechanical — LaGuardia Terminal B Expansion')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Address:'),
-        React.createElement(Text, { style: styles.value }, '4820 Maplewood Drive, Newark, NJ 07102')
+        React.createElement(Text, { style: styles.value }, 'LaGuardia Airport, Flushing, NY 11371')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Location / Area:'),
-        React.createElement(Text, { style: styles.value }, 'East Wing — 2nd Floor')
+        React.createElement(Text, { style: styles.value }, 'Building D — Bay 4, Level 2 Steel Deck')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Timezone:'),
@@ -106,15 +106,19 @@ const doc = React.createElement(
       React.createElement(Text, { style: styles.sectionTitle }, 'WATCH SUMMARY'),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Reason for Watch:'),
-        React.createElement(Text, { style: styles.value }, 'Fire alarm panel offline — scheduled maintenance')
+        React.createElement(Text, { style: styles.value }, 'Post-weld watch — structural steel pipe welding, Bay 4')
       ),
       React.createElement(View, { style: styles.row },
-        React.createElement(Text, { style: styles.label }, 'Assigned Personnel:'),
-        React.createElement(Text, { style: styles.value }, 'R. Thompson  |  +1 (555) 000-0000')
+        React.createElement(Text, { style: styles.label }, 'Fire Watcher:'),
+        React.createElement(Text, { style: styles.value }, 'D. Kim  |  +1 (718) 555-0194')
+      ),
+      React.createElement(View, { style: styles.row },
+        React.createElement(Text, { style: styles.label }, 'Supervisor (Escalation):'),
+        React.createElement(Text, { style: styles.value }, 'T. Okafor — Foreman  |  +1 (718) 555-0177')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Check-in Interval:'),
-        React.createElement(Text, { style: styles.value }, 'Every 30 minutes')
+        React.createElement(Text, { style: styles.value }, 'Every 30 minutes  (NFPA 51B §6.4 / OSHA 29 CFR §1910.252)')
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Watch Started:'),
@@ -130,7 +134,7 @@ const doc = React.createElement(
       ),
       React.createElement(View, { style: styles.row },
         React.createElement(Text, { style: styles.label }, 'Closed By:'),
-        React.createElement(Text, { style: styles.value }, 'admin@sunrisegardens.com')
+        React.createElement(Text, { style: styles.value }, 'jon@acemechanical.com')
       )
     ),
 
@@ -183,7 +187,7 @@ const doc = React.createElement(
 
     // Footer
     React.createElement(View, { style: styles.footer, fixed: true },
-      React.createElement(Text, { style: styles.footerText }, 'DutyProof Fire Watch Compliance Report  |  Report ID: A3F9C12B  |  SAMPLE'),
+      React.createElement(Text, { style: styles.footerText }, 'DutyProof Fire Watch Compliance Report  |  Report ID: A3F9C12B  |  SAMPLE REPORT'),
       React.createElement(Text, { style: styles.footerText }, 'Immutable records. Timestamps server-verified. Generated by DutyProof.')
     )
   )

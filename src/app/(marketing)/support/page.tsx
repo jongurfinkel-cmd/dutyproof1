@@ -1,8 +1,9 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Support — DutyProof',
-  description: 'Get help with DutyProof. We respond within a few hours during business hours.',
+  title: 'Support',
+  description:
+    'Get help with DutyProof fire watch compliance software. Common questions about SMS check-ins, missed check-in alerts, PDF reports, and account setup. We respond within a few hours.',
 }
 
 const TOPICS = [
@@ -11,8 +12,8 @@ const TOPICS = [
     a: 'First confirm the phone number is correct on the watch detail page. SMS delivery can be delayed by carrier filtering on some numbers — particularly VOIP lines or numbers with spam-block services enabled. If the number is correct and delivery is failing, email us and we\'ll investigate the carrier logs.',
   },
   {
-    q: 'How do I add or remove a facility?',
-    a: 'Go to Facilities in the sidebar. You can add new facilities and manage existing ones there. Each active facility counts toward your monthly billing. Removing a facility (deactivating all its watches) stops future billing for that facility at the next cycle.',
+    q: 'How do I add or remove a job site?',
+    a: 'Go to Job Sites in the sidebar. You can add new job sites and manage existing ones there. Each active job site counts toward your monthly billing. Removing a job site (deactivating all its watches) stops future billing for that job site at the next cycle.',
   },
   {
     q: 'Can I download a PDF report for a watch that\'s still active?',
@@ -23,8 +24,8 @@ const TOPICS = [
     a: 'Your compliance records and PDF reports remain downloadable for 12 months after cancellation. After that period, data is deleted from our servers. We strongly recommend downloading reports for any watches that may be subject to future inspection before cancelling.',
   },
   {
-    q: 'I need to set up multiple simultaneous watches at the same facility.',
-    a: 'Supported. Start a new watch for each location or worker — you can run as many concurrent watches as needed within the same facility. Each watch has its own check-in interval, worker, and audit trail. All appear on your dashboard sorted by urgency.',
+    q: 'I need to set up multiple simultaneous watches at the same job site.',
+    a: 'Supported. Start a new watch for each location or worker — you can run as many concurrent watches as needed within the same job site. Each watch has its own check-in interval, worker, and audit trail. All appear on your dashboard sorted by urgency.',
   },
 ]
 

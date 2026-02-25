@@ -2,9 +2,17 @@ import Link from 'next/link'
 import RevealOnScroll from '@/components/RevealOnScroll'
 
 export const metadata = {
-  title: 'Industries — DutyProof Fire Watch Compliance',
+  title: 'Industries We Serve — Fire Watch Compliance Software',
   description:
-    'DutyProof works anywhere NFPA 101 requires a fire watch. Hotels, warehouses, schools, offices, construction sites, retail, and more — one platform, any building type.',
+    'DutyProof fire watch compliance software works anywhere NFPA 101 or NFPA 241 requires a fire watch — healthcare, hotels, warehouses, schools, construction sites, and more.',
+  keywords: [
+    'fire watch compliance',
+    'NFPA 101 fire watch',
+    'fire watch software industries',
+    'hospital fire watch',
+    'hotel fire watch compliance',
+    'construction fire watch',
+  ],
 }
 
 const industries = [
@@ -53,8 +61,8 @@ const industries = [
   {
     icon: '🏥',
     name: 'Hospitals & Healthcare',
-    trigger: 'Joint Commission and CMS surveys require comprehensive fire safety documentation. Any system impairment triggers strict watch protocols.',
-    stakes: 'Accreditation findings, CMS certification risk, and immediate jeopardy designations.',
+    trigger: 'Any fire alarm or suppression system impairment — during renovation, hot work, or system maintenance — triggers strict fire watch requirements under NFPA 101 and applicable state fire codes.',
+    stakes: 'State fire inspection citations and liability exposure if fire watch documentation cannot be produced during an audit.',
   },
 ]
 
@@ -93,7 +101,7 @@ export default function IndustriesPage() {
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800, animationDelay: '0.1s' }}
           >
             Fire watches don&apos;t only<br />
-            happen in care facilities.
+            happen on hot work sites.
           </h1>
           <p
             className="fade-up text-slate-300 text-xl leading-relaxed max-w-2xl mx-auto mb-10"
@@ -151,7 +159,7 @@ export default function IndustriesPage() {
               One platform. Any fire watch.
             </h2>
             <p className="text-slate-500 text-lg mt-4 max-w-xl mx-auto">
-              DutyProof was built for care facilities — but the compliance problem is the same everywhere.
+              DutyProof was built for hot work contractors — but the compliance problem is the same everywhere.
             </p>
           </RevealOnScroll>
 
@@ -229,10 +237,10 @@ export default function IndustriesPage() {
             href="/signup"
             className="inline-flex items-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
           >
-            Start 14-Day Free Trial →
+            Start 60-Day Free Trial →
           </Link>
           <p className="mt-4 text-slate-500 text-xs">
-            14-day free trial · $149/facility/month after · Cancel any time
+            60-day free trial · $99/job site/month after · Cancel any time
           </p>
         </RevealOnScroll>
       </section>

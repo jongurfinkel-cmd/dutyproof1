@@ -62,7 +62,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navLinks = [
     { href: '/dashboard', label: 'Active Watches', badge: criticalCount },
     { href: '/history', label: 'Watch History', badge: 0 },
-    { href: '/facilities', label: 'Facilities', badge: 0 },
+    { href: '/facilities', label: 'Job Sites', badge: 0 },
+    { href: '/billing', label: 'Billing', badge: 0 },
   ]
   const isNewWatch = pathname === '/watches/new'
 

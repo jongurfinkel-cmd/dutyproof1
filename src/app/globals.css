@@ -60,3 +60,84 @@ html {
 .ticker-track:hover {
   animation-play-state: paused;
 }
+
+/* ── Shared fade-slide ── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hero product entrance ── */
+@keyframes heroUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-d { animation: heroUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.hero-p { animation: heroUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.hero-f { animation: heroUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.hero-r { animation: heroUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.72s both; }
+
+/* ── Timeline rows: only animate when parent has reveal-visible ── */
+.anim-row {
+  opacity: 0;
+  animation: none;
+}
+.timeline-trigger.reveal-visible .anim-row {
+  animation: fadeSlideIn 0.4s ease forwards;
+}
+
+/* ── Comparison card hover ── */
+.moment-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: default;
+}
+.moment-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Live dot blink ── */
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+.live-dot { animation: liveBlink 1.8s ease-in-out infinite; }
+
+/* ── Phone 5-state animation (12s loop) ── */
+@keyframes ps1 {
+  0%   { opacity: 1; }  15%  { opacity: 1; }
+  19%  { opacity: 0; }  96%  { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes ps2 {
+  0%   { opacity: 0; }  15%  { opacity: 0; }
+  19%  { opacity: 1; }  35%  { opacity: 1; }
+  39%  { opacity: 0; }  100% { opacity: 0; }
+}
+@keyframes ps3 {
+  0%   { opacity: 0; }  35%  { opacity: 0; }
+  39%  { opacity: 1; }  55%  { opacity: 1; }
+  59%  { opacity: 0; }  100% { opacity: 0; }
+}
+@keyframes ps4 {
+  0%   { opacity: 0; }  55%  { opacity: 0; }
+  59%  { opacity: 1; }  75%  { opacity: 1; }
+  79%  { opacity: 0; }  100% { opacity: 0; }
+}
+@keyframes ps5 {
+  0%   { opacity: 0; }  75%  { opacity: 0; }
+  79%  { opacity: 1; }  96%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.ps1 { animation: ps1 12s ease-in-out infinite; }
+.ps2 { opacity: 0; animation: ps2 12s ease-in-out infinite; }
+.ps3 { opacity: 0; animation: ps3 12s ease-in-out infinite; }
+.ps4 { opacity: 0; animation: ps4 12s ease-in-out infinite; }
+.ps5 { opacity: 0; animation: ps5 12s ease-in-out infinite; }
+
+/* ── Hero glow breathe ── */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.18; }
+  50%      { opacity: 0.28; }
+}
+.glow-pulse { animation: glowPulse 4s ease-in-out infinite; }

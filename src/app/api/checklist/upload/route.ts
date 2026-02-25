@@ -14,18 +14,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'file, watch_id, item_id, and checklist_token are required' }, { status: 400 })
     }
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(watchId) || !uuidRegex.test(itemId)) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+    }
+    if (!/^[0-9a-f]{64}$/.test(token)) {
+      return NextResponse.json({ error: 'Invalid token format' }, { status: 400 })
+    }
+
     const admin = createAdminClient()
 
-    // Verify token belongs to this watch
+    // Verify token belongs to this watch, watch is active, and checklist not already completed
     const { data: watch } = await admin
       .from('watches')
-      .select('id')
+      .select('id, status, checklist_completed_at')
       .eq('id', watchId)
       .eq('checklist_token', token)
       .single()
 
     if (!watch) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
+    }
+
+    if (watch.status !== 'active') {
+      return NextResponse.json({ error: 'This watch has ended.' }, { status: 410 })
+    }
+
+    if (watch.checklist_completed_at) {
+      return NextResponse.json({ error: 'Checklist already completed.' }, { status: 409 })
     }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
@@ -37,7 +53,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File size must be under 10 MB.' }, { status: 400 })
     }
 
-    const ext = file.name.split('.').pop() ?? 'jpg'
+    // Derive extension from validated MIME type, not user-supplied filename
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+    }
+    const ext = mimeToExt[file.type] ?? 'jpg'
     const path = `${watchId}/${itemId}/${Date.now()}.${ext}`
     const buffer = Buffer.from(await file.arrayBuffer())
 

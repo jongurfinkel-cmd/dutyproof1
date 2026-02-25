@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
                     autoComplete="email"
                     autoFocus
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                    placeholder="you@facility.com"
+                    placeholder="you@company.com"
                   />
                 </div>
                 <button

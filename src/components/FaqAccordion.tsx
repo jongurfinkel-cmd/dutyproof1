@@ -5,31 +5,35 @@ import { useState } from 'react'
 const FAQS = [
   {
     q: 'How much does DutyProof cost?',
-    a: '$149 per facility per month, billed monthly. No per-watch fees, no per-user fees, no setup costs. Your 14-day free trial includes full access — a credit card is required to start. Cancel any time before the trial ends and you will not be charged.',
+    a: '$99 per job site per month, billed monthly. No per-watch fees, no per-user fees, no setup costs. Your 60-day free trial includes full access — cancel any time before the trial ends and you will not be charged.',
   },
   {
-    q: 'Does DutyProof meet fire watch documentation requirements?',
-    a: 'DutyProof generates timestamped, GPS-verified, carrier-confirmed records for every check-in — the kind of documentation CMS surveyors, state fire marshals, and local AHJs look for when reviewing fire watch records. Every entry is server-timestamped and immutable. Note: DutyProof supports fire watch documentation workflows; each facility remains responsible for compliance with local AHJ, CMS, and applicable state requirements.',
+    q: 'Does DutyProof meet OSHA hot work fire watch requirements?',
+    a: 'DutyProof generates GPS-verified, server-timestamped, carrier-confirmed records for every check-in — exactly the kind of documentation OSHA inspectors, fire marshals, and insurance adjusters need when auditing hot work fire watch compliance. Every entry is immutable and write-once. Note: DutyProof supports fire watch documentation workflows; each contractor remains responsible for compliance with OSHA 29 CFR 1910.252, NFPA 51B, and local AHJ requirements.',
   },
   {
-    q: 'What check-in interval should we use for fire watches?',
-    a: 'NFPA 101 Life Safety Code and most AHJs (Authorities Having Jurisdiction) require fire watches at intervals not exceeding 30 minutes when fire protection systems are impaired. Many facilities use 15-minute intervals for added safety. DutyProof supports any interval you configure — 15, 30, or custom.',
+    q: 'What check-in interval is required for a hot work fire watch?',
+    a: 'OSHA 29 CFR 1910.252 and NFPA 51B require a fire watch to be maintained during and for at least 30 minutes after hot work operations. Most contractors run check-ins every 15–30 minutes during that post-work watch period. DutyProof supports any interval you configure — 15, 30, or custom.',
   },
   {
-    q: 'What happens when a CMS surveyor or state inspector asks for our records?',
-    a: 'Open DutyProof, go to Watch History, find the watch in question, and click Download Report. In under 60 seconds you have a print-ready PDF with every check-in, GPS coordinate, missed check-in alert, and timestamp — more detail than any paper-based system can provide.',
+    q: 'What happens when an OSHA inspector or fire marshal asks for our records?',
+    a: 'Open DutyProof, go to Watch History, find the watch in question, and click Download Report. In under 60 seconds you have a print-ready PDF with every check-in, GPS coordinate, missed check-in alert, and timestamp — more verifiable documentation than any paper log can provide.',
   },
   {
-    q: 'Can I run watches across multiple wings, floors, or buildings?',
-    a: 'Yes. Each watch is tied to a specific facility and location. You can run multiple simultaneous watches — one per building, wing, or impairment zone — each with its own worker, interval, and audit trail. All watches appear on your dashboard sorted by urgency.',
+    q: 'Can I run multiple simultaneous watches on the same job site?',
+    a: 'Yes. You can run multiple concurrent watches — one per work area, floor, or welding bay — each with its own assigned worker, check-in interval, and audit trail. All active watches appear on your dashboard sorted by urgency. One subscription covers all active watches at that job site.',
   },
   {
     q: 'What phone does the fire watch worker need?',
-    a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones and modern feature phones with browser-based location support. On basic devices without GPS capability, the check-in is still recorded with full timestamp and SMS delivery confirmation.',
+    a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones. On basic phones without GPS, the check-in still records with full timestamp and SMS confirmation.',
+  },
+  {
+    q: 'How does DutyProof help with insurance claims?',
+    a: 'When a fire or incident occurs, your insurer and the fire marshal will ask what your fire watch documented. A DutyProof PDF shows exactly where your worker was and when, with GPS coordinates and carrier-confirmed SMS delivery — evidence that actual coverage occurred, not just a handwritten log that anyone could fill in after the fact.',
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts. Month-to-month billing at $149/facility/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Your historical compliance reports remain downloadable for 12 months after cancellation.',
+    a: 'No contracts. Month-to-month billing at $99/site/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Your historical compliance reports remain downloadable for 12 months after cancellation.',
   },
 ]
 

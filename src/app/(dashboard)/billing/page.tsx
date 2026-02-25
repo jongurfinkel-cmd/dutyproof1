@@ -1,23 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 const includedFeatures = [
-  'Unlimited active watches per facility',
+  'Unlimited active watches per job site',
   'Automated SMS check-ins (15 or 30 min intervals)',
   'Missed check-in escalation in < 60 seconds',
   'Tamper-proof immutable audit log',
-  'One-click CMS-ready PDF reports',
+  'One-click OSHA-ready PDF reports',
   'Searchable watch history',
   'Unlimited admin & supervisor accounts',
   'Direct email & chat support',
 ]
 
+type SubStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | null
+
 export default function BillingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [subStatus, setSubStatus] = useState<SubStatus | undefined>(undefined)
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadStatus() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, trial_ends_at')
+        .eq('id', user.id)
+        .single()
+      setSubStatus((profile?.subscription_status as SubStatus) ?? null)
+      setTrialEndsAt(profile?.trial_ends_at ?? null)
+    }
+    loadStatus()
+  }, [])
 
   async function startCheckout() {
     setLoading(true)
@@ -27,11 +49,11 @@ export default function BillingPage() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('Something went wrong. Please try again.')
+        toast.error('Something went wrong. Please try again.')
         setLoading(false)
       }
     } catch {
-      alert('Something went wrong. Please try again.')
+      toast.error('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -44,75 +66,143 @@ export default function BillingPage() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('No billing account found. Please start your trial first.')
+        toast.error('No billing account found. Start your trial first.')
         setPortalLoading(false)
       }
     } catch {
+      toast.error('Something went wrong. Please try again.')
       setPortalLoading(false)
     }
   }
 
+  const isActive = subStatus === 'trialing' || subStatus === 'active'
+  const isPastDue = subStatus === 'past_due' || subStatus === 'unpaid'
+  const isCanceled = subStatus === 'canceled'
+  const statusLoading = subStatus === undefined
+
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000))
+    : null
+
   return (
-    <div className="max-w-2xl mx-auto px-6 py-16">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
-          Start your 14-day free trial
+        <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 mb-2">
+          {isActive ? 'Your Plan' : isCanceled ? 'Reactivate DutyProof' : 'Start your 60-day free trial'}
         </h1>
         <p className="text-slate-500">
-          Full access to DutyProof. Cancel any time before the trial ends — no charge.
+          {isActive && subStatus === 'trialing' && trialDaysLeft !== null
+            ? `${trialDaysLeft} days remaining in your free trial.`
+            : isActive
+            ? 'Full access to DutyProof. Manage or cancel any time.'
+            : isCanceled
+            ? 'Your subscription has ended. Start a new trial to resume access.'
+            : isPastDue
+            ? 'There\'s an issue with your payment — update to keep watches running.'
+            : 'Full access to DutyProof. Cancel any time before the trial ends — no charge.'}
         </p>
       </div>
 
-      <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100 mb-6">
-        <div className="bg-blue-700 px-8 py-8 text-center">
-          <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Per Facility</div>
-          <div className="flex items-end justify-center gap-1 mb-1">
-            <span className="text-7xl font-extrabold text-white">$149</span>
-            <div className="text-blue-200 text-base mb-3 text-left leading-snug">/facility<br />/month</div>
-          </div>
-          <p className="text-blue-200 text-sm">14-day free trial · Credit card required · Cancel any time</p>
-        </div>
-
-        <div className="px-8 py-8">
-          <div className="grid grid-cols-1 gap-y-2.5 mb-8">
-            {includedFeatures.map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">✓</div>
-                <span className="text-slate-700 text-sm">{f}</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={startCheckout}
-            disabled={loading}
-            className="w-full py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Redirecting to checkout…
-              </span>
-            ) : (
-              'Start 14-Day Free Trial →'
+      {/* Active / trialing state */}
+      {isActive && (
+        <div className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl shadow-green-100 mb-6">
+          <div className="bg-green-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs font-bold tracking-widest uppercase mb-3">
+              <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
+              {subStatus === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
+            </div>
+            {subStatus === 'trialing' && trialDaysLeft !== null && (
+              <div className="text-4xl sm:text-6xl font-extrabold text-white mb-1">{trialDaysLeft}<span className="text-2xl sm:text-3xl font-bold text-green-200 ml-1">days left</span></div>
             )}
-          </button>
-          <p className="text-center text-slate-500 text-xs mt-3">
-            Secured by Stripe · Cancel any time before trial ends
-          </p>
+            <p className="text-green-200 text-sm mt-1">
+              {subStatus === 'trialing'
+                ? 'Cancel any time before day 60 — no charge'
+                : '$99/site/month · Cancel any time'}
+            </p>
+          </div>
+          <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <button
+              onClick={openPortal}
+              disabled={portalLoading}
+              className="w-full py-4 px-8 rounded-xl bg-green-700 hover:bg-green-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
+            >
+              {portalLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Loading…
+                </span>
+              ) : (
+                'Manage Billing →'
+              )}
+            </button>
+            <p className="text-center text-slate-500 text-xs mt-3">
+              Update payment method · View invoices · Cancel subscription
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="text-center">
-        <p className="text-slate-500 text-sm mb-2">Already have an active subscription?</p>
-        <button
-          onClick={openPortal}
-          disabled={portalLoading}
-          className="text-blue-600 hover:text-blue-700 text-sm font-semibold underline underline-offset-2 transition-colors"
-        >
-          {portalLoading ? 'Loading…' : 'Manage billing →'}
-        </button>
-      </div>
+      {/* Past due state */}
+      {isPastDue && (
+        <div className="rounded-3xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 to-white overflow-hidden shadow-xl shadow-amber-100 mb-6">
+          <div className="bg-amber-600 px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <div className="text-white font-black text-xl mb-1">Payment Failed</div>
+            <p className="text-amber-100 text-sm">SMS check-ins may be paused until resolved.</p>
+          </div>
+          <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <button
+              onClick={openPortal}
+              disabled={portalLoading}
+              className="w-full py-4 px-8 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-slate-300 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5 disabled:translate-y-0"
+            >
+              {portalLoading ? 'Loading…' : 'Update Payment Method →'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Trial / new subscription state */}
+      {(subStatus === null || isCanceled || statusLoading) && (
+        <div className={`rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100 mb-6 ${statusLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className="bg-blue-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Per Job Site</div>
+            <div className="flex items-end justify-center gap-1 mb-1">
+              <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$99</span>
+              <div className="text-blue-200 text-base mb-3 text-left leading-snug">/site<br />/month</div>
+            </div>
+            <p className="text-blue-200 text-sm">60-day free trial · Cancel any time before day 60 — no charge</p>
+          </div>
+
+          <div className="px-4 py-6 sm:px-8 sm:py-8">
+            <div className="grid grid-cols-1 gap-y-2.5 mb-8">
+              {includedFeatures.map((f) => (
+                <div key={f} className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">✓</div>
+                  <span className="text-slate-700 text-sm">{f}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={startCheckout}
+              disabled={loading || statusLoading}
+              className="w-full py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Redirecting to checkout…
+                </span>
+              ) : (
+                'Start 60-Day Free Trial →'
+              )}
+            </button>
+            <p className="text-center text-slate-500 text-xs mt-3">
+              Secured by Stripe · Cancel any time before trial ends
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="text-center mt-8">
         <button

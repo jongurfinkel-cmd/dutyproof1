@@ -85,6 +85,23 @@ export default function CreateWatchForm() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Normalize to E.164: strips formatting, prepends +1 for 10-digit US numbers
+  function normalizePhone(raw: string): string {
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length === 10) return `+1${digits}`
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
+    if (raw.trim().startsWith('+')) return `+${digits}`
+    return raw.trim()
+  }
+
+  function handlePhoneBlur(field: 'assigned_phone' | 'escalation_phone') {
+    const value = form[field]
+    if (value.trim()) {
+      const normalized = normalizePhone(value)
+      setForm((prev) => ({ ...prev, [field]: normalized }))
+    }
+  }
+
   function setNow() {
     setForm((prev) => ({ ...prev, start_time: toLocalDatetimeValue(new Date()) }))
   }
@@ -116,7 +133,7 @@ export default function CreateWatchForm() {
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!form.facility_id) {
-      toast.error('Please select a facility')
+      toast.error('Please select a job site')
       return
     }
     if (!form.assigned_phone.match(/^\+?[\d\s\-().]{10,}$/)) {
@@ -187,13 +204,13 @@ export default function CreateWatchForm() {
       {/* ── Where / What ── */}
       <div>
         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-          Facility <span className="text-red-400">*</span>
+          Job Site <span className="text-red-400">*</span>
         </label>
         {facilities.length === 0 ? (
           <div className="text-sm text-amber-700 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            No facilities yet.{' '}
+            No job sites yet.{' '}
             <a href="/facilities" className="text-blue-600 hover:underline font-semibold">
-              Add a facility first.
+              Add a job site first.
             </a>
           </div>
         ) : (
@@ -203,7 +220,7 @@ export default function CreateWatchForm() {
             required
             className={`${inputClass} bg-white`}
           >
-            <option value="">Select facility…</option>
+            <option value="">Select job site…</option>
             {facilities.map((f) => (
               <option key={f.id} value={f.id}>{f.name}</option>
             ))}
@@ -219,7 +236,7 @@ export default function CreateWatchForm() {
           type="text"
           value={form.location}
           onChange={(e) => set('location', e.target.value)}
-          placeholder="e.g. Wing B, East Wing, 3rd Floor, ICU"
+          placeholder="e.g. Building D, Bay 2, Roof Level, West Dock"
           className={inputClass}
         />
       </div>
@@ -232,7 +249,7 @@ export default function CreateWatchForm() {
           type="text"
           value={form.reason}
           onChange={(e) => set('reason', e.target.value)}
-          placeholder="e.g. Sprinkler shutdown — Zone 3 maintenance"
+          placeholder="e.g. Post-weld watch — pipe cutting Bay 3"
           className={inputClass}
         />
       </div>
@@ -241,14 +258,14 @@ export default function CreateWatchForm() {
 
       <div>
         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-          Assigned Person&apos;s Name <span className="text-red-400">*</span>
+          Fire Watcher Name <span className="text-red-400">*</span>
         </label>
         <input
           type="text"
           value={form.assigned_name}
           onChange={(e) => set('assigned_name', e.target.value)}
           required
-          placeholder="Full name of person doing rounds"
+          placeholder="Full name of the fire watcher"
           className={inputClass}
         />
       </div>
@@ -261,6 +278,7 @@ export default function CreateWatchForm() {
           type="tel"
           value={form.assigned_phone}
           onChange={(e) => set('assigned_phone', e.target.value)}
+          onBlur={() => handlePhoneBlur('assigned_phone')}
           required
           placeholder="+1 (555) 000-0000"
           className={inputClass}
@@ -384,6 +402,7 @@ export default function CreateWatchForm() {
                 type="tel"
                 value={form.escalation_phone}
                 onChange={(e) => set('escalation_phone', e.target.value)}
+                onBlur={() => handlePhoneBlur('escalation_phone')}
                 placeholder="+1 (555) 000-0000"
                 className={inputClass}
               />
@@ -393,7 +412,7 @@ export default function CreateWatchForm() {
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                 Alert Delay
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { value: '0',  label: 'Immediate' },
                   { value: '15', label: '15 min' },

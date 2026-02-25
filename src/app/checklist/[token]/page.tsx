@@ -97,6 +97,7 @@ export default function ChecklistPage() {
       fd.append('file', file)
       fd.append('watch_id', state.watchId)
       fd.append('item_id', item.id)
+      fd.append('checklist_token', token)
       const res = await fetch('/api/checklist/upload', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)

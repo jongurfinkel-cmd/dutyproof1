@@ -139,11 +139,42 @@ export default function HistoryPage() {
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  function downloadCSV() {
+    const headers = ['Job Site', 'Location', 'Fire Watcher', 'Phone', 'Started', 'Ended', 'Duration', 'Compliance %', 'Completed', 'Missed', 'Reason']
+    const rows = sorted.map((w) => {
+      const total = w._completed + w._missed
+      const pct = total > 0 ? Math.round((w._completed / total) * 100) : 100
+      return [
+        w.facilities.name,
+        w.location ?? '',
+        w.assigned_name,
+        w.assigned_phone,
+        w.start_time ? new Date(w.start_time).toLocaleString() : '',
+        w.ended_at ? new Date(w.ended_at).toLocaleString() : '',
+        formatDuration(w.start_time, w.ended_at),
+        `${pct}%`,
+        w._completed,
+        w._missed,
+        w.reason ?? '',
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+    })
+    const csv = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dutyproof-history-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
-      <div className="p-8 lg:p-10">
+      <div className="p-4 sm:p-6 lg:p-10">
         <h2
-          className="text-3xl text-slate-900 mb-8"
+          className="text-xl sm:text-3xl text-slate-900 mb-8"
           style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
         >
           Watch History
@@ -158,11 +189,11 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-10">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h2
-            className="text-3xl text-slate-900"
+            className="text-xl sm:text-3xl text-slate-900"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
             Watch History
@@ -172,24 +203,37 @@ export default function HistoryPage() {
             {filtered.length !== watches.length && ` · ${filtered.length} shown`}
           </p>
         </div>
-        <button
-          onClick={() => loadHistory(true)}
-          disabled={refreshing}
-          aria-label="Refresh history"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 text-xs font-semibold transition-all disabled:opacity-40 shadow-sm"
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 16 16"
-            fill="none"
-            className={refreshing ? 'animate-spin' : ''}
-            aria-hidden="true"
+        <div className="flex items-center gap-2">
+          {sorted.length > 0 && (
+            <button
+              onClick={downloadCSV}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 text-xs font-semibold transition-all shadow-sm"
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Export CSV
+            </button>
+          )}
+          <button
+            onClick={() => loadHistory(true)}
+            disabled={refreshing}
+            aria-label="Refresh history"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 text-xs font-semibold transition-all disabled:opacity-40 shadow-sm"
           >
-            <path d="M13.65 2.35A8 8 0 1 0 15 8h-2a6 6 0 1 1-1.05-3.4L9 7h6V1l-1.35 1.35z" fill="currentColor" />
-          </svg>
-          {refreshing ? 'Refreshing…' : 'Refresh'}
-        </button>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              className={refreshing ? 'animate-spin' : ''}
+              aria-hidden="true"
+            >
+              <path d="M13.65 2.35A8 8 0 1 0 15 8h-2a6 6 0 1 1-1.05-3.4L9 7h6V1l-1.35 1.35z" fill="currentColor" />
+            </svg>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {/* Search + filter */}
@@ -203,7 +247,7 @@ export default function HistoryPage() {
               </svg>
               <input
                 type="text"
-                placeholder="Search by facility, worker, or reason…"
+                placeholder="Search by job site, worker, or reason…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -215,7 +259,7 @@ export default function HistoryPage() {
                 onChange={(e) => setFacilityFilter(e.target.value)}
                 className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All facilities</option>
+                <option value="">All job sites</option>
                 {facilityOptions.map((f) => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
@@ -301,16 +345,16 @@ export default function HistoryPage() {
               <thead>
                 <tr className="border-b border-slate-100">
                   {([
-                    { key: 'facility', label: 'Facility' },
-                    { key: null, label: 'Assigned' },
+                    { key: 'facility', label: 'Job Site' },
+                    { key: null, label: 'Fire Watcher', mobileHide: true },
                     { key: 'started', label: 'Started' },
-                    { key: 'duration', label: 'Duration' },
+                    { key: 'duration', label: 'Duration', mobileHide: true },
                     { key: 'compliance', label: 'Compliance' },
-                    { key: null, label: 'Reason' },
-                  ] as { key: SortKey | null; label: string }[]).map(({ key, label }) => (
+                    { key: null, label: 'Reason', mobileHide: true },
+                  ] as { key: SortKey | null; label: string; mobileHide?: boolean }[]).map(({ key, label, mobileHide }) => (
                     <th
                       key={label}
-                      className={`text-left px-5 py-4 text-[10px] font-bold uppercase tracking-widest select-none ${
+                      className={`text-left px-5 py-4 text-[10px] font-bold uppercase tracking-widest select-none${mobileHide ? ' hidden sm:table-cell' : ''} ${
                         key ? 'cursor-pointer text-slate-400 hover:text-slate-600 transition-colors' : 'text-slate-400'
                       }`}
                       onClick={key ? () => handleSort(key) : undefined}
@@ -340,9 +384,9 @@ export default function HistoryPage() {
                         <div className="font-semibold text-slate-800">{w.facilities.name}</div>
                         {w.location && <div className="text-xs text-slate-400 mt-0.5">{w.location}</div>}
                       </td>
-                      <td className="px-5 py-4 text-slate-600 whitespace-nowrap">{w.assigned_name}</td>
+                      <td className="px-5 py-4 text-slate-600 whitespace-nowrap hidden sm:table-cell">{w.assigned_name}</td>
                       <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{format(new Date(w.start_time), 'MMM d, h:mm a')}</td>
-                      <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{formatDuration(w.start_time, w.ended_at)}</td>
+                      <td className="px-5 py-4 text-slate-500 whitespace-nowrap hidden sm:table-cell">{formatDuration(w.start_time, w.ended_at)}</td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         {total > 0 ? (
                           <div className="flex items-center gap-2">
@@ -359,7 +403,7 @@ export default function HistoryPage() {
                           <span className="text-slate-300">—</span>
                         )}
                       </td>
-                      <td className="px-5 py-4 text-slate-400 max-w-[180px] truncate">{w.reason || '—'}</td>
+                      <td className="px-5 py-4 text-slate-400 max-w-[180px] truncate hidden sm:table-cell">{w.reason || '—'}</td>
                       <td className="px-5 py-4 text-right">
                         <Link
                           href={`/watches/${w.id}`}

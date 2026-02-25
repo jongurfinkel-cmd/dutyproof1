@@ -25,6 +25,9 @@ export default function WatchDetailPage() {
   const [ending, setEnding] = useState(false)
   const [confirmingEnd, setConfirmingEnd] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [simulating, setSimulating] = useState(false)
+  const [resendingSms, setResendingSms] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const loadData = useCallback(async () => {
     const supabase = createClient()
@@ -87,6 +90,43 @@ export default function WatchDetailPage() {
     }
   }
 
+  async function handleResendSms() {
+    setResendingSms(true)
+    try {
+      const res = await fetch('/api/watches/resend-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ watchId: id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to resend SMS')
+      toast.success('SMS resent to worker ✓')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to resend SMS')
+    } finally {
+      setResendingSms(false)
+    }
+  }
+
+  async function handleSimulateCheckin() {
+    setSimulating(true)
+    try {
+      const res = await fetch('/api/checkin/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ watchId: id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to simulate')
+      toast.success('Check-in simulated ✓')
+      loadData()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Simulation failed')
+    } finally {
+      setSimulating(false)
+    }
+  }
+
   async function handleDownloadReport() {
     setDownloading(true)
     try {
@@ -110,7 +150,7 @@ export default function WatchDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-8 lg:p-10 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
         <div className="animate-pulse space-y-5">
           <div className="h-8 bg-slate-200 rounded-lg w-64" />
           <div className="h-52 bg-white border border-slate-200 rounded-2xl" />
@@ -131,7 +171,7 @@ export default function WatchDetailPage() {
   const arcCircumference = 2 * Math.PI * arcR
 
   return (
-    <div className="p-8 lg:p-10 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
@@ -139,7 +179,7 @@ export default function WatchDetailPage() {
             ← Back to Dashboard
           </Link>
           <h2
-            className="text-3xl text-slate-900 mt-2"
+            className="text-xl sm:text-3xl text-slate-900 mt-2"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
             {watch.facilities.name}
@@ -159,7 +199,17 @@ export default function WatchDetailPage() {
             {' · '}Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
           </p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {watch.status === 'active' && (
+            <button
+              onClick={handleResendSms}
+              disabled={resendingSms}
+              title="Resend the current check-in SMS to the worker"
+              className="px-4 py-2.5 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+            >
+              {resendingSms ? 'Sending…' : 'Resend SMS'}
+            </button>
+          )}
           <button
             onClick={handleDownloadReport}
             disabled={downloading}
@@ -167,6 +217,16 @@ export default function WatchDetailPage() {
           >
             {downloading ? 'Generating…' : 'Download Report'}
           </button>
+          {watch.status === 'active' && process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={handleSimulateCheckin}
+              disabled={simulating}
+              title="Simulate a check-in without sending SMS — for testing only"
+              className="px-4 py-2.5 border border-amber-200 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+            >
+              {simulating ? 'Simulating…' : '⚡ Simulate Check-in'}
+            </button>
+          )}
           {watch.status === 'active' && (
             confirmingEnd ? (
               <>
@@ -205,7 +265,7 @@ export default function WatchDetailPage() {
         >
           Watch Details
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-3 text-sm">
           {watch.location && (
             <div>
               <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Location</div>
@@ -213,7 +273,7 @@ export default function WatchDetailPage() {
             </div>
           )}
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Assigned</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Fire Watcher</div>
             <div className="font-semibold text-slate-800">{watch.assigned_name}</div>
           </div>
           <div>
@@ -262,6 +322,30 @@ export default function WatchDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Copy check-in link — fallback if SMS delivery fails */}
+        {nextPending && watch.status === 'active' && (
+          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Current Check-in Link</div>
+              <div className="text-xs text-slate-500 font-mono truncate">
+                {`${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/checkin/${nextPending.token}`
+                navigator.clipboard.writeText(url).then(() => {
+                  setCopiedLink(true)
+                  setTimeout(() => setCopiedLink(false), 2000)
+                })
+              }}
+              className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg transition-all"
+            >
+              {copiedLink ? '✓ Copied' : 'Copy Link'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Compliance Score */}

@@ -100,7 +100,7 @@ export default function FacilitiesPage() {
 
   async function handleAdd(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.name.trim()) { toast.error('Facility name is required'); return }
+    if (!form.name.trim()) { toast.error('Job site name is required'); return }
     setSaving(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -115,7 +115,7 @@ export default function FacilitiesPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Facility added')
+      toast.success('Job site added')
       setForm({ name: '', address: '', timezone: 'America/New_York' })
       setShowForm(false)
       loadFacilities()
@@ -138,7 +138,7 @@ export default function FacilitiesPage() {
       .eq('id', editingId)
     setSaving(false)
     if (error) { toast.error(error.message); return }
-    toast.success('Facility updated')
+      toast.success('Job site updated')
     setEditingId(null)
     loadFacilities()
   }
@@ -146,14 +146,17 @@ export default function FacilitiesPage() {
   async function handleDeleteRequest(id: string, name: string) {
     setDeletingId(id)
     const supabase = createClient()
-    const { count } = await supabase
-      .from('watches')
-      .select('id', { count: 'exact', head: true })
-      .eq('facility_id', id)
-      .eq('status', 'active')
+    const [{ count: activeCount }, { count: historyCount }] = await Promise.all([
+      supabase.from('watches').select('id', { count: 'exact', head: true }).eq('facility_id', id).eq('status', 'active'),
+      supabase.from('watches').select('id', { count: 'exact', head: true }).eq('facility_id', id).eq('status', 'completed'),
+    ])
     setDeletingId(null)
-    if (count && count > 0) {
-      toast.error(`"${name}" has ${count} active watch${count !== 1 ? 'es' : ''}. End the watch${count !== 1 ? 'es' : ''} before deleting this facility.`)
+    if (activeCount && activeCount > 0) {
+      toast.error(`"${name}" has ${activeCount} active watch${activeCount !== 1 ? 'es' : ''}. End ${activeCount !== 1 ? 'them' : 'it'} before deleting.`)
+      return
+    }
+    if (historyCount && historyCount > 0) {
+      toast.error(`"${name}" has ${historyCount} completed watch${historyCount !== 1 ? 'es' : ''} with compliance records. Download any reports before deleting, then contact support to remove historical data.`)
       return
     }
     setConfirmDeleteId(id)
@@ -166,21 +169,21 @@ export default function FacilitiesPage() {
     const { error } = await supabase.from('facilities').delete().eq('id', id)
     setDeletingId(null)
     if (error) { toast.error(error.message); return }
-    toast.success('Facility deleted')
+    toast.success('Job site deleted')
     loadFacilities()
   }
 
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-10">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2
-            className="text-3xl text-slate-900"
+            className="text-xl sm:text-3xl text-slate-900"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
-            Facilities
+            Job Sites
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Manage the buildings and locations you oversee.</p>
+          <p className="text-slate-400 text-sm mt-1">Manage the job sites and locations you oversee.</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -190,7 +193,7 @@ export default function FacilitiesPage() {
               : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-200 hover:-translate-y-px'
           }`}
         >
-          {showForm ? 'Cancel' : '+ Add Facility'}
+          {showForm ? 'Cancel' : '+ Add Job Site'}
         </button>
       </div>
 
@@ -200,19 +203,19 @@ export default function FacilitiesPage() {
             className="text-base font-bold text-slate-800 mb-5"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
           >
-            Add New Facility
+            Add New Job Site
           </h3>
           <form onSubmit={handleAdd} className="space-y-4 max-w-lg">
             <div>
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Facility Name <span className="text-red-400">*</span>
+                Job Site Name <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 required
-                placeholder="e.g. Babson Hall"
+                placeholder="e.g. Ace Mechanical — Building D"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
               />
             </div>
@@ -251,7 +254,7 @@ export default function FacilitiesPage() {
               disabled={saving}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200"
             >
-              {saving ? 'Saving…' : 'Add Facility'}
+              {saving ? 'Saving…' : 'Add Job Site'}
             </button>
           </form>
         </div>
@@ -264,15 +267,15 @@ export default function FacilitiesPage() {
       ) : facilities.length === 0 ? (
         <div className="text-center py-24 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <span className="text-3xl">🏢</span>
+            <span className="text-3xl">🏗️</span>
           </div>
           <h3
             className="text-lg font-bold text-slate-800 mb-2"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
           >
-            No facilities yet
+            No job sites yet
           </h3>
-          <p className="text-slate-400 text-sm mb-2">Add a facility to get started with fire watch tracking.</p>
+          <p className="text-slate-400 text-sm mb-2">Add a job site to get started with fire watch tracking.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -281,8 +284,8 @@ export default function FacilitiesPage() {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Name</th>
-                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Address</th>
-                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Timezone</th>
+                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:table-cell">Address</th>
+                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:table-cell">Timezone</th>
                   <th className="text-right px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
@@ -360,8 +363,8 @@ export default function FacilitiesPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-slate-500">{f.address || '—'}</td>
-                      <td className="px-5 py-4 text-slate-500">{TZ_LABELS[f.timezone] ?? f.timezone}</td>
+                      <td className="px-5 py-4 text-slate-500 hidden sm:table-cell">{f.address || '—'}</td>
+                      <td className="px-5 py-4 text-slate-500 hidden sm:table-cell">{TZ_LABELS[f.timezone] ?? f.timezone}</td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {confirmDeleteId === f.id ? (

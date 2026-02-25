@@ -41,9 +41,9 @@ export default function PrivacyPage() {
                 When you create an account, we collect your email address and password (stored as a secure hash). We use this to authenticate you and communicate with you about your account.
               </p>
 
-              <h3 className="text-slate-800 font-semibold text-sm mb-2">Facility and Watch Data</h3>
+              <h3 className="text-slate-800 font-semibold text-sm mb-2">Job Site and Watch Data</h3>
               <p className="mb-4">
-                You provide facility names, locations, and other descriptive information when setting up fire watches. This information is stored and associated with your account to generate compliance records.
+                You provide job site names, locations, and other descriptive information when setting up fire watches. This information is stored and associated with your account to generate compliance records.
               </p>
 
               <h3 className="text-slate-800 font-semibold text-sm mb-2">Worker Information</h3>
@@ -107,11 +107,11 @@ export default function PrivacyPage() {
               <div className="space-y-4">
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <p className="font-semibold text-slate-800 mb-1">Supabase</p>
-                  <p>Our database and authentication provider. All application data — accounts, facilities, watches, check-in records — is stored in Supabase-hosted infrastructure.</p>
+                  <p>Our database and authentication provider. All application data — accounts, job sites, watches, check-in records — is stored in Supabase-hosted infrastructure.</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                  <p className="font-semibold text-slate-800 mb-1">Sinch</p>
-                  <p>Our SMS delivery provider. Worker and supervisor phone numbers are transmitted to Sinch for the purpose of sending check-in and escalation messages.</p>
+                  <p className="font-semibold text-slate-800 mb-1">Twilio</p>
+                  <p>Our SMS delivery provider. Worker and supervisor phone numbers are transmitted to Twilio for the purpose of sending check-in and escalation messages.</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <p className="font-semibold text-slate-800 mb-1">Stripe</p>

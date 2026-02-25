@@ -6,8 +6,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const token = searchParams.get('token')
 
-    if (!token) {
-      return NextResponse.json({ error: 'Token required' }, { status: 400 })
+    if (!token || !/^[0-9a-f]{64}$/.test(token)) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
     }
 
     const admin = createAdminClient()

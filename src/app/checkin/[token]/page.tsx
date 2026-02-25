@@ -9,6 +9,7 @@ type CheckInState =
   | { phase: 'loading' }
   | { phase: 'expired'; message: string }
   | { phase: 'invalid'; message: string }
+  | { phase: 'checklist_pending'; message: string }
   | { phase: 'ready'; facilityName: string; assignedName: string; scheduledTime: string; nextTime: string }
   | { phase: 'submitting' }
   | { phase: 'confirmed'; nextCheckIn: string; serverTime: string }
@@ -59,6 +60,8 @@ export default function CheckInPage() {
         if (!res.ok) {
           if (res.status === 410) {
             setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
+          } else if (res.status === 409 && data.error === 'checklist_pending') {
+            setState({ phase: 'checklist_pending', message: data.message ?? 'Complete the pre-watch safety checklist first.' })
           } else {
             setState({ phase: 'invalid', message: data.error ?? 'Invalid check-in link.' })
           }
@@ -142,6 +145,29 @@ export default function CheckInPage() {
           <p className="text-red-300 text-sm mb-4">{state.message}</p>
           <p className="text-slate-500 text-xs">
             This check-in window has closed. The missed check-in has been logged and your supervisor has been notified.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (state.phase === 'checklist_pending') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+        <Logo />
+        <div className="bg-amber-950/30 border border-amber-700/40 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900/40 flex items-center justify-center">
+            <span className="text-amber-400 text-2xl">📋</span>
+          </div>
+          <h1
+            className="text-2xl text-white mb-2"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          >
+            Checklist First
+          </h1>
+          <p className="text-amber-300 text-sm mb-2">{state.message}</p>
+          <p className="text-slate-500 text-xs">
+            Check your messages for the pre-watch safety checklist link and complete it before checking in.
           </p>
         </div>
       </div>

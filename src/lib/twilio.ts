@@ -75,7 +75,7 @@ export async function sendWatchSummarySMS(
   const pct = totalRounds > 0 ? Math.round((completedRounds / totalRounds) * 100) : 0
   return sendSMS(
     to,
-    `DutyProof Watch Complete\nFacility: ${facilityName}\nDuration: ${durationStr}\nCompleted: ${completedRounds}/${totalRounds} (${pct}%)\nMissed: ${missedRounds}\nReport: ${reportUrl}`
+    `DutyProof Watch Complete\nJob Site: ${facilityName}\nDuration: ${durationStr}\nCompleted: ${completedRounds}/${totalRounds} (${pct}%)\nMissed: ${missedRounds}\nReport: ${reportUrl}`
   )
 }
 

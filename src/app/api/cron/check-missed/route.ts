@@ -5,16 +5,17 @@ import { sendCheckInSMS, sendAlertSMS } from '@/lib/twilio'
 import { addMinutes } from 'date-fns'
 
 export async function GET(req: NextRequest) {
-  // Protect with cron secret — accepts x-cron-secret header, ?secret= query param,
-  // or Vercel's automatic Authorization: Bearer <CRON_SECRET> header
+  // Protect with cron secret — accepts Authorization: Bearer header (Vercel cron)
+  // or x-cron-secret header. Query params NOT accepted (they leak in logs/proxies).
   const authHeader = req.headers.get('authorization')
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  const secret =
-    req.headers.get('x-cron-secret') ||
-    req.nextUrl.searchParams.get('secret') ||
-    bearerToken
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const secret = bearerToken || req.headers.get('x-cron-secret')
+
+  // Always require secret in production; allow unauthenticated in local dev only
+  if (process.env.NODE_ENV === 'production' || process.env.CRON_SECRET) {
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   const admin = createAdminClient()
@@ -55,25 +56,33 @@ export async function GET(req: NextRequest) {
 
         missedCount++
 
-        // Send alert SMS to admin (using assigned phone for MVP — in production store admin phone separately)
-        const alertSid = await sendAlertSMS(
-          watch.assigned_phone,
-          checkIn.assigned_name,
-          displayName,
-          new Date(checkIn.scheduled_time)
-        )
+        // Send immediate alert to supervisor if escalation_phone is set and delay is 0
+        if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
+          const alertSid = await sendAlertSMS(
+            watch.escalation_phone,
+            checkIn.assigned_name,
+            displayName,
+            new Date(checkIn.scheduled_time)
+          )
 
-        // Log missed check-in alert
-        await admin.from('alerts').insert({
-          watch_id: watch.id,
-          check_in_id: checkIn.id,
-          alert_type: 'missed_checkin',
-          recipient_phone: watch.assigned_phone,
-          recipient_name: checkIn.assigned_name,
-          message: `${checkIn.assigned_name} missed check-in scheduled at ${checkIn.scheduled_time}`,
-          delivery_status: alertSid ? 'sent' : 'failed',
-          twilio_sid: alertSid,
-        })
+          // Log escalation alert
+          await admin.from('alerts').insert({
+            watch_id: watch.id,
+            check_in_id: checkIn.id,
+            alert_type: 'missed_checkin',
+            recipient_phone: watch.escalation_phone,
+            recipient_name: 'Supervisor',
+            message: `Immediate escalation: ${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time}`,
+            delivery_status: alertSid ? 'sent' : 'failed',
+            twilio_sid: alertSid,
+          })
+
+          // Mark escalation as sent so the escalation pass doesn't duplicate
+          await admin
+            .from('check_ins')
+            .update({ escalation_sent_at: new Date().toISOString() })
+            .eq('id', checkIn.id)
+        }
 
         // Schedule next check-in
         const nextScheduledTime = addMinutes(
