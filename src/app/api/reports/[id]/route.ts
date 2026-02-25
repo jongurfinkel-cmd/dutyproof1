@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { WatchReport } from '@/lib/pdf'
 import React from 'react'
@@ -12,6 +13,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const limited = rateLimit(req, { limit: 5, windowSec: 60, prefix: 'report' })
+  if (limited) return limited
+
   try {
     const { id: watchId } = await params
 

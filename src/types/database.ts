@@ -22,9 +22,8 @@ export interface Watch {
   created_at: string
   facility_id: string
   status: 'active' | 'completed'
-  check_interval_min: 15 | 30
+  check_interval_min: number
   start_time: string
-  end_time: string | null
   assigned_name: string
   assigned_phone: string
   reason: string | null

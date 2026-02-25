@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -51,6 +51,7 @@ function Logo() {
 export default function CheckInPage() {
   const { token } = useParams<{ token: string }>()
   const [state, setState] = useState<CheckInState>({ phase: 'loading' })
+  const submittingRef = useRef(false)
 
   useEffect(() => {
     async function validate() {
@@ -82,6 +83,8 @@ export default function CheckInPage() {
   }, [token])
 
   async function handleCheckIn() {
+    if (submittingRef.current) return
+    submittingRef.current = true
     setState({ phase: 'submitting' })
     const deviceTime = new Date().toISOString()
     const location = await getLocation()
@@ -211,7 +214,7 @@ export default function CheckInPage() {
           <p className="text-slate-400 text-sm mb-6">{state.message}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-sm transition-all hover:bg-slate-100"
+            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-sm transition-all hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             Try Again
           </button>
@@ -256,10 +259,10 @@ export default function CheckInPage() {
 
   if (state.phase === 'submitting') {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center" role="status" aria-label="Recording check-in">
         <Logo />
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-10 h-10 mx-auto mb-4 border-3 border-slate-700 border-t-green-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 mx-auto mb-4 border-3 border-slate-700 border-t-green-500 rounded-full animate-spin" aria-hidden="true" />
           <h1
             className="text-xl text-white mb-1"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
@@ -342,7 +345,8 @@ function CheckInReady({
           <div className="p-6">
             <button
               onClick={onCheckIn}
-              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97]"
+              aria-label={`Check in now at ${facilityName}`}
+              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
             >
               CHECK IN NOW
             </button>

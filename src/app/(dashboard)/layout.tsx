@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <nav className="flex-1 px-3 py-5 space-y-0.5">
+        <nav className="flex-1 px-3 py-5 space-y-0.5" aria-label="Main navigation">
           <Link
             href="/watches/new"
             className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-bold transition-all mb-3 ${
@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <p className="text-xs text-slate-500 truncate mb-3">{userEmail}</p>
           <button
             onClick={handleLogout}
-            className="w-full px-3 py-2 text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-all"
+            className="w-full px-3 py-2 text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Sign Out
           </button>

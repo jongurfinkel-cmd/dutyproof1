@@ -42,6 +42,12 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null | undefined>(undefined)
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   const loadWatches = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true)
@@ -330,6 +336,7 @@ export default function DashboardPage() {
               pendingTokenExpiresAt={pendingTokenExpiresAt}
               onEnd={handleEndWatch}
               ending={endingId === watch.id}
+              now={now}
             />
           ))}
         </div>

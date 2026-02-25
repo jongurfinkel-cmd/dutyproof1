@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendCheckInSMS } from '@/lib/twilio'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { limit: 3, windowSec: 60, prefix: 'resend-sms' })
+    if (limited) return limited
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -46,7 +49,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No pending check-in to resend' }, { status: 404 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      console.error('Missing NEXT_PUBLIC_APP_URL')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
     const checkInUrl = `${appUrl}/checkin/${checkIn.token}`
 
     const sid = await sendCheckInSMS(
@@ -54,12 +61,11 @@ export async function POST(req: NextRequest) {
       watch.facilities.name,
       watch.assigned_name,
       checkInUrl,
-      new Date(checkIn.scheduled_time),
-      watch.facilities.timezone ?? 'America/New_York'
+      new Date(checkIn.scheduled_time)
     )
 
     // Log the resend in alerts
-    await admin.from('alerts').insert({
+    const { error: alertError } = await admin.from('alerts').insert({
       watch_id: watchId,
       check_in_id: checkIn.id,
       alert_type: 'sms_sent',
@@ -69,6 +75,9 @@ export async function POST(req: NextRequest) {
       delivery_status: sid ? 'sent' : 'failed',
       twilio_sid: sid,
     })
+    if (alertError) {
+      console.error('Failed to log resend alert:', alertError)
+    }
 
     if (!sid) {
       return NextResponse.json({ error: 'SMS delivery failed — check Twilio config' }, { status: 500 })

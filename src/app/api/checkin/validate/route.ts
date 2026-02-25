@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { format, addMinutes } from 'date-fns'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, { limit: 30, windowSec: 60, prefix: 'checkin-validate' })
+  if (limited) return limited
   const token = req.nextUrl.searchParams.get('token')
   if (!token || !/^[0-9a-f]{64}$/.test(token)) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 })

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { limit: 30, windowSec: 60, prefix: 'checklist-validate' })
+    if (limited) return limited
     const { searchParams } = new URL(req.url)
     const token = searchParams.get('token')
 
@@ -42,11 +45,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to load checklist.' }, { status: 500 })
     }
 
-    const facility = watch.facilities as unknown as { name: string }
+    const facility = watch.facilities
+    if (!facility || typeof facility !== 'object' || !('name' in facility)) {
+      return NextResponse.json({ error: 'Facility not found.' }, { status: 500 })
+    }
 
     return NextResponse.json({
       watchId: watch.id,
-      facilityName: facility.name,
+      facilityName: (facility as { name: string }).name,
       assignedName: watch.assigned_name,
       items: items ?? [],
     })

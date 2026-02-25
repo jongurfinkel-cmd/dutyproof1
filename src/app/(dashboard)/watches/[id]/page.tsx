@@ -7,11 +7,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import CheckInTimeline from '@/components/CheckInTimeline'
 import toast from 'react-hot-toast'
-import type { Watch, Facility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
-
-interface WatchWithFacility extends Watch {
-  facilities: Facility
-}
+import type { WatchWithFacility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
 
 export default function WatchDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -129,6 +125,7 @@ export default function WatchDetailPage() {
 
   async function handleDownloadReport() {
     setDownloading(true)
+    const toastId = toast.loading('Generating compliance report…')
     try {
       const res = await fetch(`/api/reports/${id}`)
       if (!res.ok) throw new Error('Failed to generate report')
@@ -141,8 +138,9 @@ export default function WatchDetailPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      toast.success('Report downloaded', { id: toastId })
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to generate report')
+      toast.error(err instanceof Error ? err.message : 'Failed to generate report', { id: toastId })
     } finally {
       setDownloading(false)
     }
@@ -150,7 +148,7 @@ export default function WatchDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-4xl" role="status" aria-label="Loading watch details">
         <div className="animate-pulse space-y-5">
           <div className="h-8 bg-slate-200 rounded-lg w-64" />
           <div className="h-52 bg-white border border-slate-200 rounded-2xl" />
@@ -205,7 +203,7 @@ export default function WatchDetailPage() {
               onClick={handleResendSms}
               disabled={resendingSms}
               title="Resend the current check-in SMS to the worker"
-              className="px-4 py-2.5 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+              className="px-4 py-2.5 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               {resendingSms ? 'Sending…' : 'Resend SMS'}
             </button>
@@ -213,7 +211,7 @@ export default function WatchDetailPage() {
           <button
             onClick={handleDownloadReport}
             disabled={downloading}
-            className="px-4 py-2.5 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+            className="px-4 py-2.5 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {downloading ? 'Generating…' : 'Download Report'}
           </button>
@@ -353,7 +351,7 @@ export default function WatchDetailPage() {
         {/* Arc ring tile */}
         <div className={`rounded-2xl border p-5 text-center shadow-sm flex flex-col items-center justify-center ${pct === 100 ? 'bg-green-50 border-green-100' : pct >= 80 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'}`}>
           <div className="relative w-16 h-16">
-            <svg viewBox="0 0 72 72" width="64" height="64" className="-rotate-90">
+            <svg viewBox="0 0 72 72" width="64" height="64" className="-rotate-90" role="img" aria-label={`${pct}% compliance rate`}>
               <circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" strokeWidth="8" />
               <circle
                 cx="36" cy="36" r="28" fill="none"
@@ -425,7 +423,7 @@ export default function WatchDetailPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={completion.photo_url}
-                          alt="Compliance photo"
+                          alt={`Photo for: ${item.label}`}
                           className="w-24 h-24 object-cover rounded-lg border border-green-200 cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => window.open(completion.photo_url!, '_blank')}
                         />

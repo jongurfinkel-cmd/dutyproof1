@@ -8,7 +8,7 @@ import {
   Font,
 } from '@react-pdf/renderer'
 import { format } from 'date-fns'
-import type { Watch, Facility, CheckIn, Alert } from '@/types/database'
+import type { WatchWithFacility, CheckIn, Alert } from '@/types/database'
 
 const styles = StyleSheet.create({
   page: {
@@ -144,11 +144,7 @@ interface ReportData {
   adminEmail: string
 }
 
-interface WatchWithFacility extends Watch {
-  facilities: Facility
-}
-
-function formatTs(ts: string | null, tz = 'America/New_York'): string {
+function formatTs(ts: string | null): string {
   if (!ts) return '—'
   try {
     return format(new Date(ts), 'MMM d, yyyy h:mm:ss a')

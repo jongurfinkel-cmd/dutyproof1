@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 import { generateToken } from '@/lib/tokens'
 import { sendCheckInSMS, sendChecklistSMS } from '@/lib/twilio'
 import { addMinutes } from 'date-fns'
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'watch-start' })
+  if (limited) return limited
+
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify active subscription before allowing watch creation
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_status')
+      .eq('id', user.id)
+      .single()
+
+    const activeStatuses = ['trialing', 'active']
+    if (!profile || !activeStatuses.includes(profile.subscription_status ?? '')) {
+      return NextResponse.json({ error: 'Active subscription required to start a watch' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -53,6 +69,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'escalation_phone must be E.164 format' }, { status: 400 })
     }
 
+    // Validate location and reason length
+    if (location && (typeof location !== 'string' || location.length > 255)) {
+      return NextResponse.json({ error: 'Location must be 1–255 characters' }, { status: 400 })
+    }
+    if (reason && (typeof reason !== 'string' || reason.length > 1000)) {
+      return NextResponse.json({ error: 'Reason must be 1–1000 characters' }, { status: 400 })
+    }
+
     // Validate assigned_name length
     const trimmedName = assigned_name.trim()
     if (!trimmedName || trimmedName.length > 100) {
@@ -83,6 +107,12 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Checklist item labels must be 1–255 characters' }, { status: 400 })
         }
       }
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      console.error('Missing NEXT_PUBLIC_APP_URL')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
     const admin = createAdminClient()
@@ -149,7 +179,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send immediate checklist SMS
-      const checklistUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checklist/${checklist_token}`
+      const checklistUrl = `${appUrl}/checklist/${checklist_token}`
       const checklistSid = await sendChecklistSMS(
         assigned_phone,
         assigned_name,
@@ -157,7 +187,7 @@ export async function POST(req: NextRequest) {
         checklistUrl
       )
 
-      await admin.from('alerts').insert({
+      const { error: clAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
         alert_type: checklistSid ? 'sms_sent' : 'sms_failed',
         recipient_phone: assigned_phone,
@@ -166,6 +196,7 @@ export async function POST(req: NextRequest) {
         delivery_status: checklistSid ? 'sent' : 'failed',
         twilio_sid: checklistSid,
       })
+      if (clAlertErr) console.error('Failed to log checklist alert:', clAlertErr)
     }
 
     // Create first check-in row
@@ -176,7 +207,7 @@ export async function POST(req: NextRequest) {
       : new Date(start_time)
     const expiresAt = addMinutes(scheduledTime, check_interval_min)
     const token = generateToken()
-    const checkInUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checkin/${token}`
+    const checkInUrl = `${appUrl}/checkin/${token}`
 
     const { data: checkIn, error: checkInError } = await admin
       .from('check_ins')
@@ -202,12 +233,11 @@ export async function POST(req: NextRequest) {
       displayName,
       assigned_name,
       checkInUrl,
-      scheduledTime,
-      facility.timezone
+      scheduledTime
     )
 
     // Log alert
-    await admin.from('alerts').insert({
+    const { error: ciAlertErr } = await admin.from('alerts').insert({
       watch_id: watch.id,
       check_in_id: checkIn.id,
       alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
@@ -217,9 +247,10 @@ export async function POST(req: NextRequest) {
       delivery_status: twilioSid ? 'sent' : 'failed',
       twilio_sid: twilioSid,
     })
+    if (ciAlertErr) console.error('Failed to log check-in alert:', ciAlertErr)
 
     if (!twilioSid) {
-      await admin.from('alerts').insert({
+      const { error: failAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
         alert_type: 'sms_failed',
         recipient_phone: assigned_phone,
@@ -227,14 +258,16 @@ export async function POST(req: NextRequest) {
         message: `FAILED to send first check-in SMS to ${assigned_name}`,
         delivery_status: 'failed',
       })
+      if (failAlertErr) console.error('Failed to log SMS failure alert:', failAlertErr)
     }
 
     // Log watch_started alert
-    await admin.from('alerts').insert({
+    const { error: startAlertErr } = await admin.from('alerts').insert({
       watch_id: watch.id,
       alert_type: 'watch_started',
       message: `Watch started at ${displayName}`,
     })
+    if (startAlertErr) console.error('Failed to log watch_started alert:', startAlertErr)
 
     return NextResponse.json({ watchId: watch.id, smsDelivered: !!twilioSid })
   } catch (err) {

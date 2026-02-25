@@ -144,6 +144,7 @@ export default function FacilitiesPage() {
   }
 
   async function handleDeleteRequest(id: string, name: string) {
+    setConfirmDeleteId(null)
     setDeletingId(id)
     const supabase = createClient()
     const [{ count: activeCount }, { count: historyCount }] = await Promise.all([
@@ -372,13 +373,14 @@ export default function FacilitiesPage() {
                               <button
                                 onClick={() => handleDeleteConfirm(f.id)}
                                 disabled={deletingId === f.id}
-                                className="px-3 py-1.5 text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 font-bold text-sm transition-colors rounded-lg"
+                                aria-label={`Confirm delete ${f.name}`}
+                                className="px-3 py-1.5 text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 font-bold text-sm transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                               >
                                 {deletingId === f.id ? 'Deleting…' : 'Confirm'}
                               </button>
                               <button
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="px-3 py-1.5 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors rounded-lg hover:bg-slate-100"
+                                className="px-3 py-1.5 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors rounded-lg hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
                               >
                                 Cancel
                               </button>

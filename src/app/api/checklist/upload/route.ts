@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { limit: 30, windowSec: 60, prefix: 'checklist-upload' })
+    if (limited) return limited
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     const watchId = formData.get('watch_id') as string | null

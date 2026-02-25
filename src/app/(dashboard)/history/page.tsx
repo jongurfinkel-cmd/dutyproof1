@@ -4,12 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format, differenceInMinutes } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
-import type { Watch, Facility } from '@/types/database'
+import type { WatchWithFacility } from '@/types/database'
 import toast from 'react-hot-toast'
-
-interface WatchWithFacility extends Watch {
-  facilities: Facility
-}
 
 interface WatchWithCompliance extends WatchWithFacility {
   _completed: number
@@ -419,7 +415,7 @@ export default function HistoryPage() {
             </table>
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
+            <nav className="flex items-center justify-between px-5 py-3 border-t border-slate-100" aria-label="Pagination">
               <span className="text-xs text-slate-400">
                 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, sorted.length)} of {sorted.length}
               </span>
@@ -427,7 +423,7 @@ export default function HistoryPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   ← Prev
                 </button>
@@ -445,7 +441,7 @@ export default function HistoryPage() {
                       <button
                         key={p}
                         onClick={() => setPage(p as number)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           page === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'
                         }`}
                       >
@@ -456,12 +452,12 @@ export default function HistoryPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Next →
                 </button>
               </div>
-            </div>
+            </nav>
           )}
         </div>
       )}

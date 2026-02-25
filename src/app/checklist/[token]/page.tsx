@@ -49,6 +49,7 @@ export default function ChecklistPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const submittingRef = useRef(false)
 
   useEffect(() => {
     async function validate() {
@@ -113,7 +114,7 @@ export default function ChecklistPage() {
   }
 
   async function handleSubmit() {
-    if (state.phase !== 'ready') return
+    if (state.phase !== 'ready' || submittingRef.current) return
 
     const allChecked = state.items.every((item) => completions[item.id]?.checked)
     if (!allChecked) {
@@ -121,6 +122,7 @@ export default function ChecklistPage() {
       return
     }
     setSubmitAttempted(false)
+    submittingRef.current = true
 
     setState({ phase: 'submitting' })
     try {
@@ -200,7 +202,7 @@ export default function ChecklistPage() {
           <p className="text-slate-400 text-sm mb-6">{state.message}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-sm"
+            className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-sm transition-all hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             Try Again
           </button>
@@ -211,10 +213,10 @@ export default function ChecklistPage() {
 
   if (state.phase === 'submitting') {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center" role="status" aria-label="Submitting checklist">
         <Logo />
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-10 h-10 mx-auto mb-4 border-2 border-slate-700 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 mx-auto mb-4 border-2 border-slate-700 border-t-blue-500 rounded-full animate-spin" aria-hidden="true" />
           <h1 className="text-xl text-white mb-1" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
             Submitting checklist…
           </h1>
@@ -271,7 +273,14 @@ export default function ChecklistPage() {
               <span>{completedCount} of {items.length} complete</span>
               <span>{Math.round((completedCount / items.length) * 100)}%</span>
             </div>
-            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-1.5 bg-slate-800 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={completedCount}
+              aria-valuemin={0}
+              aria-valuemax={items.length}
+              aria-label={`${completedCount} of ${items.length} items complete`}
+            >
               <div
                 className="h-full bg-green-500 rounded-full transition-all duration-300"
                 style={{ width: `${(completedCount / items.length) * 100}%` }}
@@ -302,7 +311,10 @@ export default function ChecklistPage() {
                   {!item.requires_photo ? (
                     <button
                       onClick={() => toggleItem(item.id)}
-                      className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      role="checkbox"
+                      aria-checked={isChecked}
+                      aria-label={item.label}
+                      className={`mt-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                         isChecked
                           ? 'border-green-500 bg-green-500 text-white'
                           : 'border-slate-600 text-transparent'
@@ -312,7 +324,10 @@ export default function ChecklistPage() {
                     </button>
                   ) : (
                     <div
-                      className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      role="checkbox"
+                      aria-checked={hasPhoto}
+                      aria-label={`${item.label} (photo required)`}
+                      className={`mt-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         hasPhoto ? 'border-green-500 bg-green-500 text-white' : 'border-slate-600 text-slate-500'
                       }`}
                     >
@@ -331,7 +346,7 @@ export default function ChecklistPage() {
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={comp.photo_url!}
-                              alt="Captured"
+                              alt={`Photo for: ${item.label}`}
                               className="w-16 h-16 object-cover rounded-lg border border-green-800/40"
                             />
                             <button
@@ -341,7 +356,7 @@ export default function ChecklistPage() {
                                   [item.id]: { ...prev[item.id], photo_url: null, checked: false },
                                 }))
                               }}
-                              className="text-xs text-slate-500 hover:text-red-400"
+                              className="text-xs text-slate-500 hover:text-red-400 px-2 py-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                             >
                               Retake
                             </button>
@@ -350,7 +365,7 @@ export default function ChecklistPage() {
                           <button
                             onClick={() => fileInputRefs.current[item.id]?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 font-medium transition-all disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 font-medium transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                           >
                             {isUploading ? (
                               <>
@@ -407,7 +422,7 @@ export default function ChecklistPage() {
         <button
           onClick={handleSubmit}
           disabled={!allChecked}
-          className={`w-full py-5 text-white text-lg font-black rounded-2xl shadow-xl transition-all select-none touch-manipulation active:scale-[0.97] ${
+          className={`w-full py-5 text-white text-lg font-black rounded-2xl shadow-xl transition-all select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
             allChecked
               ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 shadow-blue-900/40'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'

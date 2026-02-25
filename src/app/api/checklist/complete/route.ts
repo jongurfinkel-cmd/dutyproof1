@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'checklist-complete' })
+    if (limited) return limited
     const body = await req.json()
     const { token, completions } = body
 
@@ -12,6 +15,18 @@ export async function POST(req: NextRequest) {
 
     if (!Array.isArray(completions) || completions.length === 0 || completions.length > 50) {
       return NextResponse.json({ error: 'Completions required (max 50)' }, { status: 400 })
+    }
+
+    // Reject duplicate item_ids
+    const seenIds = new Set<string>()
+    for (const c of completions) {
+      if (!c.item_id || typeof c.item_id !== 'string') {
+        return NextResponse.json({ error: 'Each completion must have an item_id' }, { status: 400 })
+      }
+      if (seenIds.has(c.item_id)) {
+        return NextResponse.json({ error: 'Duplicate item submission detected' }, { status: 400 })
+      }
+      seenIds.add(c.item_id)
     }
 
     const admin = createAdminClient()
@@ -70,12 +85,12 @@ export async function POST(req: NextRequest) {
     // Insert completions (only for items that belong to this watch)
     const now = new Date().toISOString()
     const rows = items.map((item) => {
-      const submitted = submittedMap.get(item.id)!
+      const submitted = submittedMap.get(item.id)
       return {
         watch_id: watch.id,
         item_id: item.id,
         completed_at: now,
-        photo_url: (submitted as { item_id: string; photo_url?: string | null }).photo_url ?? null,
+        photo_url: submitted?.photo_url ?? null,
         checklist_token: token,
       }
     })

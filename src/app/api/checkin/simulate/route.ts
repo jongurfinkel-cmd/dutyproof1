@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (!nextError && nextCheckIn) {
-      await admin.from('alerts').insert({
+      const { error: alertError } = await admin.from('alerts').insert({
         watch_id: watchId,
         check_in_id: nextCheckIn.id,
         alert_type: 'sms_sent',
@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
         delivery_status: 'simulated',
         twilio_sid: null,
       })
+      if (alertError) console.error('Failed to log simulated alert:', alertError)
     }
 
     return NextResponse.json({ success: true, nextCheckIn: nextScheduledTime.toISOString() })

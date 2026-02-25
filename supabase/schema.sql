@@ -3,6 +3,18 @@
 -- Run this entire file in Supabase SQL Editor (one paste).
 -- ============================================================
 
+-- PROFILES TABLE
+-- One row per authenticated user. Managed via Stripe webhooks.
+create table if not exists public.profiles (
+  id uuid references auth.users(id) on delete cascade primary key,
+  created_at timestamptz default now() not null,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  subscription_status text default null, -- 'incomplete', 'trialing', 'active', 'past_due', 'canceled', 'unpaid'
+  trial_ends_at timestamptz,
+  current_period_end timestamptz
+);
+
 -- FACILITIES TABLE
 -- One row per building/facility the admin manages
 create table if not exists public.facilities (
@@ -19,17 +31,23 @@ create table if not exists public.facilities (
 create table if not exists public.watches (
   id uuid default gen_random_uuid() primary key,
   created_at timestamptz default now() not null,
-  facility_id uuid references public.facilities(id) not null,
+  facility_id uuid references public.facilities(id) on delete cascade not null,
   status text default 'active' not null, -- 'active' or 'completed'
-  check_interval_min int not null,        -- 15 or 30
+  check_interval_min int not null,        -- 1-1440 minutes
   start_time timestamptz not null,
-  end_time timestamptz,                   -- null while active
   assigned_name text not null,
   assigned_phone text not null,
   reason text,
-  ended_by uuid references auth.users(id),
+  location text,
+  escalation_phone text,
+  escalation_delay_min int default 0,
+  planned_end_time timestamptz,
+  ended_by uuid references auth.users(id) on delete set null,
   ended_at timestamptz,
-  owner_id uuid references auth.users(id) not null
+  owner_id uuid references auth.users(id) on delete cascade not null,
+  constraint check_interval_range check (check_interval_min >= 1 and check_interval_min <= 1440),
+  constraint escalation_delay_range check (escalation_delay_min >= 0 and escalation_delay_min <= 60),
+  constraint watch_status_enum check (status in ('active', 'completed'))
 );
 
 -- CHECK-INS TABLE
@@ -47,7 +65,9 @@ create table if not exists public.check_ins (
   gps_accuracy double precision,         -- meters
   token text not null unique,            -- unique check-in token
   token_expires_at timestamptz not null, -- window expiration
-  assigned_name text not null
+  assigned_name text not null,
+  escalation_sent_at timestamptz,        -- when escalation SMS was sent (null if not yet)
+  constraint checkin_status_enum check (status in ('pending', 'completed', 'missed', 'cancelled'))
 );
 
 -- ALERTS TABLE
@@ -62,17 +82,32 @@ create table if not exists public.alerts (
   recipient_name text,
   message text,
   delivery_status text,  -- 'sent', 'delivered', 'failed'
-  twilio_sid text
+  twilio_sid text,
+  constraint alert_type_enum check (alert_type in ('missed_checkin', 'sms_sent', 'sms_delivered', 'sms_failed', 'watch_started', 'watch_ended'))
 );
 
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 
+alter table public.profiles enable row level security;
 alter table public.facilities enable row level security;
 alter table public.watches enable row level security;
 alter table public.check_ins enable row level security;
 alter table public.alerts enable row level security;
+
+-- Profiles
+create policy "Users see own profile"
+  on public.profiles for select using (auth.uid() = id);
+
+create policy "Users update own profile"
+  on public.profiles for update using (auth.uid() = id);
+
+create policy "Service role can upsert profiles"
+  on public.profiles for insert with check (true);
+
+create policy "Service role can update any profile"
+  on public.profiles for update using (true) with check (true);
 
 -- Facilities
 create policy "Users see own facilities"
@@ -211,3 +246,6 @@ create index if not exists idx_check_ins_token_expires_at on public.check_ins(to
 create index if not exists idx_watches_owner_status on public.watches(owner_id, status);
 create index if not exists idx_alerts_watch_id on public.alerts(watch_id);
 create index if not exists idx_alerts_twilio_sid on public.alerts(twilio_sid);
+create index if not exists idx_facilities_owner_id on public.facilities(owner_id);
+create index if not exists idx_check_ins_status_escalation on public.check_ins(status, escalation_sent_at);
+create index if not exists idx_check_ins_watch_id_status on public.check_ins(watch_id, status);

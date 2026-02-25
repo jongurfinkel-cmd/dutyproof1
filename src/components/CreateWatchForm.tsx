@@ -280,6 +280,7 @@ export default function CreateWatchForm() {
           onChange={(e) => set('assigned_phone', e.target.value)}
           onBlur={() => handlePhoneBlur('assigned_phone')}
           required
+          autoComplete="tel"
           placeholder="+1 (212) 000-0000"
           className={inputClass}
         />
@@ -302,7 +303,7 @@ export default function CreateWatchForm() {
           ].map((opt) => (
             <label
               key={opt.value}
-              className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 border-2 rounded-xl cursor-pointer transition-all ${
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 border-2 rounded-xl cursor-pointer transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
                 form.check_interval_min === opt.value
                   ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
                   : 'border-slate-200 text-slate-500 hover:border-slate-300'
@@ -379,7 +380,9 @@ export default function CreateWatchForm() {
         <button
           type="button"
           onClick={toggleEscalation}
-          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left"
+          role="switch"
+          aria-checked={escalationEnabled}
+          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         >
           <div>
             <p className="text-sm font-bold text-slate-800">Supervisor Escalation</p>
@@ -387,7 +390,7 @@ export default function CreateWatchForm() {
               Alert a supervisor by SMS when a check-in is missed
             </p>
           </div>
-          <div className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${escalationEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
+          <div aria-hidden="true" className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${escalationEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${escalationEnabled ? 'left-5' : 'left-0.5'}`} />
           </div>
         </button>
@@ -403,6 +406,7 @@ export default function CreateWatchForm() {
                 value={form.escalation_phone}
                 onChange={(e) => set('escalation_phone', e.target.value)}
                 onBlur={() => handlePhoneBlur('escalation_phone')}
+                autoComplete="tel"
                 placeholder="+1 (212) 000-0000"
                 className={inputClass}
               />
@@ -452,7 +456,9 @@ export default function CreateWatchForm() {
         <button
           type="button"
           onClick={() => setChecklistEnabled((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left"
+          role="switch"
+          aria-checked={checklistEnabled}
+          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         >
           <div>
             <p className="text-sm font-bold text-slate-800">Pre-Watch Safety Checklist</p>
@@ -460,7 +466,7 @@ export default function CreateWatchForm() {
               Worker completes safety items via SMS link before rounds begin
             </p>
           </div>
-          <div className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${checklistEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
+          <div aria-hidden="true" className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${checklistEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${checklistEnabled ? 'left-5' : 'left-0.5'}`} />
           </div>
         </button>
@@ -581,14 +587,14 @@ export default function CreateWatchForm() {
         <button
           type="button"
           onClick={() => router.push('/dashboard')}
-          className="px-5 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl text-sm transition-all"
+          className="px-5 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl text-sm transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={loading || facilities.length === 0 || checklistBlocking}
-          className="flex-1 py-3 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200"
+          className="flex-1 py-3 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           {loading ? 'Starting Watch…' : 'Start Watch & Send SMS'}
         </button>

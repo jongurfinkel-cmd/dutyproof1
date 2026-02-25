@@ -18,10 +18,11 @@ create table if not exists checklist_completions (
   id               uuid        default gen_random_uuid() primary key,
   created_at       timestamptz default now(),
   watch_id         uuid        references watches(id) on delete cascade not null,
-  item_id          uuid        references watch_checklist_items(id) not null,
-  completed_at     timestamptz default now(),
+  item_id          uuid        references watch_checklist_items(id) on delete cascade not null,
+  completed_at     timestamptz default now() not null,
   photo_url        text,
-  checklist_token  text        not null
+  checklist_token  text        not null,
+  constraint unique_completion_per_item unique(watch_id, item_id)
 );
 
 -- 3. Add checklist columns to watches
@@ -61,7 +62,8 @@ create policy "Service role full access to completions"
 -- 6. Storage bucket — created directly in SQL
 -- ============================================================
 -- Creates the bucket with:
---   • Private (not public) — files are never directly accessible via URL
+--   • Public — files are accessible via stable public URL
+--     (paths are UUID-based so effectively unguessable)
 --   • 10 MB file size limit (10,485,760 bytes)
 --   • Allowed MIME types: JPEG, PNG, WebP, HEIC/HEIF only
 --
@@ -74,7 +76,7 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'checklist-photos',
   'checklist-photos',
-  false,
+  true,
   10485760,  -- 10 MB
   array['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 )

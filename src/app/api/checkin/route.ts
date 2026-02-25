@@ -3,14 +3,28 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
 import { sendCheckInSMS } from '@/lib/twilio'
 import { addMinutes } from 'date-fns'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { limit: 20, windowSec: 60, prefix: 'checkin' })
+    if (limited) return limited
     const body = await req.json()
-    const { token, latitude, longitude, gps_accuracy, device_time } = body
+    const { token, latitude, longitude, gps_accuracy } = body
 
     if (!token || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
+    }
+
+    // Validate GPS coordinates if provided
+    if (latitude != null && (typeof latitude !== 'number' || latitude < -90 || latitude > 90)) {
+      return NextResponse.json({ error: 'Invalid latitude' }, { status: 400 })
+    }
+    if (longitude != null && (typeof longitude !== 'number' || longitude < -180 || longitude > 180)) {
+      return NextResponse.json({ error: 'Invalid longitude' }, { status: 400 })
+    }
+    if (gps_accuracy != null && (typeof gps_accuracy !== 'number' || gps_accuracy < 0)) {
+      return NextResponse.json({ error: 'Invalid GPS accuracy' }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -49,18 +63,32 @@ export async function POST(req: NextRequest) {
     })
 
     if (completeError) {
+      // Race condition: two requests for the same token — RPC rejects the second
+      if (completeError.message?.includes('not pending')) {
+        return NextResponse.json({ error: 'This check-in has already been recorded.' }, { status: 409 })
+      }
       console.error('complete_checkin RPC error:', completeError)
       return NextResponse.json({ error: 'Failed to record check-in' }, { status: 500 })
     }
 
     const watch = checkIn.watches
+    if (!watch || !watch.facilities) {
+      console.error('Check-in missing watch/facility join data:', checkIn.id)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
     const facility = watch.facilities
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      console.error('Missing NEXT_PUBLIC_APP_URL')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
 
     // Schedule next check-in
     const nextScheduledTime = addMinutes(new Date(checkIn.scheduled_time), watch.check_interval_min)
     const nextExpiresAt = addMinutes(nextScheduledTime, watch.check_interval_min)
     const nextToken = generateToken()
-    const nextCheckInUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checkin/${nextToken}`
+    const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
 
     const { data: nextCheckIn, error: nextCheckInError } = await admin
       .from('check_ins')
@@ -82,11 +110,10 @@ export async function POST(req: NextRequest) {
         facility.name,
         checkIn.assigned_name,
         nextCheckInUrl,
-        nextScheduledTime,
-        facility.timezone
+        nextScheduledTime
       )
 
-      await admin.from('alerts').insert({
+      const { error: alertError } = await admin.from('alerts').insert({
         watch_id: watch.id,
         check_in_id: nextCheckIn.id,
         alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
@@ -96,6 +123,9 @@ export async function POST(req: NextRequest) {
         delivery_status: twilioSid ? 'sent' : 'failed',
         twilio_sid: twilioSid,
       })
+      if (alertError) {
+        console.error('Failed to log check-in alert:', alertError)
+      }
     }
 
     return NextResponse.json({

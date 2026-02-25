@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns'
 import type { WatchWithFacility } from '@/types/database'
@@ -11,16 +11,11 @@ interface WatchCardProps {
   pendingTokenExpiresAt: string | null
   onEnd: (id: string) => void
   ending: boolean
+  now: Date
 }
 
-export default function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, onEnd, ending }: WatchCardProps) {
-  const [now, setNow] = useState(() => new Date())
+export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, onEnd, ending, now }: WatchCardProps) {
   const [confirmingEnd, setConfirmingEnd] = useState(false)
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000)
-    return () => clearInterval(id)
-  }, [])
 
   const pendingExpired = !!pendingTokenExpiresAt && new Date(pendingTokenExpiresAt) < now
 
@@ -151,7 +146,7 @@ export default function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, o
       <div className="border-t border-slate-100 px-5 py-3 flex gap-2">
         <Link
           href={`/watches/${watch.id}`}
-          className="flex-1 text-center py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+          className="flex-1 text-center py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           View Details
         </Link>
@@ -161,14 +156,14 @@ export default function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, o
             <button
               onClick={() => { onEnd(watch.id); setConfirmingEnd(false) }}
               disabled={ending}
-              className="flex-1 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg transition-colors"
+              className="flex-1 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
             >
               {ending ? 'Ending…' : 'Confirm End'}
             </button>
             <button
               onClick={() => setConfirmingEnd(false)}
               disabled={ending}
-              className="px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
             >
               Cancel
             </button>
@@ -177,7 +172,7 @@ export default function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, o
           <button
             onClick={() => setConfirmingEnd(true)}
             disabled={ending}
-            className="flex-1 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 disabled:text-slate-300 rounded-lg transition-colors"
+            className="flex-1 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 disabled:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
           >
             End Watch
           </button>
@@ -185,4 +180,4 @@ export default function WatchCard({ watch, lastCheckIn, pendingTokenExpiresAt, o
       </div>
     </div>
   )
-}
+})

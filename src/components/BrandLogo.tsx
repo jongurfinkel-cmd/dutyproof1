@@ -60,7 +60,7 @@ export default function BrandLogo({
         />
       </g>
       <text
-        fontFamily="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        style={{ fontFamily: "var(--font-brand), 'Outfit', 'Helvetica Neue', Arial, sans-serif" }}
         fontWeight="700"
         fontSize="36"
         letterSpacing="0.3"

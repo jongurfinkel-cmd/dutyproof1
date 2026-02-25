@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Syne } from "next/font/google";
+import { Geist, Outfit, Syne } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -12,6 +12,12 @@ const syne = Syne({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["700", "800"],
+});
+
+const outfit = Outfit({
+  variable: "--font-brand",
+  subsets: ["latin"],
+  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -40,14 +46,14 @@ export const metadata: Metadata = {
     title: 'DutyProof — Fire Watch Verification Software',
     description:
       'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'DutyProof — Fire Watch Verification Software' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'DutyProof — Fire Watch Verification Software' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'DutyProof — Fire Watch Verification Software',
     description:
       'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   robots: { index: true, follow: true },
 };
@@ -59,7 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${syne.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${syne.variable} ${outfit.variable} antialiased`}>
         {children}
         <Toaster
           position="top-right"

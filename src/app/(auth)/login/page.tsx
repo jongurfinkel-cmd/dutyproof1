@@ -26,7 +26,9 @@ function LoginForm() {
       setError(error.message)
     } else {
       const next = searchParams.get('next')
-      router.push(next && next.startsWith('/') ? next : '/dashboard')
+      // Only allow relative paths that don't escape to a different origin
+      const isSafeRedirect = next && next.startsWith('/') && !next.startsWith('//') && !next.includes(':')
+      router.push(isSafeRedirect ? next : '/dashboard')
       router.refresh()
     }
   }
@@ -127,11 +129,11 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3.5 px-6 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold rounded-xl shadow-lg shadow-blue-900/30 transition-all hover:-translate-y-px disabled:translate-y-0 text-sm"
+                className="w-full mt-2 py-3.5 px-6 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold rounded-xl shadow-lg shadow-blue-900/30 transition-all hover:-translate-y-px disabled:translate-y-0 text-sm active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                     Signing in…
                   </span>
                 ) : (

@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 // ─────────────────────────────────────────────────────────────
 // Dashboard inner content
 // ─────────────────────────────────────────────────────────────
@@ -148,11 +150,11 @@ function PhoneInner() {
         </div>
         {/* Camera viewfinder with real job site photo */}
         <div className="relative flex-1 rounded-2xl overflow-hidden border border-slate-700/60" style={{ minHeight: 200 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/hero-extinguisher.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+          <Image
+            src="/hero-extinguisher.jpg"
+            alt="Fire extinguisher at job site for safety verification"
+            fill
+            className="object-cover"
             draggable={false}
           />
           {/* Camera UI overlay */}

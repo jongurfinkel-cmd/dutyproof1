@@ -1,16 +1,24 @@
 import twilio from 'twilio'
 import { format } from 'date-fns'
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID ?? ''
-const authToken  = process.env.TWILIO_AUTH_TOKEN ?? ''
-const fromNumber = process.env.TWILIO_PHONE_NUMBER ?? ''
+function getCredentials() {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER
+  if (!accountSid || !authToken || !fromNumber) {
+    throw new Error('Missing Twilio credentials: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER must be set')
+  }
+  return { accountSid, authToken, fromNumber }
+}
 
 function getClient() {
+  const { accountSid, authToken } = getCredentials()
   return twilio(accountSid, authToken)
 }
 
 async function sendSMS(to: string, body: string): Promise<string | null> {
   try {
+    const { fromNumber } = getCredentials()
     const message = await getClient().messages.create({
       from: fromNumber,
       to,
@@ -28,8 +36,7 @@ export async function sendCheckInSMS(
   facilityName: string,
   assignedName: string,
   checkInUrl: string,
-  scheduledTime: Date,
-  _timezone: string
+  scheduledTime: Date
 ): Promise<string | null> {
   const timeStr = format(scheduledTime, 'h:mm a')
   return sendSMS(
@@ -96,6 +103,7 @@ export function validateTwilioSignature(
   url: string,
   params: Record<string, string>
 ): boolean {
-  if (!authToken) return false
-  return twilio.validateRequest(authToken, signature, url, params)
+  const token = process.env.TWILIO_AUTH_TOKEN
+  if (!token) return false
+  return twilio.validateRequest(token, signature, url, params)
 }

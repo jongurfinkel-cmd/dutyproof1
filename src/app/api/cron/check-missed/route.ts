@@ -18,6 +18,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) {
+    console.error('Missing NEXT_PUBLIC_APP_URL')
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+
   const admin = createAdminClient()
   const now = new Date().toISOString()
   let missedCount = 0
@@ -66,7 +72,7 @@ export async function GET(req: NextRequest) {
           )
 
           // Log escalation alert
-          await admin.from('alerts').insert({
+          const { error: escAlertErr } = await admin.from('alerts').insert({
             watch_id: watch.id,
             check_in_id: checkIn.id,
             alert_type: 'missed_checkin',
@@ -76,12 +82,14 @@ export async function GET(req: NextRequest) {
             delivery_status: alertSid ? 'sent' : 'failed',
             twilio_sid: alertSid,
           })
+          if (escAlertErr) errors.push(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
           // Mark escalation as sent so the escalation pass doesn't duplicate
-          await admin
+          const { error: escUpdateErr } = await admin
             .from('check_ins')
             .update({ escalation_sent_at: new Date().toISOString() })
             .eq('id', checkIn.id)
+          if (escUpdateErr) errors.push(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
         }
 
         // Schedule next check-in
@@ -91,7 +99,7 @@ export async function GET(req: NextRequest) {
         )
         const nextExpiresAt = addMinutes(nextScheduledTime, watch.check_interval_min)
         const nextToken = generateToken()
-        const nextCheckInUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checkin/${nextToken}`
+        const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
 
         const { data: nextCheckIn, error: nextError } = await admin
           .from('check_ins')
@@ -112,11 +120,10 @@ export async function GET(req: NextRequest) {
             displayName,
             checkIn.assigned_name,
             nextCheckInUrl,
-            nextScheduledTime,
-            facility.timezone
+            nextScheduledTime
           )
 
-          await admin.from('alerts').insert({
+          const { error: nextAlertErr } = await admin.from('alerts').insert({
             watch_id: watch.id,
             check_in_id: nextCheckIn.id,
             alert_type: nextSid ? 'sms_sent' : 'sms_failed',
@@ -126,6 +133,7 @@ export async function GET(req: NextRequest) {
             delivery_status: nextSid ? 'sent' : 'failed',
             twilio_sid: nextSid,
           })
+          if (nextAlertErr) errors.push(`Failed to log next SMS alert for ${nextCheckIn.id}: ${nextAlertErr.message}`)
         }
       } catch (innerErr) {
         errors.push(`Error processing check-in ${checkIn.id}: ${String(innerErr)}`)
@@ -159,12 +167,13 @@ export async function GET(req: NextRequest) {
           new Date(ci.scheduled_time)
         )
 
-        await admin
+        const { error: escPassUpdateErr } = await admin
           .from('check_ins')
           .update({ escalation_sent_at: new Date().toISOString() })
           .eq('id', ci.id)
+        if (escPassUpdateErr) errors.push(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
 
-        await admin.from('alerts').insert({
+        const { error: escPassAlertErr } = await admin.from('alerts').insert({
           watch_id: watch.id,
           check_in_id: ci.id,
           alert_type: 'missed_checkin',
@@ -174,6 +183,7 @@ export async function GET(req: NextRequest) {
           delivery_status: escalationSid ? 'sent' : 'failed',
           twilio_sid: escalationSid,
         })
+        if (escPassAlertErr) errors.push(`Failed to log escalation pass alert for ${ci.id}: ${escPassAlertErr.message}`)
       } catch (innerErr) {
         errors.push(`Escalation error for check-in ${ci.id}: ${String(innerErr)}`)
       }

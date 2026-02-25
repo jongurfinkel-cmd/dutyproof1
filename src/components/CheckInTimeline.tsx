@@ -33,11 +33,11 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
       {/* Vertical line */}
       <div className="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200" />
 
-      <div className="space-y-1">
+      <ol className="space-y-1">
         {sorted.map((ci) => {
           const alert = ci.status === 'missed' ? getAlertForCheckIn(ci.id) : undefined
           return (
-            <div key={ci.id} className="relative flex gap-4 py-2">
+            <li key={ci.id} className="relative flex gap-4 py-2">
               {/* Timeline dot */}
               <div className={`relative z-10 mt-0.5 w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
                 ci.status === 'completed'
@@ -96,10 +96,10 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                   </div>
                 )}
               </div>
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ol>
     </div>
   )
 }

@@ -5,7 +5,13 @@ import { validateTwilioSignature } from '@/lib/twilio'
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('x-twilio-signature') ?? ''
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio`
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) {
+    console.error('Missing NEXT_PUBLIC_APP_URL for Twilio webhook validation')
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+  const url = `${appUrl}/api/webhooks/twilio`
 
   // Parse form-encoded body
   const params: Record<string, string> = {}
@@ -35,21 +41,27 @@ export async function POST(req: NextRequest) {
     messageStatus === 'failed' || messageStatus === 'undelivered' ? 'failed'    :
                                                                     'sent'
 
-  await admin
+  const { error: updateError } = await admin
     .from('alerts')
     .update({ delivery_status: deliveryStatus })
     .eq('twilio_sid', messageSid)
 
+  if (updateError) {
+    console.error('Failed to update alert delivery status:', updateError)
+  }
+
   // If delivery failed, log a visible alert
   if (deliveryStatus === 'failed') {
-    const { data: alert } = await admin
+    const { data: alert, error: fetchError } = await admin
       .from('alerts')
       .select('watch_id, recipient_name, recipient_phone')
       .eq('twilio_sid', messageSid)
       .single()
 
-    if (alert) {
-      await admin.from('alerts').insert({
+    if (fetchError) {
+      console.error('Failed to fetch alert by twilio_sid:', fetchError)
+    } else if (alert) {
+      const { error: insertError } = await admin.from('alerts').insert({
         watch_id:       alert.watch_id,
         alert_type:     'sms_failed',
         recipient_phone: alert.recipient_phone,
@@ -58,6 +70,9 @@ export async function POST(req: NextRequest) {
         delivery_status: 'failed',
         twilio_sid:      messageSid,
       })
+      if (insertError) {
+        console.error('Failed to insert SMS failure alert:', insertError)
+      }
     }
   }
 

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit } from '@/lib/rate-limit'
 import { sendWatchSummarySMS } from '@/lib/twilio'
 import { formatDuration, intervalToDuration } from 'date-fns'
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'watch-end' })
+  if (limited) return limited
+
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -39,18 +43,25 @@ export async function POST(req: NextRequest) {
     const endedAt = new Date().toISOString()
 
     // Close the watch
-    await admin
+    const { error: updateError } = await admin
       .from('watches')
       .update({
         status: 'completed',
         ended_at: endedAt,
         ended_by: user.id,
-        end_time: endedAt,
       })
       .eq('id', watchId)
 
+    if (updateError) {
+      console.error('Watch update error:', updateError)
+      return NextResponse.json({ error: 'Failed to end watch' }, { status: 500 })
+    }
+
     // Cancel pending check-ins using the DB function
-    await admin.rpc('cancel_watch_checkins', { p_watch_id: watchId })
+    const { error: cancelError } = await admin.rpc('cancel_watch_checkins', { p_watch_id: watchId })
+    if (cancelError) {
+      console.error('Cancel check-ins RPC error:', cancelError)
+    }
 
     // Get check-in stats
     const { data: checkIns } = await admin
@@ -68,7 +79,13 @@ export async function POST(req: NextRequest) {
     const duration = intervalToDuration({ start: startDate, end: endDate })
     const durationStr = formatDuration(duration, { format: ['hours', 'minutes'] }) || 'Less than a minute'
 
-    const reportUrl = `${process.env.NEXT_PUBLIC_APP_URL}/watches/${watchId}`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      console.error('Missing NEXT_PUBLIC_APP_URL')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
+    const reportUrl = `${appUrl}/watches/${watchId}`
 
     // Always notify the assigned worker
     await sendWatchSummarySMS(
@@ -95,11 +112,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Log watch ended
-    await admin.from('alerts').insert({
+    const { error: endAlertErr } = await admin.from('alerts').insert({
       watch_id: watchId,
       alert_type: 'watch_ended',
       message: `Watch ended. ${completed}/${total} check-ins completed.`,
     })
+    if (endAlertErr) console.error('Failed to log watch_ended alert:', endAlertErr)
 
     return NextResponse.json({ success: true })
   } catch (err) {

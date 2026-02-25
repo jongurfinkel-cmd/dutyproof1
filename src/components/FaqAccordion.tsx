@@ -45,9 +45,11 @@ export default function FaqAccordion() {
       {FAQS.map((faq, i) => (
         <div key={i}>
           <button
+            id={`faq-trigger-${i}`}
             className="w-full flex items-center justify-between gap-4 py-5 text-left group"
             onClick={() => setOpen(open === i ? null : i)}
             aria-expanded={open === i}
+            aria-controls={`faq-content-${i}`}
           >
             <span
               className="text-slate-800 font-semibold text-base group-hover:text-blue-700 transition-colors"
@@ -64,7 +66,7 @@ export default function FaqAccordion() {
             </span>
           </button>
           {/* CSS grid trick for smooth height animation */}
-          <div className={`grid transition-all duration-300 ease-in-out ${open === i ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+          <div id={`faq-content-${i}`} role="region" aria-labelledby={`faq-trigger-${i}`} className={`grid transition-all duration-300 ease-in-out ${open === i ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
             <div className="overflow-hidden">
               <p className="text-slate-500 text-sm leading-relaxed pb-5 pr-10">{faq.a}</p>
             </div>
