@@ -20,12 +20,13 @@ export async function POST(req: NextRequest) {
     // Verify active subscription before allowing watch creation
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_status')
+      .select('subscription_status, is_admin')
       .eq('id', user.id)
       .single()
 
     const activeStatuses = ['trialing', 'active']
-    if (!profile || !activeStatuses.includes(profile.subscription_status ?? '')) {
+    const hasAccess = profile?.is_admin || activeStatuses.includes(profile?.subscription_status ?? '')
+    if (!profile || !hasAccess) {
       return NextResponse.json({ error: 'Active subscription required to start a watch' }, { status: 403 })
     }
 

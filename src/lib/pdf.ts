@@ -8,7 +8,7 @@ import {
   Font,
 } from '@react-pdf/renderer'
 import { format } from 'date-fns'
-import type { WatchWithFacility, CheckIn, Alert } from '@/types/database'
+import type { WatchWithFacility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
 
 const styles = StyleSheet.create({
   page: {
@@ -141,6 +141,8 @@ interface ReportData {
   watch: WatchWithFacility
   checkIns: CheckIn[]
   alerts: Alert[]
+  checklistItems: WatchChecklistItem[]
+  checklistCompletions: ChecklistCompletion[]
   adminEmail: string
 }
 
@@ -161,7 +163,7 @@ function calcDuration(start: string, end: string | null): string {
   return `${h}h ${m}m`
 }
 
-export function WatchReport({ watch, checkIns, alerts, adminEmail }: ReportData) {
+export function WatchReport({ watch, checkIns, alerts, checklistItems, checklistCompletions, adminEmail }: ReportData) {
   const completed = checkIns.filter((c) => c.status === 'completed')
   const missed = checkIns.filter((c) => c.status === 'missed')
   const total = completed.length + missed.length
@@ -344,6 +346,41 @@ export function WatchReport({ watch, checkIns, alerts, adminEmail }: ReportData)
             )
           )
       ),
+      // Pre-Watch Safety Checklist (only if items exist)
+      ...(checklistItems.length > 0 ? [
+        React.createElement(
+          View,
+          { style: styles.section },
+          React.createElement(Text, { style: styles.sectionTitle }, 'PRE-WATCH SAFETY CHECKLIST'),
+          React.createElement(
+            View,
+            { style: styles.row },
+            React.createElement(Text, { style: styles.label }, 'Status:'),
+            React.createElement(Text, { style: styles.value }, watch.checklist_completed_at ? `Completed ${formatTs(watch.checklist_completed_at)}` : 'Not completed')
+          ),
+          ...checklistItems.map((item) => {
+            const completion = checklistCompletions.find((c) => c.item_id === item.id)
+            return React.createElement(
+              View,
+              { key: item.id, style: styles.timelineRow },
+              React.createElement(View, {
+                style: [styles.statusDot, { backgroundColor: completion ? '#16a34a' : '#dc2626' }],
+              }),
+              React.createElement(
+                View,
+                { style: styles.timelineContent },
+                React.createElement(Text, { style: styles.timelineTime }, item.label),
+                completion
+                  ? React.createElement(Text, { style: styles.timelineDetail },
+                      `Completed: ${formatTs(completion.completed_at)}` +
+                      (item.requires_photo ? (completion.photo_url ? '  |  Photo: Attached' : '  |  Photo: Missing') : '')
+                    )
+                  : React.createElement(Text, { style: [styles.timelineDetail, { color: '#dc2626' }] }, 'Not completed')
+              )
+            )
+          })
+        )
+      ] : []),
       // Footer
       React.createElement(
         View,

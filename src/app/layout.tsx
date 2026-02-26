@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Outfit, Syne } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -19,6 +19,12 @@ const outfit = Outfit({
   subsets: ["latin"],
   weight: ["700"],
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://dutyproof.com'),

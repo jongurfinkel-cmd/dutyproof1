@@ -39,14 +39,18 @@ export async function GET(
       return NextResponse.json({ error: 'Watch not found' }, { status: 404 })
     }
 
-    // Fetch check-ins and alerts
-    const [checkInsRes, alertsRes] = await Promise.all([
+    // Fetch check-ins, alerts, and checklist data
+    const [checkInsRes, alertsRes, checklistItemsRes, checklistCompletionsRes] = await Promise.all([
       admin.from('check_ins').select('*').eq('watch_id', watchId).order('scheduled_time', { ascending: true }),
       admin.from('alerts').select('*').eq('watch_id', watchId).order('created_at', { ascending: true }),
+      admin.from('watch_checklist_items').select('*').eq('watch_id', watchId).order('sort_order', { ascending: true }),
+      admin.from('checklist_completions').select('*').eq('watch_id', watchId),
     ])
 
     const checkIns = checkInsRes.data ?? []
     const alerts = alertsRes.data ?? []
+    const checklistItems = checklistItemsRes.data ?? []
+    const checklistCompletions = checklistCompletionsRes.data ?? []
 
     // Generate PDF — call WatchReport as a function to get the Document element directly
     // (renderToBuffer needs the Document element, not a wrapper component element)
@@ -54,6 +58,8 @@ export async function GET(
       watch: watch as Parameters<typeof WatchReport>[0]['watch'],
       checkIns: checkIns as Parameters<typeof WatchReport>[0]['checkIns'],
       alerts: alerts as Parameters<typeof WatchReport>[0]['alerts'],
+      checklistItems: checklistItems as Parameters<typeof WatchReport>[0]['checklistItems'],
+      checklistCompletions: checklistCompletions as Parameters<typeof WatchReport>[0]['checklistCompletions'],
       adminEmail: user.email ?? 'Admin',
     })
 

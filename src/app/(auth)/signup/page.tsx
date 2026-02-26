@@ -115,9 +115,7 @@ function ComingSoon() {
   )
 }
 
-export default function SignupPage() {
-  const isBeforeLaunch = Date.now() < LAUNCH_DATE.getTime()
-  if (isBeforeLaunch) return <ComingSoon />
+function SignupForm() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -144,7 +142,7 @@ export default function SignupPage() {
 
   const strength = password.length === 0 ? 0 : password.length < 8 ? 1 : password.length < 12 ? 2 : 3
   const strengthColor = ['', 'bg-red-500', 'bg-yellow-400', 'bg-green-500']
-  const strengthLabel = ['', 'Too short', 'Fair', 'Strong']
+  const strengthLabel = ['', 'Too short', 'Good', 'Strong']
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
@@ -305,4 +303,10 @@ export default function SignupPage() {
       </div>
     </div>
   )
+}
+
+export default function SignupPage() {
+  const isBeforeLaunch = Date.now() < LAUNCH_DATE.getTime()
+  if (isBeforeLaunch) return <ComingSoon />
+  return <SignupForm />
 }

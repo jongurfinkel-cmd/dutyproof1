@@ -38,10 +38,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq('status', 'active')
       if (!activeWatches?.length) { setCriticalCount(0); return }
       const watchIds = activeWatches.map((w) => w.id)
-      const [{ data: missed }, { data: expiredPending }] = await Promise.all([
+      const [{ data: missed, error: missedErr }, { data: expiredPending, error: expiredErr }] = await Promise.all([
         supabase.from('check_ins').select('watch_id').in('watch_id', watchIds).eq('status', 'missed'),
         supabase.from('check_ins').select('watch_id').in('watch_id', watchIds).eq('status', 'pending').lt('token_expires_at', new Date().toISOString()),
       ])
+      if (missedErr || expiredErr) {
+        console.error('Critical count query error:', missedErr ?? expiredErr)
+      }
       const ids = new Set([
         ...(missed ?? []).map((c) => c.watch_id),
         ...(expiredPending ?? []).map((c) => c.watch_id),

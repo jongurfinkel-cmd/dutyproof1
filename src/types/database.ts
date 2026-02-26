@@ -1,11 +1,13 @@
 export interface Profile {
   id: string
   created_at: string
+  email: string | null
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   subscription_status: 'incomplete' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | null
   trial_ends_at: string | null
   current_period_end: string | null
+  is_admin: boolean
 }
 
 export interface Facility {

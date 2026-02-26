@@ -92,6 +92,14 @@ export default function ChecklistPage() {
 
   async function handlePhotoCapture(item: ChecklistItem, file: File) {
     if (state.phase !== 'ready') return
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Only image files are allowed.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPhotoError('Photo must be smaller than 10 MB.')
+      return
+    }
     setCompletions((prev) => ({ ...prev, [item.id]: { ...prev[item.id], uploading: true } }))
     try {
       const fd = new FormData()
@@ -115,6 +123,9 @@ export default function ChecklistPage() {
 
   async function handleSubmit() {
     if (state.phase !== 'ready' || submittingRef.current) return
+
+    const anyUploading = Object.values(completions).some((c) => c.uploading)
+    if (anyUploading) return
 
     const allChecked = state.items.every((item) => completions[item.id]?.checked)
     if (!allChecked) {
@@ -253,6 +264,7 @@ export default function ChecklistPage() {
   const { facilityName, assignedName, items } = state
   const allChecked = items.every((item) => completions[item.id]?.checked)
   const completedCount = items.filter((item) => completions[item.id]?.checked).length
+  const anyUploading = Object.values(completions).some((c) => c.uploading)
 
   return (
     <div className="min-h-screen bg-slate-950 px-5 py-8">
@@ -421,14 +433,14 @@ export default function ChecklistPage() {
         {/* Submit button */}
         <button
           onClick={handleSubmit}
-          disabled={!allChecked}
+          disabled={!allChecked || anyUploading}
           className={`w-full py-5 text-white text-lg font-black rounded-2xl shadow-xl transition-all select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
-            allChecked
+            allChecked && !anyUploading
               ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 shadow-blue-900/40'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
           }`}
         >
-          {allChecked ? 'SUBMIT CHECKLIST' : `${items.length - completedCount} ITEM${items.length - completedCount !== 1 ? 'S' : ''} REMAINING`}
+          {anyUploading ? 'UPLOADING PHOTO…' : allChecked ? 'SUBMIT CHECKLIST' : `${items.length - completedCount} ITEM${items.length - completedCount !== 1 ? 'S' : ''} REMAINING`}
         </button>
 
         <p className="text-slate-600 text-xs text-center mt-4 leading-relaxed">

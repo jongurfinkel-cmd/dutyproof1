@@ -24,6 +24,7 @@ export default function BillingPage() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [subStatus, setSubStatus] = useState<SubStatus | undefined>(undefined)
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     async function loadStatus() {
@@ -32,11 +33,12 @@ export default function BillingPage() {
       if (!user) return
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status, trial_ends_at')
+        .select('subscription_status, trial_ends_at, is_admin')
         .eq('id', user.id)
         .single()
       setSubStatus((profile?.subscription_status as SubStatus) ?? null)
       setTrialEndsAt(profile?.trial_ends_at ?? null)
+      setIsAdmin(profile?.is_admin ?? false)
     }
     loadStatus()
   }, [])
@@ -46,6 +48,11 @@ export default function BillingPage() {
     try {
       const res = await fetch('/api/stripe/create-checkout', { method: 'POST' })
       const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Something went wrong. Please try again.')
+        setLoading(false)
+        return
+      }
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -63,6 +70,11 @@ export default function BillingPage() {
     try {
       const res = await fetch('/api/stripe/portal', { method: 'POST' })
       const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Something went wrong. Please try again.')
+        setPortalLoading(false)
+        return
+      }
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -83,6 +95,37 @@ export default function BillingPage() {
   const trialDaysLeft = trialEndsAt
     ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000))
     : null
+
+  if (isAdmin) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        <div className="text-center mb-10">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 mb-2">Admin Account</h1>
+          <p className="text-slate-500">Full access — no subscription required.</p>
+        </div>
+        <div className="rounded-3xl border-2 border-slate-200 bg-gradient-to-b from-slate-50 to-white overflow-hidden shadow-xl mb-6">
+          <div className="bg-slate-800 px-4 py-8 sm:px-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold tracking-widest uppercase mb-3">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              Admin Access
+            </div>
+            <p className="text-slate-300 text-sm mt-1">All features unlocked · No billing required</p>
+          </div>
+          <div className="px-4 py-6 sm:px-8 text-center">
+            <p className="text-slate-500 text-sm">This account has admin privileges and bypasses subscription requirements.</p>
+          </div>
+        </div>
+        <div className="text-center mt-8">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-slate-400 hover:text-slate-600 text-sm transition-colors"
+          >
+            ← Back to dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">

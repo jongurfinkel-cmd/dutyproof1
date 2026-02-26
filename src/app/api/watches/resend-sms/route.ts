@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No pending check-in to resend' }, { status: 404 })
     }
 
+    // Reject if the token has already expired — worker would get a dead link
+    if (new Date() > new Date(checkIn.token_expires_at)) {
+      return NextResponse.json({ error: 'Check-in window has expired. A new one will be sent shortly.' }, { status: 410 })
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     if (!appUrl) {
       console.error('Missing NEXT_PUBLIC_APP_URL')

@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null | undefined>(undefined)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function DashboardPage() {
     const ciMap: Record<string, { status: string; completed_at: string | null }> = {}
     const pendingMap: Record<string, string> = {}
     if (watchIds.length > 0) {
-      const [{ data: ciData }, { data: pendingData }] = await Promise.all([
+      const [{ data: ciData, error: ciError }, { data: pendingData, error: pendingError }] = await Promise.all([
         supabase
           .from('check_ins')
           .select('watch_id, status, completed_at, scheduled_time')
@@ -82,6 +83,10 @@ export default function DashboardPage() {
           .eq('status', 'pending')
           .order('scheduled_time', { ascending: false }),
       ])
+      if (ciError || pendingError) {
+        console.error('Dashboard check-in query error:', ciError ?? pendingError)
+        toast.error('Some watch data may be incomplete')
+      }
       for (const ci of ciData ?? []) {
         if (!ciMap[ci.watch_id]) {
           ciMap[ci.watch_id] = { status: ci.status, completed_at: ci.completed_at }
@@ -128,10 +133,11 @@ export default function DashboardPage() {
       if (!user) return
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, is_admin')
         .eq('id', user.id)
         .single()
       setSubscriptionStatus(profile?.subscription_status ?? null)
+      setIsAdmin(profile?.is_admin ?? false)
     }
     loadSubscription()
   }, [])
@@ -180,7 +186,7 @@ export default function DashboardPage() {
     )
   }
 
-  const showTrialBanner = subscriptionStatus === null
+  const showTrialBanner = subscriptionStatus === null && !isAdmin
   const showPastDueBanner = subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid'
 
   return (

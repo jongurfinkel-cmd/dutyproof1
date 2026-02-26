@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
         recipient_phone: watch.assigned_phone,
         recipient_name: checkIn.assigned_name,
         message: `[SIMULATED] Check-in SMS for ${nextScheduledTime.toISOString()}`,
-        delivery_status: 'simulated',
+        delivery_status: 'sent',
         twilio_sid: null,
       })
       if (alertError) console.error('Failed to log simulated alert:', alertError)

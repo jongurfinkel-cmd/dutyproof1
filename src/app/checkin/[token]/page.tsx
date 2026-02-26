@@ -12,7 +12,7 @@ type CheckInState =
   | { phase: 'checklist_pending'; message: string }
   | { phase: 'ready'; facilityName: string; assignedName: string; scheduledTime: string; nextTime: string }
   | { phase: 'submitting' }
-  | { phase: 'confirmed'; nextCheckIn: string; serverTime: string }
+  | { phase: 'confirmed'; nextCheckIn: string; serverTime: string; gpsCapture: boolean }
   | { phase: 'error'; message: string }
 
 async function getLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | null> {
@@ -114,6 +114,7 @@ export default function CheckInPage() {
         phase: 'confirmed',
         nextCheckIn: data.nextCheckIn,
         serverTime: data.serverTime,
+        gpsCapture: location !== null,
       })
     } catch {
       setState({ phase: 'error', message: 'Network error. Please try again.' })
@@ -248,6 +249,13 @@ export default function CheckInPage() {
             <p className="text-green-400 text-xs mt-1">
               {format(new Date(state.nextCheckIn), 'EEEE, MMM d')}
             </p>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 mb-4">
+            {state.gpsCapture ? (
+              <span className="text-[10px] text-green-500 font-semibold">📍 Location recorded</span>
+            ) : (
+              <span className="text-[10px] text-slate-500">Location not captured — GPS unavailable</span>
+            )}
           </div>
           <p className="text-slate-500 text-xs">
             You will receive an SMS with a new link when that window opens.

@@ -76,8 +76,12 @@ export default function CreateWatchForm() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('facilities').select('*').order('name').then(({ data }) => {
-      if (data) setFacilities(data)
+    supabase.from('facilities').select('*').order('name').then(({ data, error }) => {
+      if (error) {
+        toast.error('Failed to load job sites. Please refresh.')
+      } else if (data) {
+        setFacilities(data)
+      }
     })
   }, [])
 

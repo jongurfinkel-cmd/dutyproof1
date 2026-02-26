@@ -136,34 +136,38 @@ export default function HistoryPage() {
   const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   function downloadCSV() {
-    const headers = ['Job Site', 'Location', 'Fire Watcher', 'Phone', 'Started', 'Ended', 'Duration', 'Compliance %', 'Completed', 'Missed', 'Reason']
-    const rows = sorted.map((w) => {
-      const total = w._completed + w._missed
-      const pct = total > 0 ? Math.round((w._completed / total) * 100) : 100
-      return [
-        w.facilities.name,
-        w.location ?? '',
-        w.assigned_name,
-        w.assigned_phone,
-        w.start_time ? new Date(w.start_time).toLocaleString() : '',
-        w.ended_at ? new Date(w.ended_at).toLocaleString() : '',
-        formatDuration(w.start_time, w.ended_at),
-        `${pct}%`,
-        w._completed,
-        w._missed,
-        w.reason ?? '',
-      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
-    })
-    const csv = [headers.join(','), ...rows].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `dutyproof-history-${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    try {
+      const headers = ['Job Site', 'Location', 'Fire Watcher', 'Phone', 'Started', 'Ended', 'Duration', 'Compliance %', 'Completed', 'Missed', 'Reason']
+      const rows = sorted.map((w) => {
+        const total = w._completed + w._missed
+        const pct = total > 0 ? Math.round((w._completed / total) * 100) : 100
+        return [
+          w.facilities.name,
+          w.location ?? '',
+          w.assigned_name,
+          w.assigned_phone,
+          w.start_time ? new Date(w.start_time).toLocaleString() : '',
+          w.ended_at ? new Date(w.ended_at).toLocaleString() : '',
+          formatDuration(w.start_time, w.ended_at),
+          `${pct}%`,
+          w._completed,
+          w._missed,
+          w.reason ?? '',
+        ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+      })
+      const csv = [headers.join(','), ...rows].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `dutyproof-history-${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Failed to generate CSV. Please try again.')
+    }
   }
 
   if (loading) {

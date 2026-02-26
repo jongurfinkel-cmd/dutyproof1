@@ -47,6 +47,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Checklist already completed.' }, { status: 409 })
     }
 
+    // Verify the item_id actually belongs to this watch
+    const { data: checklistItem } = await admin
+      .from('watch_checklist_items')
+      .select('id')
+      .eq('watch_id', watchId)
+      .eq('id', itemId)
+      .single()
+
+    if (!checklistItem) {
+      return NextResponse.json({ error: 'Invalid item' }, { status: 400 })
+    }
+
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'Only JPEG, PNG, WebP, or HEIC images are allowed.' }, { status: 400 })

@@ -74,7 +74,7 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
 
                 {ci.status === 'completed' && (
                   <div className="space-y-0.5 text-xs text-slate-500 mt-2">
-                    <div>Device: {formatTs(ci.completed_at)}</div>
+                    <div>Completed: {formatTs(ci.completed_at)}</div>
                     <div>Server: {formatTs(ci.server_received_at)}</div>
                     {ci.latitude ? (
                       <div className="text-green-600">
