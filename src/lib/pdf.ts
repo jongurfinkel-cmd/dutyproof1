@@ -357,6 +357,39 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           ),
         ]
       })(),
+      // Supervisor Acknowledgment Map — show map when ack GPS data is available
+      ...(() => {
+        const ackCheckins = missed.filter((c) => c.ack_at && c.ack_latitude != null && c.ack_longitude != null)
+        if (ackCheckins.length === 0) return []
+        const avgLat = ackCheckins.reduce((s, c) => s + c.ack_latitude!, 0) / ackCheckins.length
+        const avgLon = ackCheckins.reduce((s, c) => s + c.ack_longitude!, 0) / ackCheckins.length
+        const tiles = getMapTileUrls(avgLat, avgLon)
+        const avgAccuracy = ackCheckins.reduce((s, c) => s + (c.ack_gps_accuracy ?? 0), 0) / ackCheckins.length
+        return [
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'SUPERVISOR ACKNOWLEDGMENT MAP'),
+            React.createElement(
+              View,
+              { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+              ...tiles.map((url, i) =>
+                React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+              )
+            ),
+            React.createElement(
+              Text,
+              { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
+              `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${ackCheckins.length} GPS-verified acknowledgment(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
+            ),
+            React.createElement(
+              Text,
+              { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
+              'Map data © OpenStreetMap contributors'
+            )
+          ),
+        ]
+      })(),
       // Check-In Timeline
       React.createElement(
         View,
