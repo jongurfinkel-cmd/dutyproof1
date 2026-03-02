@@ -246,10 +246,10 @@ export default function BillingPage() {
 
           {/* Annual plan */}
           <div className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl shadow-green-100 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-600 text-white text-xs font-bold rounded-full shadow-lg">
-              Save $0 — Pay for 11, get 12
-            </div>
-            <div className="bg-green-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
+            <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                Save $0 — Pay for 11, get 12
+              </div>
               <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
               <div className="flex items-end justify-center gap-1 mb-1">
                 <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$2,388</span>
