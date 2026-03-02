@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isNewWatch = pathname === '/watches/new'
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main area */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Mobile header */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-10">
           <button
@@ -160,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </header>
 
-        <main className="flex-1 min-w-0 overflow-auto relative z-0">
+        <main className="flex-1 min-w-0 min-h-0 overflow-auto relative z-0">
           {children}
         </main>
       </div>

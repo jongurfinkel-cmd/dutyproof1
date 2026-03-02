@@ -29,6 +29,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://dutyproof.com'),
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   title: {
     default: 'DutyProof — Fire Watch Compliance Software',
     template: '%s | DutyProof',
