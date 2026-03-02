@@ -51,22 +51,12 @@ export default function TermsPage() {
             </div>
 
             <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Free Trial</h2>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Subscription and Billing</h2>
               <p className="mb-3">
-                We offer a 60-day free trial for new accounts. No credit card is required to create an account. When you activate your trial through our billing page, your payment method is collected by Stripe but you will not be charged during the trial period. If you cancel before the trial ends, you will not be charged.
-              </p>
-              <p>
-                If you do not cancel before the trial ends, your subscription will automatically begin and your payment method will be charged the applicable fee. We reserve the right to modify or discontinue the free trial at any time.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>4. Subscription and Billing</h2>
-              <p className="mb-3">
-                Subscriptions are billed monthly at $99 per job site. Billing applies to any job site you have registered in the Service, regardless of whether an active fire watch is running during that billing period.
+                Subscriptions are billed at a flat rate of $199 per month (monthly plan) or $2,388 per year (annual plan). Both plans include unlimited job sites and unlimited watches.
               </p>
               <p className="mb-3">
-                All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring monthly basis from the date your trial ends. Prices may change with 30 days&apos; notice.
+                All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring basis from the date your subscription begins. Prices may change with 30 days&apos; notice.
               </p>
               <p>
                 Payment processing is handled by Stripe. We do not store your full payment card information on our servers.

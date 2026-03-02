@@ -14,12 +14,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const body = await req.json().catch(() => ({}))
+    const isAnnual = body.annual === true
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    const priceId = process.env.STRIPE_PRICE_ID
-    if (!appUrl || !priceId) {
+    const monthlyPriceId = process.env.STRIPE_PRICE_ID
+    const annualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID
+    if (!appUrl || !monthlyPriceId) {
       console.error('Missing NEXT_PUBLIC_APP_URL or STRIPE_PRICE_ID')
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
+
+    const priceId = isAnnual && annualPriceId ? annualPriceId : monthlyPriceId
 
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',
@@ -31,7 +37,6 @@ export async function POST(req: NextRequest) {
         },
       ],
       subscription_data: {
-        trial_period_days: 60,
         metadata: { supabase_user_id: user.id },
       },
       payment_method_collection: 'always',

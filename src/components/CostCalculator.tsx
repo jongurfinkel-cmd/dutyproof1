@@ -1,63 +1,61 @@
 'use client'
 
-import { useState } from 'react'
-
 const AVG_HOTWORK_FIRE_DAMAGE = 292000
+const MONTHLY_COST = 199
+const ANNUAL_COST = 2388
+
+const risks = [
+  { label: 'Single denied hot work claim', cost: 200000 },
+  { label: 'OSHA hot work violation fine', cost: 16131 },
+  { label: '20% premium increase on $50K GL policy', cost: 10000 },
+  { label: 'Policy non-renewal (forced high-risk market)', cost: 27500 },
+]
 
 export default function CostCalculator() {
-  const [sites, setSites] = useState(3)
-
-  const monthly = sites * 99
-  const annual = monthly * 12
-  const pctOfOneFire = ((annual / AVG_HOTWORK_FIRE_DAMAGE) * 100).toFixed(1)
-
   return (
     <div className="rounded-2xl bg-slate-50 border border-slate-200 p-8">
       <div className="text-center mb-8">
-        <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-2">Calculate your investment</p>
+        <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-2">The math that sells itself</p>
         <p className="text-slate-800 text-lg font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-          How many active job sites do you run?
+          DutyProof vs. the cost of not having proof
         </p>
       </div>
 
-      {/* Slider */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-slate-500 text-sm">1</span>
-          <span
-            className="text-4xl font-extrabold text-blue-700"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            {sites} {sites === 1 ? 'job site' : 'job sites'}
-          </span>
-          <span className="text-slate-500 text-sm">20</span>
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={20}
-          value={sites}
-          onChange={(e) => setSites(Number(e.target.value))}
-          className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-blue-600"
-        />
-      </div>
-
-      {/* Cost output */}
+      {/* Cost summary */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
           <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Monthly</p>
           <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-            ${monthly.toLocaleString()}
+            ${MONTHLY_COST}
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">$99 × {sites}</p>
+          <p className="text-slate-400 text-[11px] mt-0.5">flat rate · unlimited sites</p>
         </div>
         <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
           <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Annual</p>
           <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-            ${annual.toLocaleString()}
+            ${ANNUAL_COST.toLocaleString()}
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">per year</p>
+          <p className="text-slate-400 text-[11px] mt-0.5">pay 11 months, get 12</p>
         </div>
+      </div>
+
+      {/* ROI table */}
+      <div className="space-y-2 mb-6">
+        {risks.map((r) => {
+          const roi = Math.round(r.cost / ANNUAL_COST)
+          return (
+            <div key={r.label} className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-3">
+              <div>
+                <p className="text-slate-700 text-sm font-medium">{r.label}</p>
+                <p className="text-red-600 text-xs font-bold">${r.cost.toLocaleString()}+</p>
+              </div>
+              <div className="text-right">
+                <p className="text-green-700 text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{roi}:1</p>
+                <p className="text-slate-400 text-[10px]">ROI</p>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Risk comparison */}
@@ -66,7 +64,7 @@ export default function CostCalculator() {
         <p className="text-red-700 font-bold text-base">${AVG_HOTWORK_FIRE_DAMAGE.toLocaleString()} per incident</p>
         <p className="text-slate-500 text-xs mt-2">
           Your annual DutyProof cost is just{' '}
-          <span className="font-bold text-slate-700">{pctOfOneFire}%</span>{' '}
+          <span className="font-bold text-slate-700">{((ANNUAL_COST / AVG_HOTWORK_FIRE_DAMAGE) * 100).toFixed(1)}%</span>{' '}
           of the damage from a single hot work fire.
         </p>
       </div>

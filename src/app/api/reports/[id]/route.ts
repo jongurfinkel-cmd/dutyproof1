@@ -47,6 +47,12 @@ export async function GET(
       admin.from('checklist_completions').select('*').eq('watch_id', watchId),
     ])
 
+    const queryError = checkInsRes.error || alertsRes.error || checklistItemsRes.error || checklistCompletionsRes.error
+    if (queryError) {
+      console.error('Report data query error:', queryError)
+      return NextResponse.json({ error: 'Failed to load report data' }, { status: 500 })
+    }
+
     const checkIns = checkInsRes.data ?? []
     const alerts = alertsRes.data ?? []
     const checklistItems = checklistItemsRes.data ?? []

@@ -6,9 +6,9 @@ import CostCalculator from '@/components/CostCalculator'
 import HeroProduct from '@/components/HeroProduct'
 
 export const metadata = {
-  title: 'Fire Watch Verification Software for Contractors & Hot Work',
+  title: 'Fire Watch Compliance Software for Contractors',
   description:
-    'DutyProof is the fire watch verification platform for welding, pipefitting, and mechanical contractors. SMS check-ins every 15–30 minutes, missed-check-in escalation in under 60 seconds, and one-click OSHA-ready PDF audit reports. Stop pencil-whipping your logs.',
+    'Stop pencil-whipping your fire watch logs. DutyProof sends automated SMS check-ins every 15–30 min, alerts supervisors in under 60 seconds on a miss, and generates one-click OSHA-ready PDF audit reports. $199/mo flat rate — unlimited sites.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',
@@ -22,9 +22,9 @@ export const metadata = {
     'fire watch audit log software',
   ],
   openGraph: {
-    title: 'DutyProof — Fire Watch Verification for Contractors',
+    title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports for hot work contractors.',
+      'Automated SMS check-ins, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate for hot work contractors.',
     url: 'https://dutyproof.com',
     siteName: 'DutyProof',
     type: 'website',
@@ -39,9 +39,9 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DutyProof — Fire Watch Verification for Contractors',
+    title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, missed-check-in alerts in under 60 seconds, OSHA-ready PDF reports.',
+      'Automated SMS check-ins, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
   },
 }
 
@@ -79,34 +79,79 @@ const FACILITY_TYPES = [
   'Infrastructure & Utility Work',
 ]
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'DutyProof',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
-  url: 'https://dutyproof.com',
-  description:
-    'Fire watch verification platform for hot work contractors. SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for welding, pipefitting, and mechanical contractors.',
-  offers: {
-    '@type': 'Offer',
-    price: '99',
-    priceCurrency: 'USD',
-    priceSpecification: {
-      '@type': 'UnitPriceSpecification',
-      price: '99',
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'DutyProof',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    url: 'https://dutyproof.com',
+    description:
+      'Fire watch verification platform for hot work contractors. SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for welding, pipefitting, and mechanical contractors.',
+    offers: {
+      '@type': 'Offer',
+      price: '199',
       priceCurrency: 'USD',
-      unitText: 'per job site per month',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: '199',
+        priceCurrency: 'USD',
+        unitText: 'per month',
+      },
+    },
+    featureList: [
+      'Automated SMS fire watch check-ins',
+      'Missed check-in escalation in under 60 seconds',
+      'Tamper-proof immutable audit log',
+      'OSHA-ready PDF compliance reports',
+      'Unlimited job sites and active watches',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'DutyProof',
+    url: 'https://dutyproof.com',
+    logo: 'https://dutyproof.com/icon.svg',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'support@dutyproof.com',
+      contactType: 'customer support',
     },
   },
-  featureList: [
-    'Automated SMS fire watch check-ins',
-    'Missed check-in escalation in under 60 seconds',
-    'Tamper-proof immutable audit log',
-    'OSHA-ready PDF compliance reports',
-    'Unlimited admin and supervisor accounts',
-  ],
-}
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'How much does DutyProof cost?',
+        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,388/year.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'Does DutyProof meet OSHA hot work fire watch requirements?',
+        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof generates GPS-verified, server-timestamped, carrier-confirmed records for every check-in — exactly the kind of documentation OSHA inspectors, fire marshals, and insurance adjusters need when auditing hot work fire watch compliance.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'What check-in interval is required for a hot work fire watch?',
+        acceptedAnswer: { '@type': 'Answer', text: 'OSHA 29 CFR 1910.252 and NFPA 51B require a fire watch during and for at least 30 minutes after hot work. Most contractors run check-ins every 15–30 minutes. DutyProof supports any interval you configure.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'What phone does the fire watch worker need?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is there a contract or long-term commitment?',
+        acceptedAnswer: { '@type': 'Answer', text: 'No contracts on the monthly plan. $199/month, cancel any time. Annual plans are billed once at $2,388/year. Records retained for the life of your account.' },
+      },
+    ],
+  },
+]
 
 export default function LandingPage() {
   const tickerItems = [...FACILITY_TYPES, ...FACILITY_TYPES]
@@ -167,7 +212,7 @@ export default function LandingPage() {
                   href="/signup"
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5 hover:shadow-blue-700/60"
                 >
-                  Start 60-Day Free Trial →
+                  Get Started — $199/mo →
                 </Link>
                 <a
                   href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
@@ -485,13 +530,13 @@ export default function LandingPage() {
             {/* Single facility card */}
             <RevealOnScroll className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100">
               <div className="bg-blue-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
-                <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Per Job Site</div>
+                <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Flat Rate — Unlimited Sites</div>
                 <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$99</span>
-                  <div className="text-blue-200 text-base mb-3 text-left leading-snug">/site<br />/month</div>
+                  <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$199</span>
+                  <div className="text-blue-200 text-base mb-3 text-left leading-snug">/month</div>
                 </div>
                 <p className="text-blue-200 text-sm max-w-xs mx-auto">
-                  Each job site is $99/month — no tiers, no per-watch fees, no surprises.
+                  Unlimited job sites. Unlimited watches. No per-user fees. No surprises.
                 </p>
               </div>
               <div className="px-4 py-6 sm:px-8 sm:py-8">
@@ -507,7 +552,7 @@ export default function LandingPage() {
                   href="/signup"
                   className="block text-center py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
                 >
-                  Start 60-Day Free Trial →
+                  Get Started — $199/mo →
                 </Link>
                 <a
                   href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
@@ -516,46 +561,49 @@ export default function LandingPage() {
                   Book a 15-min Demo →
                 </a>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  Cancel any time · No setup fees
+                  Cancel any time · No setup fees · Annual option: $2,388/yr
                 </p>
               </div>
             </RevealOnScroll>
 
-            {/* Multi-facility / chain card */}
-            <RevealOnScroll delay={100} className="rounded-3xl border-2 border-slate-200 bg-gradient-to-b from-slate-50 to-white overflow-hidden shadow-xl">
-              <div className="bg-slate-800 px-4 py-6 sm:px-8 sm:py-8 text-center">
-                <div className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-3">Multi-Site / Contractor Fleet</div>
-                <div className="text-3xl sm:text-5xl font-extrabold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>Custom</div>
-                <p className="text-slate-400 text-sm max-w-xs mx-auto">
-                  Volume pricing for contractors running multiple active job sites simultaneously.
+            {/* Annual / GC Enterprise card */}
+            <RevealOnScroll delay={100} className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-600 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                Pay for 11, get 12
+              </div>
+              <div className="bg-green-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
+                <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
+                <div className="flex items-end justify-center gap-1 mb-1">
+                  <span className="text-4xl sm:text-6xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$2,388</span>
+                  <div className="text-green-200 text-base mb-3">/year</div>
+                </div>
+                <p className="text-green-200 text-sm max-w-xs mx-auto">
+                  Same unlimited plan. Pay annually and save one month.
                 </p>
               </div>
               <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="grid grid-cols-1 gap-y-2.5 mb-8">
                   {[
-                    'Everything in Per Job Site',
-                    'Volume pricing — reduced per-site rate',
-                    'Fleet-level compliance dashboard',
-                    'Centralized PDF reporting across all sites',
-                    'Dedicated onboarding & account support',
+                    'Everything in the monthly plan',
+                    'One month free ($199 savings)',
                     'Priority email & phone support',
-                    'Custom check-in intervals & escalation rules',
-                    'SSO / single sign-on (on request)',
+                    'Dedicated onboarding assistance',
+                    'Annual compliance summary report',
                   ].map((f) => (
                     <div key={f} className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">✓</div>
+                      <div className="w-4 h-4 rounded-full bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">✓</div>
                       <span className="text-slate-700 text-sm">{f}</span>
                     </div>
                   ))}
                 </div>
-                <a
-                  href="mailto:jon@dutyproof.com?subject=DutyProof%20Multi-Site%20Pricing"
-                  className="block text-center py-4 px-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5"
+                <Link
+                  href="/signup"
+                  className="block text-center py-4 px-8 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5"
                 >
-                  Contact Sales →
-                </a>
+                  Get Started — $2,388/yr →
+                </Link>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  3+ job sites · Custom contract available
+                  Billed annually · Cancel any time
                 </p>
               </div>
             </RevealOnScroll>
@@ -572,7 +620,7 @@ export default function LandingPage() {
             <p className="text-slate-500 text-sm text-center mt-6">
               One hot work fire causes an average of{' '}
               <span className="font-semibold text-slate-700">$292,000</span> in property damage.
-              DutyProof costs <span className="font-semibold text-slate-700">$99/month</span>.
+              DutyProof costs <span className="font-semibold text-slate-700">$199/month</span>.
             </p>
           </RevealOnScroll>
         </div>
@@ -609,14 +657,14 @@ export default function LandingPage() {
             Set up your first fire watch in under two minutes. No setup fees.
           </p>
           <p className="text-slate-400 text-sm mb-10">
-            Then $99/site/month — less than 0.1% of the average hot work fire claim.
+            $199/month flat — less than 0.1% of the average hot work fire claim.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
               className="inline-flex items-center justify-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
             >
-              Start 60-Day Free Trial →
+              Get Started — $199/mo →
             </Link>
             <a
               href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
@@ -626,7 +674,7 @@ export default function LandingPage() {
             </a>
           </div>
           <p className="mt-4 text-slate-500 text-xs">
-            60-day free trial · No setup fees · Cancel any time before trial ends — no charge
+            No setup fees · Cancel any time · Annual option: $2,388/yr
           </p>
           <p className="mt-3 text-slate-600 text-sm">
             Already have an account?{' '}

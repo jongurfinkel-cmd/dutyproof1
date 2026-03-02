@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
   const secret = bearerToken || req.headers.get('x-cron-secret')
 
   // Always require secret in production; allow unauthenticated in local dev only
-  if (process.env.NODE_ENV === 'production' || process.env.CRON_SECRET) {
+  if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
+    console.error('CRON_SECRET is not configured in production')
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+  if (process.env.CRON_SECRET) {
     if (!secret || secret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

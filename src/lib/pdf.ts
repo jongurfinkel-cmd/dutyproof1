@@ -4,6 +4,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   Font,
 } from '@react-pdf/renderer'
@@ -163,6 +164,27 @@ function calcDuration(start: string, end: string | null): string {
   return `${h}h ${m}m`
 }
 
+/** Convert lat/lon to OSM tile x,y at a given zoom */
+function latLonToTile(lat: number, lon: number, zoom: number) {
+  const n = Math.pow(2, zoom)
+  const x = Math.floor(((lon + 180) / 360) * n)
+  const latRad = (lat * Math.PI) / 180
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
+  return { x, y }
+}
+
+/** Build a 2x2 grid of OSM tile URLs centered on a lat/lon */
+function getMapTileUrls(lat: number, lon: number): string[] {
+  const zoom = 16
+  const { x, y } = latLonToTile(lat, lon, zoom)
+  return [
+    `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x + 1}/${y}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x}/${y + 1}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x + 1}/${y + 1}.png`,
+  ]
+}
+
 export function WatchReport({ watch, checkIns, alerts, checklistItems, checklistCompletions, adminEmail }: ReportData) {
   const completed = checkIns.filter((c) => c.status === 'completed')
   const missed = checkIns.filter((c) => c.status === 'missed')
@@ -296,6 +318,39 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           )
         )
       ),
+      // GPS Coverage Map — show area map when GPS data is available
+      ...(() => {
+        const gpsCheckins = completed.filter((c) => c.latitude != null && c.longitude != null)
+        if (gpsCheckins.length === 0) return []
+        const avgLat = gpsCheckins.reduce((s, c) => s + c.latitude!, 0) / gpsCheckins.length
+        const avgLon = gpsCheckins.reduce((s, c) => s + c.longitude!, 0) / gpsCheckins.length
+        const tiles = getMapTileUrls(avgLat, avgLon)
+        const avgAccuracy = gpsCheckins.reduce((s, c) => s + (c.gps_accuracy ?? 0), 0) / gpsCheckins.length
+        return [
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'GPS COVERAGE MAP'),
+            React.createElement(
+              View,
+              { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+              ...tiles.map((url, i) =>
+                React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+              )
+            ),
+            React.createElement(
+              Text,
+              { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
+              `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${gpsCheckins.length} GPS-verified check-in(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
+            ),
+            React.createElement(
+              Text,
+              { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
+              'Map data © OpenStreetMap contributors'
+            )
+          ),
+        ]
+      })(),
       // Check-In Timeline
       React.createElement(
         View,

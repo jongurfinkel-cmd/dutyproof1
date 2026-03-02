@@ -5,7 +5,7 @@ import { useState } from 'react'
 const FAQS = [
   {
     q: 'How much does DutyProof cost?',
-    a: '$99 per job site per month, billed monthly. No per-watch fees, no per-user fees, no setup costs. Your 60-day free trial includes full access — cancel any time before the trial ends and you will not be charged.',
+    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,388/year (pay for 11 months, get 12).',
   },
   {
     q: 'Does DutyProof meet OSHA hot work fire watch requirements?',
@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts. Month-to-month billing at $99/site/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
+    a: 'No contracts on the monthly plan. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Annual plans are billed once at $2,388/year. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
   },
 ]
 

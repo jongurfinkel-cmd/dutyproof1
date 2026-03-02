@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Active subscription required to start a watch' }, { status: 403 })
     }
 
-    const body = await req.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let body: any
+    try { body = await req.json() } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
     const {
       facility_id,
       location,

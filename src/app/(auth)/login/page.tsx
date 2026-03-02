@@ -145,7 +145,7 @@ function LoginForm() {
             <p className="text-center text-sm text-slate-600 mt-6">
               No account?{' '}
               <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-                Start 60-day free trial →
+                Sign up →
               </Link>
             </p>
           </div>

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Outfit, Syne } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     template: '%s | DutyProof',
   },
   description:
-    'Fire watch verification software for welding, pipefitting, and mechanical contractors. SMS check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. Start a 60-day free trial.',
+    'Fire watch verification software for welding, pipefitting, and mechanical contractors. SMS check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',
@@ -73,6 +74,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${syne.variable} ${outfit.variable} antialiased`}>
         {children}
+        <Analytics />
         <Toaster
           position="top-right"
           toastOptions={{

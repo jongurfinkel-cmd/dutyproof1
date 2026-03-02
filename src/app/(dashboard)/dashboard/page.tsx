@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('checkout=success')) {
-      toast.success('Trial activated! 60 days free — no charge until day 60.', { duration: 8000 })
+      toast.success('Subscription activated! You now have full access to DutyProof.', { duration: 8000 })
       window.history.replaceState({}, '', '/dashboard')
     }
   }, [])
@@ -197,14 +197,14 @@ export default function DashboardPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-blue-800 text-sm">Start your 60-day free trial</p>
-            <p className="text-blue-600 text-xs mt-0.5">Set up billing to activate SMS check-ins. No charge until your trial ends.</p>
+            <p className="font-bold text-blue-800 text-sm">Subscribe to activate DutyProof</p>
+            <p className="text-blue-600 text-xs mt-0.5">Set up billing to activate SMS check-ins. $199/mo flat rate, unlimited sites.</p>
           </div>
           <Link
             href="/billing"
             className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors"
           >
-            Set up trial →
+            Subscribe →
           </Link>
         </div>
       )}

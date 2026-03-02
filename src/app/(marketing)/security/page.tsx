@@ -243,7 +243,7 @@ export default function SecurityPage() {
               href="/signup"
               className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition-all text-sm"
             >
-              Start free trial
+              Get started
             </Link>
           </div>
         </div>

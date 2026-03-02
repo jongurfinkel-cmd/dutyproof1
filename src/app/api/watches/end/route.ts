@@ -16,7 +16,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { watchId } = await req.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsed: any
+    try { parsed = await req.json() } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { watchId } = parsed
     if (!watchId || typeof watchId !== 'string') return NextResponse.json({ error: 'watchId required' }, { status: 400 })
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(watchId)) {
       return NextResponse.json({ error: 'Invalid watchId format' }, { status: 400 })

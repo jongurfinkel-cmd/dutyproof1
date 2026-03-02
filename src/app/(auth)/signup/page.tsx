@@ -1,119 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BrandLogo from '@/components/BrandLogo'
 import toast from 'react-hot-toast'
-
-const LAUNCH_DATE = new Date('2026-03-02T09:00:00-05:00')
-
-function ComingSoon() {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-
-  useEffect(() => {
-    function calc() {
-      const diff = LAUNCH_DATE.getTime() - Date.now()
-      if (diff <= 0) { window.location.reload(); return }
-      setTimeLeft({
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      })
-    }
-    calc()
-    const id = setInterval(calc, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full opacity-25"
-        style={{ background: 'radial-gradient(ellipse, #1d4ed8 0%, transparent 70%)' }}
-      />
-
-      <div className="relative w-full max-w-lg text-center">
-        <Link href="/" className="flex justify-center mb-10">
-          <BrandLogo className="w-[240px] h-auto" variant="light" />
-        </Link>
-
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-bold tracking-widest uppercase mb-8">
-          🚀 Official Launch
-        </div>
-
-        <h1
-          className="text-5xl sm:text-7xl text-white font-black tracking-tight leading-none mb-3"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
-          March 2<sup className="text-3xl sm:text-4xl align-super">nd</sup>
-        </h1>
-        <p className="text-slate-400 text-lg mb-12">2026 — Doors open in</p>
-
-        {/* Countdown */}
-        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-14">
-          {[
-            { label: 'Days', value: pad(timeLeft.days) },
-            { label: 'Hours', value: pad(timeLeft.hours) },
-            { label: 'Min', value: pad(timeLeft.minutes) },
-            { label: 'Sec', value: pad(timeLeft.seconds) },
-          ].map(({ label, value }, i) => (
-            <div key={label} className="flex items-center gap-3 sm:gap-5">
-              <div className="bg-slate-900 border border-slate-700 rounded-2xl px-4 sm:px-6 py-4 sm:py-5 text-center min-w-[64px] sm:min-w-[80px]">
-                <div className="text-3xl sm:text-5xl font-black tabular-nums text-white leading-none">{value}</div>
-                <div className="text-[10px] uppercase tracking-widest text-slate-500 mt-2">{label}</div>
-              </div>
-              {i < 3 && <span className="text-slate-600 font-bold text-3xl">:</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* What to expect */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl px-6 py-6 mb-8 text-left space-y-3">
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-4 text-center">What&apos;s coming March 2nd</p>
-          {[
-            'Automated SMS check-ins — no app required for workers',
-            'Missed check-in escalation alerts in under 60 seconds',
-            'One-click OSHA-ready PDF audit reports',
-            '60-day free trial — no credit card required at signup',
-          ].map((item) => (
-            <div key={item} className="flex items-start gap-3 text-sm text-slate-400">
-              <span className="text-blue-400 font-bold mt-0.5 flex-shrink-0">✓</span>
-              {item}
-            </div>
-          ))}
-        </div>
-
-        <p className="text-slate-500 text-sm mb-6">
-          Already have access?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-            Sign in →
-          </Link>
-        </p>
-
-        <Link
-          href="/"
-          className="text-slate-600 hover:text-slate-400 text-sm transition-colors"
-        >
-          ← Back to home
-        </Link>
-      </div>
-    </div>
-  )
-}
 
 function SignupForm() {
   const router = useRouter()
@@ -135,7 +27,7 @@ function SignupForm() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Account created! Check your email to verify, then start your free trial.', { duration: 6000 })
+      toast.success('Account created! Check your email to verify, then set up your subscription.', { duration: 6000 })
       router.push('/billing')
     }
   }
@@ -176,7 +68,7 @@ function SignupForm() {
               Protect your job site.
             </h1>
             <div className="flex items-center gap-2">
-              <span className="text-green-400 text-sm font-semibold">✓ 60-day free trial</span>
+              <span className="text-green-400 text-sm font-semibold">✓ $199/mo · Unlimited sites</span>
               <span className="text-slate-700">·</span>
               <span className="text-slate-500 text-sm">Cancel any time</span>
             </div>
@@ -274,11 +166,11 @@ function SignupForm() {
                     Creating account…
                   </span>
                 ) : (
-                  'Start Free Trial →'
+                  'Create Account →'
                 )}
               </button>
               <p className="text-center text-slate-600 text-xs mt-3">
-                60-day free trial · Secured by Stripe
+                Secured by Stripe · Cancel any time
               </p>
               <p className="text-center text-slate-700 text-xs mt-2">
                 By signing up you agree to our{' '}
@@ -298,7 +190,7 @@ function SignupForm() {
         </div>
 
         <p className="text-center text-slate-700 text-xs mt-5">
-          After trial: $99/site/month · Cancel any time
+          $199/month flat rate · Annual option: $2,388/yr
         </p>
       </div>
     </div>
@@ -306,7 +198,5 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
-  const isBeforeLaunch = Date.now() < LAUNCH_DATE.getTime()
-  if (isBeforeLaunch) return <ComingSoon />
   return <SignupForm />
 }

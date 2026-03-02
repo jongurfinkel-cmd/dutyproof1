@@ -6,7 +6,11 @@ export async function POST(req: NextRequest) {
   try {
     const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'checklist-complete' })
     if (limited) return limited
-    const body = await req.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let body: any
+    try { body = await req.json() } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
     const { token, completions } = body
 
     if (!token || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {

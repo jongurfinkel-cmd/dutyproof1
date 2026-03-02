@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
     params[key] = value
   })
 
-  // Validate Twilio signature in production
-  if (process.env.NODE_ENV === 'production') {
+  // Validate Twilio signature whenever auth token is configured
+  if (process.env.TWILIO_AUTH_TOKEN) {
     const valid = validateTwilioSignature(signature, url, params)
     if (!valid) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })

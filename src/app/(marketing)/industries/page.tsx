@@ -119,7 +119,7 @@ export default function IndustriesPage() {
               href="/signup"
               className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5"
             >
-              Start Free Trial →
+              Get Started — $199/mo →
             </Link>
             <Link
               href="/"
@@ -237,10 +237,10 @@ export default function IndustriesPage() {
             href="/signup"
             className="inline-flex items-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
           >
-            Start 60-Day Free Trial →
+            Get Started — $199/mo →
           </Link>
           <p className="mt-4 text-slate-500 text-xs">
-            60-day free trial · $99/job site/month after · Cancel any time
+            $199/month flat rate · Unlimited sites · Cancel any time
           </p>
         </RevealOnScroll>
       </section>
