@@ -49,13 +49,14 @@ export async function sendAlertSMS(
   to: string,
   assignedName: string,
   facilityName: string,
-  missedTime: Date
+  missedTime: Date,
+  ackUrl?: string
 ): Promise<string | null> {
   const timeStr = format(missedTime, 'h:mm a')
-  return sendSMS(
-    to,
-    `DUTYPROOF ALERT: ${assignedName} missed their ${timeStr} check-in at ${facilityName}. Check your dashboard immediately.`
-  )
+  const message = ackUrl
+    ? `DUTYPROOF ALERT: ${assignedName} missed their ${timeStr} check-in at ${facilityName}. Tap to acknowledge: ${ackUrl}`
+    : `DUTYPROOF ALERT: ${assignedName} missed their ${timeStr} check-in at ${facilityName}. Check your dashboard immediately.`
+  return sendSMS(to, message)
 }
 
 export async function sendWatchStartSMS(

@@ -315,6 +315,12 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
             { style: styles.scoreCard },
             React.createElement(Text, { style: [styles.scoreNumber, { color: '#1e3a5f' }] }, String(alerts.filter(a => a.alert_type === 'missed_checkin').length)),
             React.createElement(Text, { style: styles.scoreLabel }, 'ALERTS SENT')
+          ),
+          React.createElement(
+            View,
+            { style: styles.scoreCard },
+            React.createElement(Text, { style: [styles.scoreNumber, { color: '#d97706' }] }, String(missed.filter(c => c.ack_at).length)),
+            React.createElement(Text, { style: styles.scoreLabel }, 'ACKNOWLEDGED')
           )
         )
       ),
@@ -393,9 +399,29 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
                   ),
                 ci.status === 'missed' &&
                   React.createElement(
-                    Text,
-                    { style: styles.timelineDetail },
-                    `Scheduled window expired. Escalation sent to admin.`
+                    View,
+                    null,
+                    React.createElement(
+                      Text,
+                      { style: styles.timelineDetail },
+                      `Scheduled window expired. Escalation sent to supervisor.`
+                    ),
+                    ci.ack_at
+                      ? React.createElement(
+                          Text,
+                          { style: [styles.timelineDetail, { color: '#d97706' }] },
+                          `Supervisor acknowledged: ${formatTs(ci.ack_at)}` +
+                          (ci.ack_latitude
+                            ? `  |  GPS: ${ci.ack_latitude.toFixed(5)}, ${ci.ack_longitude?.toFixed(5)} (±${ci.ack_gps_accuracy?.toFixed(0)}m)`
+                            : '')
+                        )
+                      : ci.escalation_sent_at
+                        ? React.createElement(
+                            Text,
+                            { style: [styles.timelineDetail, { color: '#9ca3af', fontStyle: 'italic' }] },
+                            'Awaiting supervisor acknowledgment'
+                          )
+                        : null
                   )
               )
             )

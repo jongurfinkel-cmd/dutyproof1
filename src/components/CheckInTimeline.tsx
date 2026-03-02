@@ -93,6 +93,18 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                     {alert && (
                       <div className="text-slate-500 mt-0.5">Alert sent: {formatTs(alert.created_at)}</div>
                     )}
+                    {ci.ack_at ? (
+                      <div className="text-amber-600 mt-0.5 font-medium">
+                        Supervisor acknowledged: {formatTs(ci.ack_at)}
+                        {ci.ack_latitude != null && (
+                          <span className="text-amber-500 font-normal">
+                            {' '}| GPS: {ci.ack_latitude.toFixed(5)}, {ci.ack_longitude?.toFixed(5)}
+                          </span>
+                        )}
+                      </div>
+                    ) : ci.escalation_sent_at ? (
+                      <div className="text-slate-400 mt-0.5 italic">Awaiting supervisor acknowledgment</div>
+                    ) : null}
                   </div>
                 )}
               </div>

@@ -78,6 +78,11 @@ export interface CheckIn {
   token_expires_at: string
   assigned_name: string
   escalation_sent_at: string | null
+  ack_token: string | null
+  ack_at: string | null
+  ack_latitude: number | null
+  ack_longitude: number | null
+  ack_gps_accuracy: number | null
 }
 
 export interface Alert {
@@ -85,7 +90,7 @@ export interface Alert {
   created_at: string
   watch_id: string
   check_in_id: string | null
-  alert_type: 'missed_checkin' | 'sms_delivered' | 'watch_started' | 'watch_ended' | 'sms_failed' | 'sms_sent'
+  alert_type: 'missed_checkin' | 'sms_delivered' | 'watch_started' | 'watch_ended' | 'sms_failed' | 'sms_sent' | 'escalation_acknowledged'
   recipient_phone: string | null
   recipient_name: string | null
   message: string | null

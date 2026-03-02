@@ -89,6 +89,11 @@ create table if not exists public.check_ins (
   token_expires_at timestamptz not null, -- window expiration
   assigned_name text not null,
   escalation_sent_at timestamptz,        -- when escalation SMS was sent (null if not yet)
+  ack_token text unique,                -- supervisor acknowledgment token
+  ack_at timestamptz,                   -- when supervisor acknowledged the escalation
+  ack_latitude double precision,        -- supervisor GPS on acknowledgment
+  ack_longitude double precision,
+  ack_gps_accuracy double precision,
   constraint checkin_status_enum check (status in ('pending', 'completed', 'missed', 'cancelled'))
 );
 
@@ -105,7 +110,7 @@ create table if not exists public.alerts (
   message text,
   delivery_status text,  -- 'sent', 'delivered', 'failed'
   twilio_sid text,
-  constraint alert_type_enum check (alert_type in ('missed_checkin', 'sms_sent', 'sms_delivered', 'sms_failed', 'watch_started', 'watch_ended'))
+  constraint alert_type_enum check (alert_type in ('missed_checkin', 'sms_sent', 'sms_delivered', 'sms_failed', 'watch_started', 'watch_ended', 'escalation_acknowledged'))
 );
 
 -- ============================================================
@@ -257,6 +262,37 @@ begin
 end;
 $$;
 
+-- Write-once supervisor acknowledgment of a missed check-in escalation
+create or replace function public.acknowledge_checkin(
+  p_checkin_id uuid,
+  p_ack_at timestamptz,
+  p_latitude double precision default null,
+  p_longitude double precision default null,
+  p_gps_accuracy double precision default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.check_ins
+  set
+    ack_at = p_ack_at,
+    ack_latitude = p_latitude,
+    ack_longitude = p_longitude,
+    ack_gps_accuracy = p_gps_accuracy
+  where id = p_checkin_id
+    and status = 'missed'
+    and escalation_sent_at is not null
+    and ack_at is null;  -- write-once: cannot re-acknowledge
+
+  if not found then
+    raise exception 'Check-in % cannot be acknowledged (not missed, no escalation, or already acknowledged)', p_checkin_id;
+  end if;
+end;
+$$;
+
 -- ============================================================
 -- INDEXES (for query performance)
 -- ============================================================
@@ -270,4 +306,5 @@ create index if not exists idx_alerts_watch_id on public.alerts(watch_id);
 create index if not exists idx_alerts_twilio_sid on public.alerts(twilio_sid);
 create index if not exists idx_facilities_owner_id on public.facilities(owner_id);
 create index if not exists idx_check_ins_status_escalation on public.check_ins(status, escalation_sent_at);
+create index if not exists idx_check_ins_ack_token on public.check_ins(ack_token);
 create index if not exists idx_check_ins_watch_id_status on public.check_ins(watch_id, status);

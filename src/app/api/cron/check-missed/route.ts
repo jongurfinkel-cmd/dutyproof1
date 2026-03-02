@@ -68,11 +68,15 @@ export async function GET(req: NextRequest) {
 
         // Send immediate alert to supervisor if escalation_phone is set and delay is 0
         if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
+          const ackToken = generateToken()
+          const ackUrl = `${appUrl}/ack/${ackToken}`
+
           const alertSid = await sendAlertSMS(
             watch.escalation_phone,
             checkIn.assigned_name,
             displayName,
-            new Date(checkIn.scheduled_time)
+            new Date(checkIn.scheduled_time),
+            ackUrl
           )
 
           // Log escalation alert
@@ -88,10 +92,10 @@ export async function GET(req: NextRequest) {
           })
           if (escAlertErr) errors.push(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
-          // Mark escalation as sent so the escalation pass doesn't duplicate
+          // Mark escalation as sent and store ack token
           const { error: escUpdateErr } = await admin
             .from('check_ins')
-            .update({ escalation_sent_at: new Date().toISOString() })
+            .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
             .eq('id', checkIn.id)
           if (escUpdateErr) errors.push(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
         }
@@ -164,16 +168,20 @@ export async function GET(req: NextRequest) {
       try {
         const facility = watch.facilities
         const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+        const ackToken = generateToken()
+        const ackUrl = `${appUrl}/ack/${ackToken}`
+
         const escalationSid = await sendAlertSMS(
           watch.escalation_phone,
           ci.assigned_name,
           displayName,
-          new Date(ci.scheduled_time)
+          new Date(ci.scheduled_time),
+          ackUrl
         )
 
         const { error: escPassUpdateErr } = await admin
           .from('check_ins')
-          .update({ escalation_sent_at: new Date().toISOString() })
+          .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
           .eq('id', ci.id)
         if (escPassUpdateErr) errors.push(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
 
