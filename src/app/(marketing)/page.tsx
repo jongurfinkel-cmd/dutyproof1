@@ -144,6 +144,11 @@ const jsonLd = [
       },
       {
         '@type': 'Question',
+        name: 'What if my worker doesn\'t check in on time?',
+        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds. The miss is permanently recorded in the audit trail, and the next check-in cycle continues automatically.' },
+      },
+      {
+        '@type': 'Question',
         name: 'Is there a contract or long-term commitment?',
         acceptedAnswer: { '@type': 'Answer', text: 'No contracts on the monthly plan. $199/month, cancel any time. Annual plans are billed once at $2,388/year. Records retained for the life of your account.' },
       },
@@ -242,23 +247,26 @@ export default function LandingPage() {
                     l: 'hot work fires per year in the US',
                     s: 'NFPA Hot Work Report',
                     href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/hot-work',
+                    highlight: false,
                   },
                   {
                     n: '$292M',
                     l: 'annual property damage from hot work fires',
                     s: 'NFPA Hot Work Report',
                     href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/hot-work',
+                    highlight: false,
                   },
                   {
                     n: '48 min',
                     l: 'average time before a post-weld fire ignites — after the welder has left',
                     s: 'NFPA 51B / Hot Work Data',
                     href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b',
+                    highlight: true,
                   },
                 ] as const).map(s => (
-                  <div key={s.n} className="text-center lg:text-left">
-                    <div className="text-white font-black leading-none mb-1.5" style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem' }}>{s.n}</div>
-                    <div className="text-slate-400 text-xs leading-snug">{s.l}</div>
+                  <div key={s.n} className={`text-center lg:text-left ${s.highlight ? 'rounded-xl bg-orange-500/10 border border-orange-500/20 px-4 py-3 -mx-2' : ''}`}>
+                    <div className={`font-black leading-none mb-1.5 ${s.highlight ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300' : 'text-white'}`} style={{ fontFamily: 'var(--font-display)', fontSize: s.highlight ? '2rem' : '1.75rem' }}>{s.n}</div>
+                    <div className={`text-xs leading-snug ${s.highlight ? 'text-orange-300/70' : 'text-slate-400'}`}>{s.l}</div>
                     <a
                       href={s.href}
                       target="_blank"
@@ -343,16 +351,10 @@ export default function LandingPage() {
               </div>
               <div className="space-y-5 text-slate-600 text-base leading-relaxed">
                 <p>
-                  Your welder finished at 3 PM. Your fire watch said he watched the hot work area
-                  for the full post-welding period. Nobody verified that.
+                  Your welder finished at 3 PM. Your fire watch says he stayed the full post-weld period. Nobody verified that. Now the fire marshal wants documentation.
                 </p>
                 <p>
-                  The fire marshal and your insurance adjuster want documentation.
-                  You hand them a paper log — handwritten times, no GPS, no carrier confirmation.
-                  There&apos;s no way to prove anyone was actually there.
-                </p>
-                <p>
-                  The claim is disputed. Litigation begins. Your next premium goes up.
+                  You hand them a paper log — handwritten times, no GPS, no proof anyone was actually there. The claim is disputed. Litigation begins. Your premium goes up.
                 </p>
               </div>
               <div className="mt-7 p-4 rounded-xl bg-red-50 border border-red-200">
@@ -519,7 +521,17 @@ export default function LandingPage() {
       ════════════════════════════════════════ */}
       <section id="pricing" className="py-24 bg-slate-50">
         <div className="max-w-5xl mx-auto px-6">
-          <RevealOnScroll className="text-center mb-14">
+          {/* ROI calculator — value anchoring before the price */}
+          <RevealOnScroll className="mb-16">
+            <CostCalculator />
+            <p className="text-slate-500 text-sm text-center mt-6">
+              One hot work fire causes an average of{' '}
+              <span className="font-semibold text-slate-700">$292,000</span> in property damage.
+              DutyProof costs <span className="font-semibold text-slate-700">$199/month</span>.
+            </p>
+          </RevealOnScroll>
+
+          <RevealOnScroll delay={100} className="text-center mb-14">
             <h2 className="text-2xl sm:text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
               Simple, honest pricing
             </h2>
@@ -560,7 +572,7 @@ export default function LandingPage() {
                   href="/signup"
                   className="block text-center py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
                 >
-                  Get Started — $199/mo →
+                  Start Your First Watch →
                 </Link>
                 <a
                   href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
@@ -618,19 +630,9 @@ export default function LandingPage() {
           </div>
 
           {/* AHJ disclaimer */}
-          <p className="text-center text-slate-400 text-xs mb-10 max-w-2xl mx-auto">
+          <p className="text-center text-slate-400 text-xs max-w-2xl mx-auto">
             DutyProof supports fire watch verification workflows. Each contractor remains responsible for compliance with local AHJ, OSHA, and applicable fire code requirements.
           </p>
-
-          {/* Cost calculator */}
-          <RevealOnScroll delay={150}>
-            <CostCalculator />
-            <p className="text-slate-500 text-sm text-center mt-6">
-              One hot work fire causes an average of{' '}
-              <span className="font-semibold text-slate-700">$292,000</span> in property damage.
-              DutyProof costs <span className="font-semibold text-slate-700">$199/month</span>.
-            </p>
-          </RevealOnScroll>
         </div>
       </section>
 
@@ -672,7 +674,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
             >
-              Get Started — $199/mo →
+              Lock In Launch Pricing →
             </Link>
             <a
               href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"

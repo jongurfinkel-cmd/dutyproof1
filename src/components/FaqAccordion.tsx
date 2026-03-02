@@ -28,8 +28,8 @@ const FAQS = [
     a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones. On basic phones without GPS, the check-in still records with full timestamp and SMS confirmation.',
   },
   {
-    q: 'How does DutyProof help with insurance claims?',
-    a: 'When a fire or incident occurs, your insurer and the fire marshal will ask what your fire watch documented. A DutyProof PDF shows exactly where your worker was and when, with GPS coordinates and carrier-confirmed SMS delivery — evidence that actual coverage occurred, not just a handwritten log that anyone could fill in after the fact.',
+    q: 'What if my worker doesn\'t check in on time?',
+    a: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — no manual oversight needed. The miss is permanently recorded in the audit trail, and the next check-in cycle continues automatically. You get full visibility into exactly when coverage lapsed and who was notified.',
   },
   {
     q: 'Is there a contract or long-term commitment?',
