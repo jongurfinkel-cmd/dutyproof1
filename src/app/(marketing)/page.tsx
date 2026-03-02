@@ -139,6 +139,16 @@ const jsonLd = [
       },
       {
         '@type': 'Question',
+        name: 'What happens when an OSHA inspector or fire marshal asks for our records?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Open DutyProof, go to Watch History, find the watch in question, and click Download Report. In under 60 seconds you have a print-ready PDF with every check-in, GPS coordinate, missed check-in alert, and timestamp.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I run multiple simultaneous watches on the same job site?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Yes. You can run multiple concurrent watches — one per work area, floor, or welding bay — each with its own assigned worker, check-in interval, and audit trail. One subscription covers all active watches.' },
+      },
+      {
+        '@type': 'Question',
         name: 'What phone does the fire watch worker need?',
         acceptedAnswer: { '@type': 'Answer', text: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates.' },
       },
@@ -497,29 +507,9 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════
-          FAQ
-      ════════════════════════════════════════ */}
-      <section className="py-24 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-3xl mx-auto px-6">
-          <RevealOnScroll className="text-center mb-12">
-            <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">Common questions</div>
-            <h2
-              className="text-2xl sm:text-4xl text-slate-900"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-            >
-              Questions contractors ask
-            </h2>
-          </RevealOnScroll>
-          <RevealOnScroll delay={100}>
-            <FaqAccordion />
-          </RevealOnScroll>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
           PRICING + CALCULATOR
       ════════════════════════════════════════ */}
-      <section id="pricing" className="py-24 bg-slate-50">
+      <section id="pricing" className="py-24 bg-slate-50 border-t border-slate-100">
         <div className="max-w-5xl mx-auto px-6">
           {/* ROI calculator — value anchoring before the price */}
           <RevealOnScroll className="mb-16">
@@ -620,7 +610,7 @@ export default function LandingPage() {
                   href="/signup"
                   className="block text-center py-4 px-8 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5"
                 >
-                  Get Started — $2,388/yr →
+                  Start Annual Plan →
                 </Link>
                 <p className="text-center text-slate-500 text-xs mt-3">
                   Billed annually · Cancel any time
@@ -637,16 +627,24 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════
-          NOT A CARE FACILITY — subtle link
+          FAQ
       ════════════════════════════════════════ */}
-      <div className="bg-white border-t border-slate-100 py-5">
-        <p className="text-center text-slate-400 text-sm">
-          Not a contractor?{' '}
-          <Link href="/industries" className="text-slate-500 hover:text-slate-800 underline underline-offset-2 transition-colors">
-            DutyProof works anywhere a fire watch is required →
-          </Link>
-        </p>
-      </div>
+      <section className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <RevealOnScroll className="text-center mb-12">
+            <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">Common questions</div>
+            <h2
+              className="text-2xl sm:text-4xl text-slate-900"
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            >
+              Questions contractors ask
+            </h2>
+          </RevealOnScroll>
+          <RevealOnScroll delay={100}>
+            <FaqAccordion />
+          </RevealOnScroll>
+        </div>
+      </section>
 
       {/* ════════════════════════════════════════
           FINAL CTA
@@ -692,6 +690,16 @@ export default function LandingPage() {
           </p>
         </RevealOnScroll>
       </section>
+
+      {/* ── Not a contractor? ── */}
+      <div className="bg-slate-950 border-t border-slate-800 py-5">
+        <p className="text-center text-slate-500 text-sm">
+          Not a contractor?{' '}
+          <Link href="/industries" className="text-slate-400 hover:text-slate-200 underline underline-offset-2 transition-colors">
+            DutyProof works anywhere a fire watch is required →
+          </Link>
+        </p>
+      </div>
 
       <StickyCTA />
     </>
