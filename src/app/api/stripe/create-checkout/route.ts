@@ -25,7 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
-    const priceId = isAnnual && annualPriceId ? annualPriceId : monthlyPriceId
+    if (isAnnual && !annualPriceId) {
+      return NextResponse.json({ error: 'Annual billing is not configured' }, { status: 400 })
+    }
+
+    const priceId = isAnnual ? annualPriceId! : monthlyPriceId
 
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',

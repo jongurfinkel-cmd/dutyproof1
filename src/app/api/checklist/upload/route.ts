@@ -68,6 +68,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File size must be under 10 MB.' }, { status: 400 })
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer())
+
+    // Validate file magic bytes to prevent MIME type spoofing
+    const h = buffer.subarray(0, 12)
+    const isJpeg = h[0] === 0xFF && h[1] === 0xD8 && h[2] === 0xFF
+    const isPng = h[0] === 0x89 && h[1] === 0x50 && h[2] === 0x4E && h[3] === 0x47
+    const isWebp = h[8] === 0x57 && h[9] === 0x45 && h[10] === 0x42 && h[11] === 0x50
+    const isHeic = h[4] === 0x66 && h[5] === 0x74 && h[6] === 0x79 && h[7] === 0x70 // ftyp box
+    if (!isJpeg && !isPng && !isWebp && !isHeic) {
+      return NextResponse.json({ error: 'File contents do not match an allowed image type.' }, { status: 400 })
+    }
+
     // Derive extension from validated MIME type, not user-supplied filename
     const mimeToExt: Record<string, string> = {
       'image/jpeg': 'jpg',
@@ -77,7 +89,6 @@ export async function POST(req: NextRequest) {
     }
     const ext = mimeToExt[file.type] ?? 'jpg'
     const path = `${watchId}/${itemId}/${Date.now()}.${ext}`
-    const buffer = Buffer.from(await file.arrayBuffer())
 
     const { error: uploadError } = await admin.storage
       .from('checklist-photos')

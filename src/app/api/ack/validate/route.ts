@@ -34,6 +34,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'This check-in is no longer in a missed state.' }, { status: 410 })
   }
 
+  if (!checkIn.escalation_sent_at) {
+    return NextResponse.json({ error: 'No escalation was sent for this check-in.' }, { status: 410 })
+  }
+
   const watch = checkIn.watches
   const facility = watch.facilities
 

@@ -94,6 +94,24 @@ export async function POST(req: NextRequest) {
         .update({ subscription_status: 'canceled' })
         .eq('id', userId)
       if (deleteError) console.error('Stripe subscription.deleted error:', deleteError)
+
+      // End all active watches for this user so the cron stops processing them
+      const { data: activeWatches } = await admin
+        .from('watches')
+        .select('id')
+        .eq('owner_id', userId)
+        .eq('status', 'active')
+
+      for (const watch of activeWatches ?? []) {
+        const { error: endErr } = await admin
+          .from('watches')
+          .update({ status: 'completed', ended_at: new Date().toISOString() })
+          .eq('id', watch.id)
+        if (endErr) console.error(`Failed to end watch ${watch.id} on subscription cancel:`, endErr)
+
+        const { error: cancelErr } = await admin.rpc('cancel_watch_checkins', { p_watch_id: watch.id })
+        if (cancelErr) console.error(`Failed to cancel check-ins for watch ${watch.id}:`, cancelErr)
+      }
       break
     }
 
@@ -103,7 +121,11 @@ export async function POST(req: NextRequest) {
         invoice.parent?.subscription_details?.subscription ?? null
       if (!subscriptionId) break
 
-      const subId = typeof subscriptionId === 'string' ? subscriptionId : subscriptionId.id
+      const subId = typeof subscriptionId === 'string' ? subscriptionId : (subscriptionId as { id: string })?.id
+      if (!subId) {
+        console.error('Could not extract subscription ID from invoice:', invoice.id)
+        break
+      }
       const subscription = await getStripe().subscriptions.retrieve(subId)
       const userId = subscription.metadata?.supabase_user_id
       if (!userId) break

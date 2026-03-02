@@ -77,10 +77,18 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                     <div>Completed: {formatTs(ci.completed_at)}</div>
                     <div>Server: {formatTs(ci.server_received_at)}</div>
                     {ci.latitude ? (
-                      <div className="text-green-600">
-                        GPS: {ci.latitude.toFixed(5)}, {ci.longitude?.toFixed(5)}
-                        {ci.gps_accuracy && ` (±${ci.gps_accuracy.toFixed(0)}m)`}
-                      </div>
+                      <a
+                        href={`https://www.openstreetmap.org/?mlat=${ci.latitude}&mlon=${ci.longitude}#map=17/${ci.latitude}/${ci.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-green-600 hover:text-green-700 transition-colors group"
+                      >
+                        <svg className="w-3.5 h-3.5 text-green-500 group-hover:text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        {ci.latitude.toFixed(5)}, {ci.longitude?.toFixed(5)}
+                        {ci.gps_accuracy && <span className="text-green-500"> (±{ci.gps_accuracy.toFixed(0)}m)</span>}
+                      </a>
                     ) : (
                       <div className="text-amber-500">GPS: Not captured</div>
                     )}
@@ -97,9 +105,17 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                       <div className="text-amber-600 mt-0.5 font-medium">
                         Supervisor acknowledged: {formatTs(ci.ack_at)}
                         {ci.ack_latitude != null && (
-                          <span className="text-amber-500 font-normal">
-                            {' '}| GPS: {ci.ack_latitude.toFixed(5)}, {ci.ack_longitude?.toFixed(5)}
-                          </span>
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${ci.ack_latitude}&mlon=${ci.ack_longitude}#map=17/${ci.ack_latitude}/${ci.ack_longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-amber-500 hover:text-amber-600 font-normal transition-colors ml-1"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            {ci.ack_latitude.toFixed(5)}, {ci.ack_longitude?.toFixed(5)}
+                          </a>
                         )}
                       </div>
                     ) : ci.escalation_sent_at ? (

@@ -308,3 +308,89 @@ create index if not exists idx_facilities_owner_id on public.facilities(owner_id
 create index if not exists idx_check_ins_status_escalation on public.check_ins(status, escalation_sent_at);
 create index if not exists idx_check_ins_ack_token on public.check_ins(ack_token);
 create index if not exists idx_check_ins_watch_id_status on public.check_ins(watch_id, status);
+
+-- ============================================================
+-- SAFETY CHECKLIST TABLES
+-- ============================================================
+
+-- Checklist items configured by admin when creating a watch
+create table if not exists public.watch_checklist_items (
+  id           uuid        default gen_random_uuid() primary key,
+  created_at   timestamptz default now(),
+  watch_id     uuid        references public.watches(id) on delete cascade not null,
+  label        text        not null,
+  requires_photo boolean   default false,
+  sort_order   int         default 0
+);
+
+-- One immutable row per checklist item the worker completes
+create table if not exists public.checklist_completions (
+  id               uuid        default gen_random_uuid() primary key,
+  created_at       timestamptz default now(),
+  watch_id         uuid        references public.watches(id) on delete cascade not null,
+  item_id          uuid        references public.watch_checklist_items(id) on delete cascade not null,
+  completed_at     timestamptz default now() not null,
+  photo_url        text,
+  checklist_token  text        not null,
+  constraint unique_completion_per_item unique(watch_id, item_id)
+);
+
+-- Checklist columns on watches (added via migration)
+-- Note: these are defined inline in the watches table above for fresh installs,
+-- but the ALTER is kept for existing databases that already have the watches table.
+alter table public.watches
+  add column if not exists checklist_token         text,
+  add column if not exists checklist_completed_at  timestamptz;
+
+-- Checklist indexes
+create index if not exists idx_watch_checklist_items_watch_id on public.watch_checklist_items(watch_id);
+create index if not exists idx_checklist_completions_watch_id on public.checklist_completions(watch_id);
+create index if not exists idx_watches_checklist_token        on public.watches(checklist_token);
+
+-- Checklist RLS
+alter table public.watch_checklist_items  enable row level security;
+alter table public.checklist_completions  enable row level security;
+
+create policy "Owner reads own checklist items"
+  on public.watch_checklist_items for select
+  using (
+    exists (
+      select 1 from public.watches w
+      where w.id = watch_id and w.owner_id = auth.uid()
+    )
+  );
+
+create policy "Service role full access to checklist items"
+  on public.watch_checklist_items for all
+  using (auth.role() = 'service_role');
+
+create policy "Service role full access to completions"
+  on public.checklist_completions for all
+  using (auth.role() = 'service_role');
+
+-- ============================================================
+-- STORAGE BUCKET — checklist photos
+-- ============================================================
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'checklist-photos',
+  'checklist-photos',
+  true,
+  10485760,  -- 10 MB
+  array['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+)
+on conflict (id) do update set
+  public             = excluded.public,
+  file_size_limit    = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+create policy "Service role manages checklist photos"
+  on storage.objects for all
+  using (
+    bucket_id = 'checklist-photos'
+    and auth.role() = 'service_role'
+  )
+  with check (
+    bucket_id = 'checklist-photos'
+    and auth.role() = 'service_role'
+  );

@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
   })
 
   if (ackError) {
-    if (ackError.message?.includes('cannot be acknowledged')) {
+    // Supabase wraps RAISE EXCEPTION as code P0001 — means already ack'd or invalid state
+    if (ackError.code === 'P0001') {
       return NextResponse.json({ error: 'This alert cannot be acknowledged.' }, { status: 409 })
     }
     console.error('acknowledge_checkin RPC error:', ackError)

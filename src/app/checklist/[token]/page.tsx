@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
+import { format } from 'date-fns'
 
 interface ChecklistItem {
   id: string
@@ -248,11 +249,29 @@ export default function ChecklistPage() {
           <h1 className="text-2xl text-white mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
             Checklist Complete
           </h1>
-          <p className="text-green-300 text-sm mb-5">
-            All safety items have been logged and timestamped.
+          <p className="text-green-300 text-sm mb-6">
+            All safety items verified and logged.
           </p>
-          <p className="text-slate-500 text-xs">
-            You will receive an SMS with your first check-in link at the scheduled time.
+          <div className="bg-green-900/30 rounded-xl px-6 py-4 mb-5">
+            <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest mb-1">Completed At</p>
+            <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+              {format(new Date(state.completedAt), 'h:mm:ss a')}
+            </p>
+            <p className="text-green-400 text-xs mt-1">
+              {format(new Date(state.completedAt), 'EEEE, MMM d, yyyy')}
+            </p>
+          </div>
+          <div className="bg-slate-900/60 rounded-xl px-5 py-4 mb-5 border border-slate-800/60">
+            <div className="flex items-center gap-2 justify-center mb-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">What Happens Next</p>
+            </div>
+            <p className="text-slate-300 text-xs leading-relaxed">
+              You will receive an SMS with your first check-in link when the window opens. Tap it to confirm you are on-site.
+            </p>
+          </div>
+          <p className="text-slate-600 text-xs">
+            This checklist has been logged in the compliance report.
           </p>
         </div>
       </div>
@@ -302,8 +321,8 @@ export default function ChecklistPage() {
         </div>
 
         {/* Checklist items */}
-        <div className="space-y-2 mb-4">
-          {items.map((item) => {
+        <div className="space-y-2.5 mb-4">
+          {items.map((item, index) => {
             const comp = completions[item.id]
             const isChecked = comp?.checked ?? false
             const isUploading = comp?.uploading ?? false
@@ -313,7 +332,7 @@ export default function ChecklistPage() {
               <div
                 key={item.id}
                 className={`bg-slate-900 border rounded-xl p-4 transition-all ${
-                  isChecked ? 'border-green-800/60' :
+                  isChecked ? 'border-green-800/60 bg-green-950/20' :
                   submitAttempted ? 'border-red-700/60 bg-red-950/20' :
                   'border-slate-800'
                 }`}
@@ -326,68 +345,83 @@ export default function ChecklistPage() {
                       role="checkbox"
                       aria-checked={isChecked}
                       aria-label={item.label}
-                      className={`mt-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                      className={`mt-0.5 w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                         isChecked
-                          ? 'border-green-500 bg-green-500 text-white'
+                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/40'
                           : 'border-slate-600 text-transparent'
                       }`}
                     >
-                      <span className="text-xs font-bold">✓</span>
+                      <span className="text-sm font-bold">✓</span>
                     </button>
                   ) : (
-                    <div
+                    <button
+                      onClick={() => !hasPhoto && fileInputRefs.current[item.id]?.click()}
                       role="checkbox"
                       aria-checked={hasPhoto}
                       aria-label={`${item.label} (photo required)`}
-                      className={`mt-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        hasPhoto ? 'border-green-500 bg-green-500 text-white' : 'border-slate-600 text-slate-500'
+                      className={`mt-0.5 w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                        hasPhoto
+                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/40'
+                          : 'border-slate-600 text-slate-500'
                       }`}
                     >
-                      <span className="text-xs">{hasPhoto ? '✓' : '📷'}</span>
-                    </div>
+                      <span className="text-sm">{hasPhoto ? '✓' : '📷'}</span>
+                    </button>
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${isChecked ? 'text-green-300' : 'text-white'}`}>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">{index + 1} / {items.length}</span>
+                      {item.requires_photo && !hasPhoto && (
+                        <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider bg-blue-950/40 border border-blue-800/30 px-1.5 py-0.5 rounded">Photo</span>
+                      )}
+                    </div>
+                    <p className={`text-sm font-semibold leading-snug ${isChecked ? 'text-green-300' : 'text-white'}`}>
                       {item.label}
                     </p>
                     {item.requires_photo && (
-                      <div className="mt-2">
+                      <div className="mt-3">
                         {hasPhoto ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={comp.photo_url!}
                               alt={`Photo for: ${item.label}`}
-                              className="w-16 h-16 object-cover rounded-lg border border-green-800/40"
+                              className="w-20 h-20 object-cover rounded-xl border-2 border-green-700/40 shadow-lg shadow-black/30"
                             />
-                            <button
-                              onClick={() => {
-                                setCompletions((prev) => ({
-                                  ...prev,
-                                  [item.id]: { ...prev[item.id], photo_url: null, checked: false },
-                                }))
-                              }}
-                              className="text-xs text-slate-500 hover:text-red-400 px-2 py-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                            >
-                              Retake
-                            </button>
+                            <div>
+                              <p className="text-[10px] text-green-400 font-bold mb-1.5">Photo captured</p>
+                              <button
+                                onClick={() => {
+                                  setCompletions((prev) => ({
+                                    ...prev,
+                                    [item.id]: { ...prev[item.id], photo_url: null, checked: false },
+                                  }))
+                                }}
+                                className="text-xs text-slate-500 hover:text-red-400 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-red-800/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                              >
+                                Retake
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <button
                             onClick={() => fileInputRefs.current[item.id]?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 font-medium transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                            className="w-full flex items-center justify-center gap-2.5 px-4 py-4 bg-slate-800 hover:bg-slate-750 border border-dashed border-slate-600 hover:border-blue-600/50 rounded-xl text-sm text-slate-300 font-semibold transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                           >
                             {isUploading ? (
                               <>
-                                <span className="w-3 h-3 border border-slate-600 border-t-blue-400 rounded-full animate-spin" />
+                                <span className="w-4 h-4 border-2 border-slate-600 border-t-blue-400 rounded-full animate-spin" />
                                 Uploading…
                               </>
                             ) : (
                               <>
-                                <span>📷</span>
-                                Take Photo
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400" aria-hidden="true">
+                                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                  <circle cx="12" cy="13" r="4" />
+                                </svg>
+                                Tap to Take Photo
                               </>
                             )}
                           </button>

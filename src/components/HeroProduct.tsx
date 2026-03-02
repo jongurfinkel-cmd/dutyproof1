@@ -60,6 +60,48 @@ function DashboardInner() {
           </p>
         </div>
 
+        {/* GPS Location Map */}
+        <div className="bg-slate-800/30 border border-slate-700/40 rounded-xl p-2.5 mb-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Check-In Locations</span>
+            <div className="flex items-center gap-2 text-[7px]">
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-green-400" />On-site</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400" />Missed</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />Ack</span>
+            </div>
+          </div>
+          <div className="relative w-full h-[100px] rounded-lg overflow-hidden bg-slate-900/80 border border-slate-800">
+            {/* Fake map grid */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 240 100" preserveAspectRatio="none">
+              {/* Road grid */}
+              <line x1="0" y1="35" x2="240" y2="35" stroke="#334155" strokeWidth="0.5" />
+              <line x1="0" y1="70" x2="240" y2="70" stroke="#334155" strokeWidth="0.5" />
+              <line x1="60" y1="0" x2="60" y2="100" stroke="#334155" strokeWidth="0.5" />
+              <line x1="120" y1="0" x2="120" y2="100" stroke="#334155" strokeWidth="0.5" />
+              <line x1="180" y1="0" x2="180" y2="100" stroke="#334155" strokeWidth="0.5" />
+              {/* Building outlines */}
+              <rect x="70" y="15" width="40" height="25" rx="2" fill="none" stroke="#475569" strokeWidth="0.5" strokeDasharray="2,2" />
+              <rect x="130" y="42" width="35" height="22" rx="2" fill="none" stroke="#475569" strokeWidth="0.5" strokeDasharray="2,2" />
+              {/* Patrol route */}
+              <polyline points="45,50 80,28 120,30 148,52 190,45 210,60" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4,3" opacity="0.6" />
+              {/* Check-in pins */}
+              <circle cx="45" cy="50" r="4" fill="#22c55e" stroke="#fff" strokeWidth="1.5" />
+              <circle cx="80" cy="28" r="4" fill="#22c55e" stroke="#fff" strokeWidth="1.5" />
+              <circle cx="120" cy="30" r="4" fill="#22c55e" stroke="#fff" strokeWidth="1.5" />
+              <circle cx="148" cy="52" r="4" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
+              <circle cx="190" cy="45" r="4" fill="#22c55e" stroke="#fff" strokeWidth="1.5" />
+              <circle cx="210" cy="60" r="4" fill="#f59e0b" stroke="#fff" strokeWidth="1.5" />
+              {/* Labels */}
+              <text x="70" y="12" fill="#64748b" fontSize="5" fontWeight="600">BLDG A</text>
+              <text x="130" y="40" fill="#64748b" fontSize="5" fontWeight="600">BLDG D</text>
+            </svg>
+            {/* Live indicator */}
+            <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-slate-900/90 border border-slate-700/60 text-[7px] text-green-400 font-bold px-1.5 py-0.5 rounded">
+              <span className="w-1 h-1 rounded-full bg-green-400 live-dot" />LIVE
+            </div>
+          </div>
+        </div>
+
         {/* Cards */}
         <div className="space-y-2">
           <div className="bg-red-950/20 border border-red-600/30 rounded-xl p-3 cursor-default hover:border-red-500/50 transition-colors">
@@ -157,12 +199,8 @@ function PhoneInner() {
             className="object-cover"
             draggable={false}
           />
-          {/* Camera UI overlay */}
-          <div className="absolute inset-0 bg-black/10" />
-          <div className="absolute top-2 left-3 right-3 flex items-center justify-between z-10">
-            <span className="text-[7px] text-white/70 font-bold uppercase tracking-widest drop-shadow">Live Camera</span>
-            <span className="text-[7px] text-white/70 drop-shadow">1x</span>
-          </div>
+          {/* Subtle vignette overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
           {/* Camera corner brackets */}
           <div className="absolute top-6 left-4 w-6 h-6 border-t-2 border-l-2 border-white/60 rounded-tl" />
           <div className="absolute top-6 right-4 w-6 h-6 border-t-2 border-r-2 border-white/60 rounded-tr" />
@@ -453,6 +491,31 @@ function PDFMockup() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* GPS Verification Map */}
+        <div>
+          <div className="text-[6.5px] font-bold text-[#1e3a5f] uppercase tracking-widest bg-slate-50 px-1.5 py-0.5 mb-1 border-l-[2.5px] border-[#e85c0d]">
+            GPS VERIFICATION MAP
+          </div>
+          <div className="relative w-full h-[52px] rounded border border-slate-200 overflow-hidden bg-[#f1f0ec]">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 52" preserveAspectRatio="none">
+              {/* Simplified street grid */}
+              <line x1="0" y1="20" x2="200" y2="20" stroke="#d4d3cf" strokeWidth="0.5" />
+              <line x1="0" y1="38" x2="200" y2="38" stroke="#d4d3cf" strokeWidth="0.5" />
+              <line x1="50" y1="0" x2="50" y2="52" stroke="#d4d3cf" strokeWidth="0.5" />
+              <line x1="100" y1="0" x2="100" y2="52" stroke="#d4d3cf" strokeWidth="0.5" />
+              <line x1="150" y1="0" x2="150" y2="52" stroke="#d4d3cf" strokeWidth="0.5" />
+              {/* Route line */}
+              <polyline points="30,30 65,18 100,20 135,32 170,26" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+              {/* Pins */}
+              <circle cx="30" cy="30" r="3" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+              <circle cx="65" cy="18" r="3" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+              <circle cx="100" cy="20" r="3" fill="#ef4444" stroke="#fff" strokeWidth="1" />
+              <circle cx="135" cy="32" r="3" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+              <circle cx="170" cy="26" r="3" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+            </svg>
           </div>
         </div>
 

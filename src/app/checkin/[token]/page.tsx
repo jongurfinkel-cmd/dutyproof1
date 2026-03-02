@@ -241,15 +241,29 @@ export default function CheckInPage() {
           <p className="text-green-300 text-sm mb-6">
             Your check-in has been recorded and timestamped.
           </p>
-          <div className="bg-green-900/30 rounded-xl px-6 py-4 mb-5">
-            <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest mb-1">Next Check-In Due</p>
+
+          {/* Server timestamp */}
+          <div className="bg-green-900/30 rounded-xl px-6 py-4 mb-4">
+            <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest mb-1">Recorded At</p>
+            <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+              {format(new Date(state.serverTime), 'h:mm:ss a')}
+            </p>
+            <p className="text-green-400 text-xs mt-1">
+              {format(new Date(state.serverTime), 'EEEE, MMM d')}
+            </p>
+          </div>
+
+          {/* Next check-in */}
+          <div className="bg-slate-900/60 rounded-xl px-6 py-4 mb-5 border border-slate-800/60">
+            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">Next Check-In Due</p>
             <p className="text-white text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
               {format(new Date(state.nextCheckIn), 'h:mm a')}
             </p>
-            <p className="text-green-400 text-xs mt-1">
+            <p className="text-slate-400 text-xs mt-1">
               {format(new Date(state.nextCheckIn), 'EEEE, MMM d')}
             </p>
           </div>
+
           <div className="flex items-center justify-center gap-1.5 mb-4">
             {state.gpsCapture ? (
               <span className="text-[10px] text-green-500 font-semibold">📍 Location recorded</span>

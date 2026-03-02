@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import CheckInTimeline from '@/components/CheckInTimeline'
+import CheckInMapDynamic from '@/components/CheckInMapDynamic'
 import toast from 'react-hot-toast'
 import type { WatchWithFacility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
 
@@ -444,6 +445,9 @@ export default function WatchDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Check-In Locations Map */}
+      <CheckInMapDynamic checkIns={checkIns} />
 
       {/* Timeline */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">

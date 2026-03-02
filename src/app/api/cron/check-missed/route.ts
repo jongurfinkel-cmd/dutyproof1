@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS, sendAlertSMS } from '@/lib/twilio'
-import { addMinutes } from 'date-fns'
+import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS } from '@/lib/twilio'
+import { addMinutes, formatDuration, intervalToDuration } from 'date-fns'
 
 export async function GET(req: NextRequest) {
   // Protect with cron secret — accepts Authorization: Bearer header (Vercel cron)
@@ -31,9 +31,63 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient()
   const now = new Date().toISOString()
   let missedCount = 0
-  let errors: string[] = []
+  const errors: string[] = []
+  const pushError = (msg: string) => { if (errors.length < 100) pushError(msg) }
 
   try {
+    // ── Auto-stop pass ────────────────────────────────────────────────────
+    // End active watches whose planned_end_time has passed.
+    const { data: expiredWatches } = await admin
+      .from('watches')
+      .select('*, facilities(*)')
+      .eq('status', 'active')
+      .not('planned_end_time', 'is', null)
+      .lt('planned_end_time', now)
+
+    for (const watch of expiredWatches ?? []) {
+      try {
+        const { error: endErr } = await admin
+          .from('watches')
+          .update({ status: 'completed', ended_at: now })
+          .eq('id', watch.id)
+        if (endErr) {
+          pushError(`Failed to auto-end watch ${watch.id}: ${endErr.message}`)
+          continue
+        }
+
+        const { error: cancelErr } = await admin.rpc('cancel_watch_checkins', { p_watch_id: watch.id })
+        if (cancelErr) pushError(`Failed to cancel check-ins for auto-ended watch ${watch.id}: ${cancelErr.message}`)
+
+        // Send summary SMS
+        const { data: checkIns } = await admin
+          .from('check_ins')
+          .select('status')
+          .eq('watch_id', watch.id)
+
+        const completed = (checkIns ?? []).filter((c) => c.status === 'completed').length
+        const missed = (checkIns ?? []).filter((c) => c.status === 'missed').length
+        const total = completed + missed
+        const duration = intervalToDuration({ start: new Date(watch.start_time), end: new Date(now) })
+        const durationStr = formatDuration(duration, { format: ['hours', 'minutes'] }) || 'Less than a minute'
+        const reportUrl = `${appUrl}/watches/${watch.id}`
+        const facility = watch.facilities
+
+        await sendWatchSummarySMS(watch.assigned_phone, facility.name, durationStr, total, completed, missed, reportUrl)
+        if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
+          await sendWatchSummarySMS(watch.escalation_phone, facility.name, durationStr, total, completed, missed, reportUrl)
+        }
+
+        const { error: alertErr } = await admin.from('alerts').insert({
+          watch_id: watch.id,
+          alert_type: 'watch_ended',
+          message: `Watch auto-ended (planned end time reached). ${completed}/${total} check-ins completed.`,
+        })
+        if (alertErr) pushError(`Failed to log auto-end alert for ${watch.id}: ${alertErr.message}`)
+      } catch (innerErr) {
+        pushError(`Auto-stop error for watch ${watch.id}: ${String(innerErr)}`)
+      }
+    }
+
     // Find expired pending check-ins for active watches
     const { data: expiredCheckIns, error: fetchError } = await admin
       .from('check_ins')
@@ -60,7 +114,7 @@ export async function GET(req: NextRequest) {
         })
 
         if (missError) {
-          errors.push(`Failed to mark ${checkIn.id} as missed: ${missError.message}`)
+          pushError(`Failed to mark ${checkIn.id} as missed: ${missError.message}`)
           continue
         }
 
@@ -90,14 +144,14 @@ export async function GET(req: NextRequest) {
             delivery_status: alertSid ? 'sent' : 'failed',
             twilio_sid: alertSid,
           })
-          if (escAlertErr) errors.push(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
+          if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
           // Mark escalation as sent and store ack token
           const { error: escUpdateErr } = await admin
             .from('check_ins')
             .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
             .eq('id', checkIn.id)
-          if (escUpdateErr) errors.push(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
+          if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
         }
 
         // Schedule next check-in
@@ -141,10 +195,10 @@ export async function GET(req: NextRequest) {
             delivery_status: nextSid ? 'sent' : 'failed',
             twilio_sid: nextSid,
           })
-          if (nextAlertErr) errors.push(`Failed to log next SMS alert for ${nextCheckIn.id}: ${nextAlertErr.message}`)
+          if (nextAlertErr) pushError(`Failed to log next SMS alert for ${nextCheckIn.id}: ${nextAlertErr.message}`)
         }
       } catch (innerErr) {
-        errors.push(`Error processing check-in ${checkIn.id}: ${String(innerErr)}`)
+        pushError(`Error processing check-in ${checkIn.id}: ${String(innerErr)}`)
       }
     }
 
@@ -183,7 +237,7 @@ export async function GET(req: NextRequest) {
           .from('check_ins')
           .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
           .eq('id', ci.id)
-        if (escPassUpdateErr) errors.push(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
+        if (escPassUpdateErr) pushError(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
 
         const { error: escPassAlertErr } = await admin.from('alerts').insert({
           watch_id: watch.id,
@@ -195,9 +249,9 @@ export async function GET(req: NextRequest) {
           delivery_status: escalationSid ? 'sent' : 'failed',
           twilio_sid: escalationSid,
         })
-        if (escPassAlertErr) errors.push(`Failed to log escalation pass alert for ${ci.id}: ${escPassAlertErr.message}`)
+        if (escPassAlertErr) pushError(`Failed to log escalation pass alert for ${ci.id}: ${escPassAlertErr.message}`)
       } catch (innerErr) {
-        errors.push(`Escalation error for check-in ${ci.id}: ${String(innerErr)}`)
+        pushError(`Escalation error for check-in ${ci.id}: ${String(innerErr)}`)
       }
     }
 

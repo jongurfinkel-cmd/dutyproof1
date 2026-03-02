@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
     })
 
     if (completeError) {
-      // Race condition: two requests for the same token — RPC rejects the second
-      if (completeError.message?.includes('not pending')) {
+      // Race condition: two requests for the same token — RPC rejects the second.
+      // Supabase wraps RAISE EXCEPTION as code P0001 (raise_exception).
+      if (completeError.code === 'P0001') {
         return NextResponse.json({ error: 'This check-in has already been recorded.' }, { status: 409 })
       }
       console.error('complete_checkin RPC error:', completeError)
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
     const facility = watch.facilities
+    const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     if (!appUrl) {
@@ -111,7 +113,7 @@ export async function POST(req: NextRequest) {
       // Send next SMS
       const twilioSid = await sendCheckInSMS(
         watch.assigned_phone,
-        facility.name,
+        displayName,
         checkIn.assigned_name,
         nextCheckInUrl,
         nextScheduledTime
