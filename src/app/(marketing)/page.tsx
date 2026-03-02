@@ -4,6 +4,7 @@ import FeatureTabs from '@/components/FeatureTabs'
 import FaqAccordion from '@/components/FaqAccordion'
 import CostCalculator from '@/components/CostCalculator'
 import HeroProduct from '@/components/HeroProduct'
+import StickyCTA from '@/components/StickyCTA'
 
 export const metadata = {
   title: 'Fire Watch Compliance Software for Contractors',
@@ -56,14 +57,11 @@ const timelineItems = [
 const includedFeatures = [
   'Unlimited active watches per job site',
   'Automated SMS check-ins (15 or 30 min intervals)',
-  'Location capture on every check-in',
+  'GPS location capture on every check-in',
   'Missed check-in escalation in < 60 seconds',
-  'Tamper-proof immutable audit log',
+  'Tamper-proof immutable audit log with full search',
   'One-click OSHA-ready PDF reports',
-  'Searchable watch history — any date, any worker',
-  'SMS delivery receipt logging',
   'Unlimited admin & supervisor accounts',
-  'Direct email & chat support',
 ]
 
 const FACILITY_TYPES = [
@@ -185,9 +183,14 @@ export default function LandingPage() {
 
             {/* ── Copy ── */}
             <div className="flex-1 text-center lg:text-left max-w-2xl lg:max-w-none lg:pt-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold tracking-widest mb-8 uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 live-dot" />
-                Built by a Firefighter · OSHA 29 CFR 1910.252 · Hot Work Verification
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-300 text-sm font-bold tracking-wide mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 live-dot" />
+                  Built by a Firefighter
+                </div>
+                <div className="text-slate-600 text-[10px] font-medium tracking-widest uppercase">
+                  OSHA 29 CFR 1910.252 · NFPA 51B · Hot Work Verification
+                </div>
               </div>
 
               <h1
@@ -202,7 +205,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-slate-300 text-xl leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-                3,400 hot work fires a year. Most ignite after the welder already left.
+                Most hot work fires start after the welder leaves.
                 Your fire watch either happened — or it didn&apos;t.
                 DutyProof makes sure you can prove it.
               </p>
@@ -222,10 +225,13 @@ export default function LandingPage() {
                 </a>
               </div>
 
+              <p className="text-slate-500 text-xs mb-6 text-center lg:text-left">30-day money-back guarantee — no questions asked.</p>
+
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 justify-center lg:justify-start text-sm text-slate-400 font-medium">
                 <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> Set up in under 2 minutes</span>
                 <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> OSHA-ready PDF reports</span>
                 <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> No app for workers</span>
+                <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> Cancel any time — no contracts</span>
               </div>
 
               {/* ── Risk stats strip — sourced from NFPA ── */}
@@ -272,6 +278,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <div id="sticky-sentinel" />
 
       {/* ════════════════════════════════════════
           FACILITY TYPE TICKER
@@ -561,7 +569,7 @@ export default function LandingPage() {
                   Book a 15-min Demo →
                 </a>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  Cancel any time · No setup fees · Annual option: $2,388/yr
+                  30-day money-back guarantee · No setup fees · Annual option: $2,388/yr
                 </p>
               </div>
             </RevealOnScroll>
@@ -654,10 +662,10 @@ export default function LandingPage() {
             When the fire marshal<br />walks in, you&apos;ll<br />be ready.
           </h2>
           <p className="text-slate-400 text-lg leading-relaxed mb-4">
-            Set up your first fire watch in under two minutes. No setup fees.
+            Set up your first watch in under two minutes. Launch pricing — lock in $199/mo.
           </p>
           <p className="text-slate-400 text-sm mb-10">
-            $199/month flat — less than 0.1% of the average hot work fire claim.
+            If it&apos;s not for you, cancel in 30 days for a full refund. No questions asked.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -674,7 +682,7 @@ export default function LandingPage() {
             </a>
           </div>
           <p className="mt-4 text-slate-500 text-xs">
-            No setup fees · Cancel any time · Annual option: $2,388/yr
+            30-day money-back guarantee · Cancel any time · $2,388/yr annual option
           </p>
           <p className="mt-3 text-slate-600 text-sm">
             Already have an account?{' '}
@@ -682,6 +690,8 @@ export default function LandingPage() {
           </p>
         </RevealOnScroll>
       </section>
+
+      <StickyCTA />
     </>
   )
 }
