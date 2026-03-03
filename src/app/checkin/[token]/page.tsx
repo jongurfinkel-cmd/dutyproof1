@@ -55,6 +55,18 @@ export default function CheckInPage() {
   const [state, setState] = useState<CheckInState>({ phase: 'loading' })
   const submittingRef = useRef(false)
 
+  // Add PWA manifest + service worker only on check-in page (not the marketing site)
+  useEffect(() => {
+    const link = document.createElement('link')
+    link.rel = 'manifest'
+    link.href = '/manifest.webmanifest'
+    document.head.appendChild(link)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+    }
+    return () => { document.head.removeChild(link) }
+  }, [])
+
   useEffect(() => {
     async function validate() {
       try {

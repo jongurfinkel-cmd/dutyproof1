@@ -144,6 +144,7 @@ export default function SocialProof() {
 
         <p className="text-center text-slate-600 text-xs mb-12">
           Collected from trade professionals across the field, 2025–2026.
+          These responses shaped every feature in DutyProof. We&apos;re onboarding our first partners now.
         </p>
 
         {/* Hero quotes — first row */}

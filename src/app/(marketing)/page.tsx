@@ -254,25 +254,25 @@ export default function LandingPage() {
               <div className="mt-8 pt-6 border-t border-white/[0.07] grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-5">
                 {([
                   {
-                    n: '3,400+',
-                    l: 'hot work fires per year in the US',
-                    s: 'NFPA Hot Work Report',
-                    href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/hot-work',
+                    n: '4,630',
+                    l: 'structure fires per year caused by hot work',
+                    s: 'NFPA Fire Research',
+                    href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work',
                     highlight: false,
                   },
                   {
-                    n: '63%',
-                    l: 'of hot work fires — no fire watch was present',
-                    s: 'NFPA 51B / Hot Work Data',
-                    href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b',
-                    highlight: false,
+                    n: '$355M',
+                    l: 'in property damage every year from hot work fires',
+                    s: 'NFPA Fire Research',
+                    href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work',
+                    highlight: true,
                   },
                   {
                     n: '48 min',
-                    l: 'average time before a post-weld fire ignites — after the welder has left',
-                    s: 'NFPA 51B / Hot Work Data',
+                    l: 'avg time before a post-weld fire ignites — after the welder has left',
+                    s: 'NFPA 51B',
                     href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b',
-                    highlight: true,
+                    highlight: false,
                   },
                 ] as const).map(s => (
                   <div key={s.n} className={`text-center lg:text-left ${s.highlight ? 'rounded-xl bg-orange-500/10 border border-orange-500/20 px-4 py-3 -mx-2' : ''}`}>
@@ -383,6 +383,96 @@ export default function LandingPage() {
               <div className="mt-7 p-4 rounded-xl bg-blue-50 border border-blue-200">
                 <div className="text-blue-700 font-bold text-lg">Same day.</div>
                 <div className="text-blue-600 text-sm">Fire marshal satisfied. Insurance claim supported.</div>
+              </div>
+            </div>
+          </RevealOnScroll>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          WORKER EXPERIENCE — zero friction
+      ════════════════════════════════════════ */}
+      <section className="relative py-16 bg-slate-950 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="relative max-w-5xl mx-auto px-6">
+          <RevealOnScroll className="text-center mb-12">
+            <div className="text-orange-500 text-xs font-bold tracking-widest uppercase mb-3">Zero friction for the field</div>
+            <h2
+              className="text-2xl sm:text-4xl lg:text-5xl text-white leading-tight mb-3"
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            >
+              Nothing to install.<br />Nothing to learn.
+            </h2>
+            <p className="text-slate-400 text-lg">Your fire watch worker keeps their phone. That&apos;s it.</p>
+          </RevealOnScroll>
+
+          <RevealOnScroll delay={100}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 mb-10">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div className="text-white font-bold text-base mb-1.5">Gets a text</div>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                  DutyProof sends an SMS with a secure check-in link at each interval. No app to download.
+                </p>
+              </div>
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+                  </svg>
+                </div>
+                <div className="text-white font-bold text-base mb-1.5">Taps the link</div>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                  One tap opens the check-in page. GPS coordinates and timestamp captured automatically.
+                </p>
+              </div>
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div className="text-white font-bold text-base mb-1.5">Done</div>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                  Check-in logged to the immutable audit trail. Supervisor sees it in real time.
+                </p>
+              </div>
+            </div>
+          </RevealOnScroll>
+
+          {/* Offline callout */}
+          <RevealOnScroll delay={200}>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-6 py-5 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+                  <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+                  <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                  <line x1="12" y1="20" x2="12.01" y2="20" />
+                </svg>
+              </div>
+              <div className="text-center sm:text-left">
+                <div className="text-amber-300 font-bold text-sm mb-0.5">No signal? No problem.</div>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Works underground, in parking garages, inside steel structures. Check-ins save to the phone and sync automatically when connectivity returns.
+                </p>
               </div>
             </div>
           </RevealOnScroll>
@@ -507,14 +597,40 @@ export default function LandingPage() {
             <h2 className="text-2xl sm:text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
               Simple, honest pricing
             </h2>
-            <p className="text-slate-500 text-lg">Start self-serve. Scale with us.</p>
-            <a
-              href="/sample-report.pdf"
-              download
-              className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:text-blue-700 text-sm font-semibold underline underline-offset-2 transition-colors"
-            >
-              ↓ Download a sample compliance report
-            </a>
+            <p className="text-slate-500 text-lg mb-6">Start self-serve. Scale with us.</p>
+
+            {/* PDF report preview card */}
+            <div className="inline-block max-w-md mx-auto rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-slate-900 font-bold text-sm mb-2">What&apos;s in the compliance report</div>
+                  <ul className="space-y-1.5 text-slate-500 text-xs">
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />GPS coverage map for every check-in</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Server-timestamped, immutable check-in log</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Missed check-in alerts + supervisor acknowledgments</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Print-ready, one-click download</li>
+                  </ul>
+                  <a
+                    href="/sample-report.pdf"
+                    download
+                    className="inline-flex items-center gap-1.5 mt-3 text-blue-600 hover:text-blue-700 text-xs font-semibold transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download Sample Report (PDF)
+                  </a>
+                </div>
+              </div>
+            </div>
           </RevealOnScroll>
 
           {/* ROI calculator — value anchoring before the cards */}
@@ -561,7 +677,7 @@ export default function LandingPage() {
             <RevealOnScroll delay={100} className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl relative">
               <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                  Lock in your rate
+                  Priority support included
                 </div>
                 <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
                 <div className="flex items-end justify-center gap-1 mb-1">
@@ -646,18 +762,43 @@ export default function LandingPage() {
         <div aria-hidden className="glow-pulse pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] opacity-20" style={{ background: 'radial-gradient(ellipse, #1d4ed8 0%, transparent 70%)' }} />
 
         <RevealOnScroll className="relative max-w-2xl mx-auto px-6 text-center">
-          <div className="text-orange-500 text-xs font-bold tracking-widest uppercase mb-6">Stop pencil-whipping</div>
+          <div className="text-orange-500 text-xs font-bold tracking-widest uppercase mb-6">Built for the trades</div>
           <h2
             className="text-3xl sm:text-5xl lg:text-6xl text-white mb-6 leading-[0.95]"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
-            When the fire marshal<br />walks in, you&apos;ll<br />be ready.
+            When someone asks<br />&ldquo;where&apos;s the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">proof</span>?&rdquo;<br />you&apos;ll have it.
           </h2>
-          <p className="text-slate-400 text-lg leading-relaxed mb-4">
-            Set up your first watch in under two minutes. $199/mo, unlimited sites.
+          <p className="text-slate-400 text-lg leading-relaxed mb-8">
+            GPS-stamped. Time-verified. Every check-in documented.
           </p>
-          <p className="text-slate-400 text-sm mb-10">
-            If it&apos;s not for you, cancel in 30 days for a full refund. No questions asked.
+
+          {/* Founder blurb */}
+          <div className="max-w-lg mx-auto mb-10 border-l-2 border-orange-500/40 pl-5 text-left">
+            <p className="text-slate-400 text-sm leading-relaxed italic">
+              &ldquo;I spent years as a firefighter watching hot work fires happen because the paperwork said everything was fine.
+              DutyProof exists to close the gap between what the log says and what actually happened.&rdquo;
+            </p>
+            <p className="text-slate-500 text-xs mt-2 not-italic">— Jon, Founder</p>
+          </div>
+
+          {/* Setup steps */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10 max-w-xl mx-auto">
+            {([
+              { step: '1', label: 'Sign up' },
+              { step: '2', label: 'Add your site' },
+              { step: '3', label: 'Enter phone' },
+              { step: '4', label: 'Start watch' },
+            ] as const).map((s) => (
+              <div key={s.step} className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400 text-xs font-bold">{s.step}</div>
+                <span className="text-slate-300 text-xs font-medium">{s.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-slate-500 text-xs mb-8">
+            $199/mo, unlimited sites. 30-day money-back guarantee.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
