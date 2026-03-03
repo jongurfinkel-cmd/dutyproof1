@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -12,22 +12,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [criticalCount, setCriticalCount] = useState(0)
+  const sidebarRef = useRef<HTMLElement>(null)
+  const hamburgerRef = useRef<HTMLButtonElement>(null)
 
+  // Proxy already redirects unauthenticated users — just fetch email for display
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        router.push(`/login?next=${encodeURIComponent(pathname)}`)
-      } else {
-        setUserEmail(data.user.email ?? null)
-      }
+      if (data.user) setUserEmail(data.user.email ?? null)
     })
-  }, [router, pathname])
+  }, [])
 
   // Close sidebar on navigation
   useEffect(() => {
     setSidebarOpen(false)
   }, [pathname])
+
+  // Close sidebar on Escape
+  useEffect(() => {
+    if (!sidebarOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSidebarOpen(false)
+        hamburgerRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [sidebarOpen])
+
+  // Focus trap inside sidebar when open on mobile
+  const trapFocus = useCallback((e: KeyboardEvent) => {
+    if (e.key !== 'Tab' || !sidebarRef.current) return
+    const focusable = sidebarRef.current.querySelectorAll<HTMLElement>('a, button')
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!sidebarOpen) return
+    document.addEventListener('keydown', trapFocus)
+    const firstLink = sidebarRef.current?.querySelector<HTMLElement>('a')
+    firstLink?.focus()
+    return () => document.removeEventListener('keydown', trapFocus)
+  }, [sidebarOpen, trapFocus])
 
   useEffect(() => {
     async function loadCriticalCount() {
@@ -77,11 +113,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          role="presentation"
         />
       )}
 
       {/* Sidebar — fixed+off-screen on mobile, static in flow on desktop */}
       <aside
+        ref={sidebarRef}
         className={`fixed inset-y-0 left-0 z-30 w-60 bg-slate-950 text-white flex flex-col shrink-0 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -142,6 +180,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Mobile header */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-10">
           <button
+            ref={hamburgerRef}
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label="Open menu"

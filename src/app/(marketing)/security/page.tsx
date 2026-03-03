@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import PageHero from '@/components/PageHero'
 
 export const metadata = {
   title: 'Security & Data Protection',
@@ -8,32 +9,32 @@ export const metadata = {
 
 const protections = [
   {
-    icon: '🔒',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
     heading: 'Records are write-once',
     body: 'Every check-in, missed check-in, and escalation event is written once and permanently locked. There is no edit function. There is no delete function. No one — including DutyProof staff — can alter a record after it is created.',
   },
   {
-    icon: '🕐',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     heading: 'Timestamps come from the server, not the device',
     body: 'Check-in times are set by our servers at the moment the event is recorded — not by the worker\'s phone. This prevents backdating. The time on the record is the time it actually happened.',
   },
   {
-    icon: '📋',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>,
     heading: 'SMS delivery receipts are logged',
     body: 'Every outbound check-in SMS includes a carrier delivery receipt that is stored alongside the check-in record. If an inspector asks whether a message was actually sent and delivered, the receipt is there.',
   },
   {
-    icon: '👥',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
     heading: 'Job site data is fully isolated',
     body: 'Each job site\'s watch data, personnel, and reports are completely separated at the database level. Administrators at one job site cannot see or access data from another job site, even within the same organization.',
   },
   {
-    icon: '🛡️',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
     heading: 'Role-based access control',
     body: 'Admin accounts control job site setup, worker assignment, and report access. Supervisor accounts can monitor active watches and receive escalations. Fire watch workers interact only via SMS — they never log into the platform.',
   },
   {
-    icon: '🌐',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
     heading: 'Encrypted in transit and at rest',
     body: 'All data is transmitted over HTTPS/TLS. Data at rest is encrypted using AES-256. Backups are encrypted. No unencrypted copies of watch data exist anywhere in the system.',
   },
@@ -59,24 +60,12 @@ export default function SecurityPage() {
   return (
     <div className="bg-white">
 
-      {/* ── Hero ── */}
-      <section className="bg-slate-950 py-16 sm:py-20 px-4 sm:px-6 text-center">
-        <div className="max-w-3xl mx-auto">
-          <div className="inline-block bg-blue-600/20 text-blue-400 text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-4">
-            Security & Trust
-          </div>
-          <h1
-            className="text-2xl sm:text-4xl lg:text-5xl text-white mb-4"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-          >
-            Built to hold up under scrutiny
-          </h1>
-          <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto">
-            When an OSHA inspector or fire marshal asks for documentation, DutyProof records need to be unimpeachable.
-            Here is exactly how they are protected.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        tag="Security & Trust"
+        tagStyle="pill"
+        title="Built to hold up under scrutiny"
+        subtitle="When an OSHA inspector or fire marshal asks for documentation, DutyProof records need to be unimpeachable. Here is exactly how they are protected."
+      />
 
       {/* ── Record Protection ── */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white">
@@ -95,7 +84,7 @@ export default function SecurityPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {protections.map((p) => (
               <div key={p.heading} className="rounded-2xl border border-slate-100 bg-slate-50 p-6">
-                <div className="text-2xl mb-3">{p.icon}</div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">{p.icon}</div>
                 <h3 className="font-bold text-slate-900 mb-2 text-sm sm:text-base">{p.heading}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{p.body}</p>
               </div>

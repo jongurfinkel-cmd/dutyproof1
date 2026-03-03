@@ -15,51 +15,55 @@ export const metadata = {
   ],
 }
 
+const IndustryIcon = ({ d }: { d: string }) => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+)
+
 const industries = [
   {
-    icon: '🏨',
+    icon: <IndustryIcon d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h1M14 7h1M9 11h1M14 11h1M9 15h6" />,
     name: 'Hotels & Hospitality',
     trigger: 'A fire alarm system offline during a renovation or system upgrade triggers an immediate watch requirement — with guests on every floor.',
     stakes: 'Brand damage, liability exposure, and AHJ citations if documentation is insufficient.',
   },
   {
-    icon: '🏭',
+    icon: <IndustryIcon d="M2 20V8l4-4 4 4v12M10 20V4l12 8v8M6 12h.01M6 16h.01M14 16h.01M14 12h.01M18 16h.01" />,
     name: 'Warehouses & Distribution Centers',
     trigger: 'Sprinkler system impairment for maintenance or cold-pipe repair forces a watch across thousands of square feet.',
     stakes: 'Insurance requirements often mandate written logs. No log = no coverage.',
   },
   {
-    icon: '🏫',
+    icon: <IndustryIcon d="M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5" />,
     name: 'Schools & Universities',
     trigger: 'Any fire alarm or suppression system taken offline for testing, upgrade, or repair.',
     stakes: 'State fire marshal audits. Occupation certificates. Board liability. Parental scrutiny.',
   },
   {
-    icon: '🏢',
+    icon: <IndustryIcon d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />,
     name: 'Office Buildings & Commercial Towers',
     trigger: 'Tenant fit-outs, HVAC tie-ins, and system upgrades routinely take alarm systems offline.',
     stakes: 'Property management firms need documentation chains across multiple tenants and floors.',
   },
   {
-    icon: '⚙️',
+    icon: <IndustryIcon d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 2v2M12 20v2M2 12h2M20 12h2" />,
     name: 'Manufacturing & Industrial Facilities',
     trigger: 'Sprinkler impairments for equipment relocation, welding work, or pipe freeze protection.',
     stakes: 'OSHA 29 CFR 1910.159 and insurance audits require written records. Verbal logs don\'t hold up.',
   },
   {
-    icon: '🏗️',
+    icon: <IndustryIcon d="M2 20h20M5 20V8l3-3M9 20V6l6-4v18M19 20V10l-4-2" />,
     name: 'Construction Sites',
     trigger: 'Temporary structures, hot work operations, and buildings under construction before suppression systems are active.',
     stakes: 'GC liability. AHJ inspection holds. Project delays when documentation can\'t be produced.',
   },
   {
-    icon: '🛍️',
+    icon: <IndustryIcon d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" />,
     name: 'Retail & Shopping Centers',
     trigger: 'Anchor tenant renovations, common-area suppression work, or system testing during off-hours.',
     stakes: 'Fire marshal closures cost thousands per hour. Paper logs don\'t survive an audit.',
   },
   {
-    icon: '🏥',
+    icon: <IndustryIcon d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M10 7h4M12 5v4M9 14h6M9 18h6" />,
     name: 'Hospitals & Healthcare',
     trigger: 'Any fire alarm or suppression system impairment — during renovation, hot work, or system maintenance — triggers strict fire watch requirements under NFPA 101 and applicable state fire codes.',
     stakes: 'State fire inspection citations and liability exposure if fire watch documentation cannot be produced during an audit.',
@@ -69,14 +73,6 @@ const industries = [
 export default function IndustriesPage() {
   return (
     <>
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .fade-up { animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
-      `}</style>
-
       {/* ── Hero ── */}
       <section className="bg-slate-950 py-24 relative overflow-hidden">
         <div
@@ -123,7 +119,7 @@ export default function IndustriesPage() {
             </Link>
             <Link
               href="/"
-              className="px-8 py-4 text-white/70 hover:text-white font-semibold rounded-xl text-base border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/8 transition-all"
+              className="px-8 py-4 text-white/70 hover:text-white font-semibold rounded-xl text-base border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/[0.08] transition-all"
             >
               ← Back to Home
             </Link>
@@ -167,7 +163,7 @@ export default function IndustriesPage() {
             {industries.map((ind, i) => (
               <RevealOnScroll key={ind.name} delay={i * 40}>
                 <div className="bg-white rounded-2xl border border-slate-200 p-7 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all">
-                  <div className="text-3xl mb-4">{ind.icon}</div>
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">{ind.icon}</div>
                   <h3
                     className="text-lg text-slate-900 mb-3"
                     style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}

@@ -38,6 +38,7 @@ function urgencyPriority(w: WatchWithLastCheckIn): number {
 export default function DashboardPage() {
   const [watches, setWatches] = useState<WatchWithLastCheckIn[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [endingId, setEndingId] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -61,9 +62,11 @@ export default function DashboardPage() {
 
     if (error) {
       toast.error('Failed to load watches')
+      setLoadError(true)
       setLoading(false)
       return
     }
+    setLoadError(false)
 
     const watchIds = (data as WatchWithFacility[]).map((w) => w.id)
     const ciMap: Record<string, { status: string; completed_at: string | null }> = {}
@@ -120,9 +123,12 @@ export default function DashboardPage() {
   }, [loadWatches])
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('checkout=success')) {
-      toast.success('Subscription activated! You now have full access to DutyProof.', { duration: 8000 })
-      window.history.replaceState({}, '', '/dashboard')
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('checkout') === 'success') {
+        toast.success('Subscription activated! You now have full access to DutyProof.', { duration: 8000 })
+        window.history.replaceState({}, '', '/dashboard')
+      }
     }
   }, [])
 
@@ -294,7 +300,27 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {watches.length === 0 ? (
+      {loadError ? (
+        <div className="bg-white rounded-2xl border border-red-200 shadow-sm text-center py-14 px-6">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-red-50 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
+            Failed to load watches
+          </h3>
+          <p className="text-slate-400 text-sm mb-5 max-w-sm mx-auto">
+            There was an error loading your watches. Please try again.
+          </p>
+          <button
+            onClick={() => loadWatches(true)}
+            className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200"
+          >
+            Retry
+          </button>
+        </div>
+      ) : watches.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="text-center py-14 px-6 border-b border-slate-100">
             <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-100 flex items-center justify-center">

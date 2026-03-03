@@ -106,7 +106,7 @@ export default function HistoryPage() {
 
   // Reset to page 1 whenever filters change
   const filteredKey = `${search}|${facilityFilter}|${dateFrom}|${dateTo}`
-  useEffect(() => { setPage(1) }, [filteredKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(1) }, [filteredKey])
 
   const dir = sortDir === 'asc' ? 1 : -1
   const sorted = [...filtered].sort((a, b) => {
@@ -318,7 +318,7 @@ export default function HistoryPage() {
       {watches.length === 0 ? (
         <div className="text-center py-24 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <span className="text-3xl">📋</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
           </div>
           <h3
             className="text-lg font-bold text-slate-800 mb-2"
@@ -358,6 +358,7 @@ export default function HistoryPage() {
                         key ? 'cursor-pointer text-slate-400 hover:text-slate-600 transition-colors' : 'text-slate-400'
                       }`}
                       onClick={key ? () => handleSort(key) : undefined}
+                      aria-sort={key && sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
                     >
                       <span className="inline-flex items-center gap-1">
                         {label}

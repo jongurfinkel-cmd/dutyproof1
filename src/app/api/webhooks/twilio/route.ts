@@ -19,12 +19,14 @@ export async function POST(req: NextRequest) {
     params[key] = value
   })
 
-  // Validate Twilio signature whenever auth token is configured
-  if (process.env.TWILIO_AUTH_TOKEN) {
-    const valid = validateTwilioSignature(signature, url, params)
-    if (!valid) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
-    }
+  // Validate Twilio signature — fail closed if auth token is not configured
+  if (!process.env.TWILIO_AUTH_TOKEN) {
+    console.error('TWILIO_AUTH_TOKEN not configured — rejecting webhook')
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+  const valid = validateTwilioSignature(signature, url, params)
+  if (!valid) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
   }
 
   const messageSid    = params.MessageSid

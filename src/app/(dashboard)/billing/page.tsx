@@ -153,10 +153,12 @@ export default function BillingPage() {
           <div className="bg-green-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs font-bold tracking-widest uppercase mb-3">
               <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
-              Subscription Active
+              {subStatus === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
             </div>
             <p className="text-green-200 text-sm mt-1">
-              $199/month · Unlimited sites · Cancel any time
+              {subStatus === 'trialing'
+                ? 'Your trial is active. Subscribe to keep access when it ends.'
+                : '$199/month · Unlimited sites · Cancel any time'}
             </p>
           </div>
           <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">

@@ -11,9 +11,14 @@ function getCredentials() {
   return { accountSid, authToken, fromNumber }
 }
 
+let _client: ReturnType<typeof twilio> | null = null
+
 function getClient() {
-  const { accountSid, authToken } = getCredentials()
-  return twilio(accountSid, authToken)
+  if (!_client) {
+    const { accountSid, authToken } = getCredentials()
+    _client = twilio(accountSid, authToken)
+  }
+  return _client
 }
 
 async function sendSMS(to: string, body: string): Promise<string | null> {

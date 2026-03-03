@@ -131,10 +131,10 @@ create policy "Users update own profile"
   on public.profiles for update using (auth.uid() = id);
 
 create policy "Service role can upsert profiles"
-  on public.profiles for insert with check (true);
+  on public.profiles for insert with check (auth.uid() = id);
 
 create policy "Service role can update any profile"
-  on public.profiles for update using (true) with check (true);
+  on public.profiles for update using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 -- Facilities
 create policy "Users see own facilities"
@@ -145,6 +145,9 @@ create policy "Users create own facilities"
 
 create policy "Users update own facilities"
   on public.facilities for update using (auth.uid() = owner_id);
+
+create policy "Users delete own facilities"
+  on public.facilities for delete using (auth.uid() = owner_id);
 
 -- Watches
 create policy "Users see own watches"
@@ -170,9 +173,9 @@ create policy "check_ins are immutable - no updates"
 create policy "check_ins are immutable - no deletes"
   on public.check_ins for delete using (false);
 
--- Allow inserting check-ins (service role bypasses this, but anon needs it blocked)
+-- Only service role can insert check-ins (service role bypasses RLS, but this blocks anon/authenticated)
 create policy "Service role can insert check-ins"
-  on public.check_ins for insert with check (true);
+  on public.check_ins for insert with check (auth.role() = 'service_role');
 
 -- Alerts: viewable by watch owner
 create policy "Users see alerts for own watches"
@@ -181,10 +184,10 @@ create policy "Users see alerts for own watches"
   );
 
 create policy "Service role can insert alerts"
-  on public.alerts for insert with check (true);
+  on public.alerts for insert with check (auth.role() = 'service_role');
 
 create policy "Service role can update alerts"
-  on public.alerts for update using (true);
+  on public.alerts for update using (auth.role() = 'service_role');
 
 -- ============================================================
 -- POSTGRES FUNCTIONS (bypass RLS for specific transitions)
@@ -293,6 +296,32 @@ begin
 end;
 $$;
 
+-- Record escalation sent on a missed check-in (write-once escalation_sent_at + ack_token)
+create or replace function public.escalate_checkin(
+  p_checkin_id uuid,
+  p_escalation_sent_at timestamptz,
+  p_ack_token text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.check_ins
+  set
+    escalation_sent_at = p_escalation_sent_at,
+    ack_token = p_ack_token
+  where id = p_checkin_id
+    and status = 'missed'
+    and escalation_sent_at is null;  -- write-once: cannot re-escalate
+
+  if not found then
+    raise exception 'Check-in % cannot be escalated (not missed or already escalated)', p_checkin_id;
+  end if;
+end;
+$$;
+
 -- ============================================================
 -- INDEXES (for query performance)
 -- ============================================================
@@ -364,6 +393,15 @@ create policy "Service role full access to checklist items"
   on public.watch_checklist_items for all
   using (auth.role() = 'service_role');
 
+create policy "Owner reads own checklist completions"
+  on public.checklist_completions for select
+  using (
+    exists (
+      select 1 from public.watches w
+      where w.id = watch_id and w.owner_id = auth.uid()
+    )
+  );
+
 create policy "Service role full access to completions"
   on public.checklist_completions for all
   using (auth.role() = 'service_role');
@@ -375,7 +413,7 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'checklist-photos',
   'checklist-photos',
-  true,
+  false,
   10485760,  -- 10 MB
   array['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 )

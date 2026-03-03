@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     const reportUrl = `${appUrl}/watches/${watchId}`
 
     // Always notify the assigned worker
-    await sendWatchSummarySMS(
+    const workerSmsSid = await sendWatchSummarySMS(
       watch.assigned_phone,
       watch.facilities.name,
       durationStr,
@@ -102,10 +102,13 @@ export async function POST(req: NextRequest) {
       missed,
       reportUrl
     )
+    if (!workerSmsSid) {
+      console.error('Failed to send summary SMS to worker:', watch.assigned_phone)
+    }
 
     // Also notify the supervisor/escalation contact if one was set and is different
     if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
-      await sendWatchSummarySMS(
+      const supervisorSmsSid = await sendWatchSummarySMS(
         watch.escalation_phone,
         watch.facilities.name,
         durationStr,
@@ -114,6 +117,9 @@ export async function POST(req: NextRequest) {
         missed,
         reportUrl
       )
+      if (!supervisorSmsSid) {
+        console.error('Failed to send summary SMS to supervisor:', watch.escalation_phone)
+      }
     }
 
     // Log watch ended

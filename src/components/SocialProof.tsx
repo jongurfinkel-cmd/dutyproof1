@@ -8,21 +8,29 @@ const HERO_QUOTES = [
     text: "Fire watch permit issued in and out same day. One per area, signed by the super. Mainly it's one guy with a fire extinguisher paying absolutely no attention to the person doing work.",
     role: 'Project Manager',
     context: 'Commercial Construction',
+    tag: 'Accountability',
+    tagColor: 'text-red-400 bg-red-500/10 border-red-500/20',
   },
   {
     text: "The process is solid on paper but it comes down to whoever is sitting there with the extinguisher. I've heard stories of fire watch falling asleep and the welder setting something on fire under himself. It's not a glamorous job — no one wants to just sit and watch. But it's necessary.",
     role: 'Mechanical Pipefitter Foreman',
     context: 'Industrial',
+    tag: 'Attention',
+    tagColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
   },
   {
     text: "What usually breaks it is production pressure. Someone wants to get moving, the watch gets treated like a formality, or the after-watch window gets shortened because 'it looks fine.' The better setups I've seen make it harder to fake — time stamps, photos, and someone actually checking that the watch stayed in place.",
     role: 'Construction Manager',
     context: 'General Contracting',
+    tag: 'Pressure',
+    tagColor: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
   },
   {
     text: "Documentation says everything was fine. The field reality tells a completely different story. And the gap between those two things is where people get hurt. The ones who've actually fixed this did it by making verification something you can't fake — GPS-stamped photos with timestamps. Not a checkbox on a form.",
     role: 'Compliance Manager',
     context: 'Excavation & Utilities',
+    tag: 'Documentation',
+    tagColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   },
 ]
 
@@ -31,39 +39,56 @@ const MORE_QUOTES = [
     text: "I always thought of it like overnight security. Zero authority to do anything — only there to CYA and make a phone call if something happens. And they're usually sleeping or completely useless in the event something actually does happen.",
     role: 'Safety Manager',
     context: 'Facilities',
+    tag: 'Authority',
+    tagColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
   },
   {
     text: "One job in 18 years in the trades. Just one — where the foreman actually got checked on the spot for pulling the fire watch off. That's the reality on the street.",
     role: 'Ironworker',
     context: '18 Years in the Field',
+    tag: 'Enforcement',
+    tagColor: 'text-red-400 bg-red-500/10 border-red-500/20',
   },
   {
     text: "Paper permit, usually pencil whipped and generic. Fire watch is often the same mechanic who needed the welding done — they stick around because they have to finish the job. It's a conflict of interest from the start.",
     role: 'Mechanic',
     context: 'Mechanical Contracting',
+    tag: 'Conflict',
+    tagColor: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
   },
   {
     text: "Our fire watch was a joke. Safety standards were horrible and our foreman would push us to get the job done fast. We're supposed to stay an hour after hot work but they didn't want to pay us — so we'd leave right after welding.",
     role: 'Welder',
     context: 'Marine Fabrication',
+    tag: 'Shortcuts',
+    tagColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
   },
   {
     text: "They'll grab whoever's available — usually a first-year apprentice who has no idea what to watch for or what to do if something happens. And the hot work permit is just paperwork. Check the boxes, get a signature, move on.",
     role: 'Journeyman Ironworker',
     context: 'Commercial',
+    tag: 'Training',
+    tagColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   },
 ]
 
-function QuoteCard({ q }: { q: { text: string; role: string; context: string } }) {
+function QuoteCard({ q }: { q: { text: string; role: string; context: string; tag?: string; tagColor?: string } }) {
   return (
     <div className="rounded-xl p-6 flex flex-col justify-between transition-all duration-200 cursor-default bg-white/[0.025] border border-white/[0.06] hover:bg-white/[0.05] hover:border-orange-500/20 hover:-translate-y-0.5">
       <div>
-        <svg className="mb-3 opacity-[0.12]" width="18" height="14" viewBox="0 0 20 16" fill="none" aria-hidden="true">
-          <path
-            d="M8.2 0L5 5.2C2.8 8.6 1.6 11.2 1.6 13.2C1.6 14.8 2.6 16 4.4 16C6 16 7.2 14.8 7.2 13.2C7.2 11.8 6.2 10.6 4.8 10.6L5 10C5.2 9 6 7.4 7.2 5.6L8.2 4V0ZM18.2 0L15 5.2C12.8 8.6 11.6 11.2 11.6 13.2C11.6 14.8 12.6 16 14.4 16C16 16 17.2 14.8 17.2 13.2C17.2 11.8 16.2 10.6 14.8 10.6L15 10C15.2 9 16 7.4 17.2 5.6L18.2 4V0Z"
-            fill="#f97316"
-          />
-        </svg>
+        <div className="flex items-center gap-2.5 mb-3">
+          <svg className="opacity-[0.12]" width="18" height="14" viewBox="0 0 20 16" fill="none" aria-hidden="true">
+            <path
+              d="M8.2 0L5 5.2C2.8 8.6 1.6 11.2 1.6 13.2C1.6 14.8 2.6 16 4.4 16C6 16 7.2 14.8 7.2 13.2C7.2 11.8 6.2 10.6 4.8 10.6L5 10C5.2 9 6 7.4 7.2 5.6L8.2 4V0ZM18.2 0L15 5.2C12.8 8.6 11.6 11.2 11.6 13.2C11.6 14.8 12.6 16 14.4 16C16 16 17.2 14.8 17.2 13.2C17.2 11.8 16.2 10.6 14.8 10.6L15 10C15.2 9 16 7.4 17.2 5.6L18.2 4V0Z"
+              fill="#f97316"
+            />
+          </svg>
+          {q.tag && (
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${q.tagColor ?? 'text-slate-400 bg-slate-500/10 border-slate-500/20'}`}>
+              {q.tag}
+            </span>
+          )}
+        </div>
         <p className="text-[15px] leading-relaxed text-slate-300">
           {q.text}
         </p>
@@ -158,20 +183,23 @@ export default function SocialProof() {
 
         {/* Pull stat break */}
         <RevealOnScroll delay={200}>
-          <div className="rounded-xl bg-gradient-to-r from-red-500/[0.05] to-orange-500/[0.03] border border-red-500/10 p-8 sm:p-10 flex items-center justify-center gap-7 flex-wrap mb-3.5">
-            <div
-              className="text-3xl sm:text-4xl font-extrabold text-red-500 italic"
-              style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}
-            >
-              Every. Single. One.
-            </div>
-            <div className="hidden sm:block w-px h-12 bg-red-500/15" />
-            <div className="max-w-md">
-              <p className="text-white/90 text-[15px] font-semibold mb-1.5">100+ tradespeople. Same answer.</p>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                Paper permits. Pencil-whipped logs. A warm body with an extinguisher and no accountability.
-                Not one person said fire watch documentation is working as designed.
-              </p>
+          <div className="relative rounded-xl bg-gradient-to-r from-red-500/[0.05] to-orange-500/[0.03] border border-red-500/10 p-8 sm:p-10 mb-3.5">
+            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-xl" style={{ boxShadow: 'inset 0 0 60px rgba(239,68,68,0.06), 0 0 80px rgba(239,68,68,0.04)' }} />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-7">
+              <div
+                className="text-4xl sm:text-4xl lg:text-5xl font-extrabold text-red-500 italic text-center sm:text-left"
+                style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}
+              >
+                Every.<br className="sm:hidden" /> Single.<br className="sm:hidden" /> One.
+              </div>
+              <div className="hidden sm:block w-px h-12 bg-red-500/15 flex-shrink-0" />
+              <div className="max-w-md text-center sm:text-left">
+                <p className="text-white/90 text-[15px] font-semibold mb-1.5">100+ tradespeople. Same answer.</p>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Paper permits. Pencil-whipped logs. A warm body with an extinguisher and no accountability.
+                  Not one person said fire watch documentation is working as designed.
+                </p>
+              </div>
             </div>
           </div>
         </RevealOnScroll>

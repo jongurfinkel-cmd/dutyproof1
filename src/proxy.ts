@@ -71,11 +71,12 @@ export async function proxy(request: NextRequest) {
   if (requiresSubscription && user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_status')
+      .select('subscription_status, is_admin')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !ACTIVE_STATUSES.includes(profile.subscription_status ?? '')) {
+    const hasAccess = profile?.is_admin || ACTIVE_STATUSES.includes(profile?.subscription_status ?? '')
+    if (!profile || !hasAccess) {
       const url = request.nextUrl.clone()
       url.pathname = '/billing'
       return NextResponse.redirect(url)
@@ -87,6 +88,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|checkin|checklist|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|checkin|checklist|ack|api).*)',
   ],
 }

@@ -102,9 +102,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to upload photo.' }, { status: 500 })
     }
 
-    const { data: urlData } = admin.storage.from('checklist-photos').getPublicUrl(path)
+    // Bucket is private — generate a signed URL (valid for 1 year)
+    const { data: signedData, error: signedError } = await admin.storage
+      .from('checklist-photos')
+      .createSignedUrl(path, 60 * 60 * 24 * 365)
 
-    return NextResponse.json({ photo_url: urlData.publicUrl })
+    if (signedError || !signedData?.signedUrl) {
+      console.error('Signed URL error:', signedError)
+      return NextResponse.json({ error: 'Failed to generate photo URL.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ photo_url: signedData.signedUrl })
   } catch (err) {
     console.error('Checklist upload error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import PageHero from '@/components/PageHero'
+
 export const metadata = {
   title: 'Privacy Policy — DutyProof',
   description: 'DutyProof Privacy Policy — how we collect, use, and protect your data.',
@@ -8,19 +11,7 @@ const LAST_UPDATED = 'February 2026'
 export default function PrivacyPage() {
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="bg-slate-950 py-16">
-        <div className="max-w-3xl mx-auto px-6">
-          <p className="text-blue-500 text-xs font-bold tracking-widest uppercase mb-3">Legal</p>
-          <h1
-            className="text-4xl text-white mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-          >
-            Privacy Policy
-          </h1>
-          <p className="text-slate-500 text-sm">Last updated: {LAST_UPDATED}</p>
-        </div>
-      </section>
+      <PageHero tag="Legal" title="Privacy Policy" meta={`Last updated: ${LAST_UPDATED}`} />
 
       {/* ── Content ── */}
       <section className="bg-white py-16">
@@ -96,7 +87,7 @@ export default function PrivacyPage() {
                 Worker phone numbers are used exclusively to deliver fire watch check-in links and confirmation messages via SMS. Supervisor phone numbers are used exclusively to deliver missed check-in alert messages. These are transactional messages directly related to the service you have configured.
               </p>
               <p>
-                Message and data rates may apply to recipients based on their carrier plan. Workers and supervisors receive SMS messages because a DutyProof account administrator has provided their number and started an active watch. If a worker or supervisor believes they are receiving messages in error, they should contact the account administrator or email us at support@dutyproof.com.
+                Message and data rates may apply to recipients based on their carrier plan. Workers and supervisors receive SMS messages because a DutyProof account administrator has provided their number and started an active watch. If a worker or supervisor believes they are receiving messages in error, they should contact the account administrator or <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contact us</Link>.
               </p>
             </div>
 
@@ -116,6 +107,10 @@ export default function PrivacyPage() {
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <p className="font-semibold text-slate-800 mb-1">Stripe</p>
                   <p>Our payment processor. Stripe handles all payment card data. DutyProof does not store full card numbers or CVVs.</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                  <p className="font-semibold text-slate-800 mb-1">Resend</p>
+                  <p>Our email delivery provider. Used to deliver contact and walkthrough form submissions. No personal data beyond submitted form content is shared.</p>
                 </div>
               </div>
 
@@ -154,10 +149,10 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>8. Your Rights</h2>
               <p className="mb-3">
-                You may access, export, or request deletion of your data at any time by emailing us at support@dutyproof.com. PDF compliance reports can be downloaded directly from the Service at any time while your account is active.
+                You may access, export, or request deletion of your data at any time by <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contacting us</Link>. PDF compliance reports can be downloaded directly from the Service at any time while your account is active.
               </p>
               <p>
-                If you are a resident of California, the European Union, or another jurisdiction with applicable privacy rights, you may have additional rights under laws such as the CCPA or GDPR. Contact us to exercise these rights.
+                If you are a resident of California, the European Union, or another jurisdiction with applicable privacy rights, you may have additional rights under laws such as the CCPA or GDPR. <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">Contact us</Link> to exercise these rights.
               </p>
             </div>
 
@@ -178,10 +173,10 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>11. Contact</h2>
               <p>
-                Questions about this policy or requests related to your data? Email us at{' '}
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">
-                  support@dutyproof.com
-                </a>.
+                Questions about this policy or requests related to your data?{' '}
+                <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">
+                  Contact us
+                </Link>.
               </p>
             </div>
 

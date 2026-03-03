@@ -99,9 +99,11 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const { error: insertError } = await admin.from('checklist_completions').insert(rows)
+    const { error: insertError } = await admin
+      .from('checklist_completions')
+      .upsert(rows, { onConflict: 'watch_id,item_id' })
     if (insertError) {
-      console.error('Checklist completions insert error:', insertError)
+      console.error('Checklist completions upsert error:', insertError)
       return NextResponse.json({ error: 'Failed to save checklist.' }, { status: 500 })
     }
 

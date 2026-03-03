@@ -100,6 +100,9 @@ export async function POST(req: NextRequest) {
       if (isNaN(endDate.getTime())) {
         return NextResponse.json({ error: 'Invalid planned_end_time' }, { status: 400 })
       }
+      if (endDate <= startDate) {
+        return NextResponse.json({ error: 'Planned end time must be after start time' }, { status: 400 })
+      }
     }
 
     // Validate checklist items if provided

@@ -172,7 +172,7 @@ export default function WatchDetailPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <Link href="/dashboard" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">
             ← Back to Dashboard
@@ -198,7 +198,7 @@ export default function WatchDetailPage() {
             {' · '}Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end">
           {watch.status === 'active' && (
             <button
               onClick={handleResendSms}
@@ -333,11 +333,15 @@ export default function WatchDetailPage() {
             </div>
             <button
               onClick={() => {
-                const url = `${window.location.origin}/checkin/${nextPending.token}`
-                navigator.clipboard.writeText(url).then(() => {
-                  setCopiedLink(true)
-                  setTimeout(() => setCopiedLink(false), 2000)
-                })
+                try {
+                  const url = `${window.location.origin}/checkin/${nextPending.token}`
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopiedLink(true)
+                    setTimeout(() => setCopiedLink(false), 2000)
+                  }).catch(() => toast.error('Unable to copy to clipboard'))
+                } catch {
+                  toast.error('Unable to copy to clipboard')
+                }
               }}
               className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg transition-all"
             >

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import Image from 'next/image'
+import BrandLogo from '@/components/BrandLogo'
 import { format } from 'date-fns'
 import { queueCheckin, syncPendingCheckins } from '@/lib/offline-queue'
 
@@ -38,14 +38,7 @@ async function getLocation(): Promise<{ latitude: number; longitude: number; acc
 function Logo() {
   return (
     <div className="flex justify-center mb-4">
-      <Image
-        src="/logo.svg"
-        alt="DutyProof"
-        width={160}
-        height={48}
-        className="h-10 w-auto object-contain"
-        priority
-      />
+      <BrandLogo variant="light" className="h-10 w-auto" />
     </div>
   )
 }
@@ -192,7 +185,7 @@ export default function CheckInPage() {
         <Logo />
         <div className="bg-amber-950/30 border border-amber-700/40 rounded-2xl p-8 max-w-sm w-full">
           <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900/40 flex items-center justify-center">
-            <span className="text-amber-400 text-2xl">📋</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
           </div>
           <h1
             className="text-2xl text-white mb-2"
@@ -405,6 +398,7 @@ function CheckInReady({
 }) {
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(true)
+  const [tapped, setTapped] = useState(false)
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000)
@@ -476,11 +470,12 @@ function CheckInReady({
           {/* The big button */}
           <div className="p-6">
             <button
-              onClick={onCheckIn}
+              onClick={() => { setTapped(true); onCheckIn() }}
+              disabled={tapped}
               aria-label={`Check in now at ${facilityName}`}
-              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
+              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 disabled:bg-green-800 disabled:text-green-300 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
             >
-              CHECK IN NOW
+              {tapped ? 'Checking in…' : 'CHECK IN NOW'}
             </button>
           </div>
         </div>

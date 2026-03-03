@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const now = new Date().toISOString()
   let missedCount = 0
   const errors: string[] = []
-  const pushError = (msg: string) => { if (errors.length < 100) pushError(msg) }
+  const pushError = (msg: string) => { if (errors.length < 100) errors.push(msg) }
 
   try {
     // ── Auto-stop pass ────────────────────────────────────────────────────
@@ -146,19 +146,19 @@ export async function GET(req: NextRequest) {
           })
           if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
-          // Mark escalation as sent and store ack token
-          const { error: escUpdateErr } = await admin
-            .from('check_ins')
-            .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
-            .eq('id', checkIn.id)
+          // Mark escalation as sent via RPC (write-once escalation_sent_at + ack_token)
+          const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+            p_checkin_id: checkIn.id,
+            p_escalation_sent_at: new Date().toISOString(),
+            p_ack_token: ackToken,
+          })
           if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
         }
 
-        // Schedule next check-in
-        const nextScheduledTime = addMinutes(
-          new Date(checkIn.scheduled_time),
-          watch.check_interval_min
-        )
+        // Schedule next check-in — use max(now, scheduled+interval) to prevent cascading misses
+        // if the cron ran late
+        const baseNextTime = addMinutes(new Date(checkIn.scheduled_time), watch.check_interval_min)
+        const nextScheduledTime = baseNextTime > new Date() ? baseNextTime : new Date()
         const nextExpiresAt = addMinutes(nextScheduledTime, watch.check_interval_min)
         const nextToken = generateToken()
         const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
@@ -233,10 +233,11 @@ export async function GET(req: NextRequest) {
           ackUrl
         )
 
-        const { error: escPassUpdateErr } = await admin
-          .from('check_ins')
-          .update({ escalation_sent_at: new Date().toISOString(), ack_token: ackToken })
-          .eq('id', ci.id)
+        const { error: escPassUpdateErr } = await admin.rpc('escalate_checkin', {
+          p_checkin_id: ci.id,
+          p_escalation_sent_at: new Date().toISOString(),
+          p_ack_token: ackToken,
+        })
         if (escPassUpdateErr) pushError(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
 
         const { error: escPassAlertErr } = await admin.from('alerts').insert({

@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import PageHero from '@/components/PageHero'
+
 export const metadata = {
   title: 'Terms of Service — DutyProof',
   description: 'DutyProof Terms of Service.',
@@ -8,19 +11,7 @@ const LAST_UPDATED = 'February 2026'
 export default function TermsPage() {
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="bg-slate-950 py-16">
-        <div className="max-w-3xl mx-auto px-6">
-          <p className="text-blue-500 text-xs font-bold tracking-widest uppercase mb-3">Legal</p>
-          <h1
-            className="text-4xl text-white mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-          >
-            Terms of Service
-          </h1>
-          <p className="text-slate-500 text-sm">Last updated: {LAST_UPDATED}</p>
-        </div>
-      </section>
+      <PageHero tag="Legal" title="Terms of Service" meta={`Last updated: ${LAST_UPDATED}`} />
 
       {/* ── Content ── */}
       <section className="bg-white py-16">
@@ -78,8 +69,8 @@ export default function TermsPage() {
                 <strong>Opt-out:</strong> Any message recipient may reply STOP at any time to stop receiving messages. Reply HELP for assistance. After opting out, no further messages will be sent to that number unless a new watch is created with renewed consent.
               </p>
               <p>
-                SMS messages are delivered via Twilio. Carriers are not liable for delayed or undelivered messages. For SMS-related questions, contact{' '}
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">support@dutyproof.com</a>.
+                SMS messages are delivered via Twilio. Carriers are not liable for delayed or undelivered messages. For SMS-related questions,{' '}
+                <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contact us</Link>.
               </p>
             </div>
 
@@ -164,10 +155,10 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>14. Contact</h2>
               <p>
-                Questions about these Terms? Email us at{' '}
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">
-                  support@dutyproof.com
-                </a>.
+                Questions about these Terms?{' '}
+                <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">
+                  Contact us
+                </Link>.
               </p>
             </div>
 

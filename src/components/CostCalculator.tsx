@@ -59,13 +59,19 @@ export default function CostCalculator() {
       </div>
 
       {/* Risk comparison */}
-      <div className="rounded-xl bg-red-950/5 border border-red-200 p-4 text-center">
-        <p className="text-red-600 text-xs font-bold uppercase tracking-widest mb-1">Avg hot work fire property damage</p>
-        <p className="text-red-700 font-bold text-base">${AVG_HOTWORK_FIRE_DAMAGE.toLocaleString()} per incident</p>
-        <p className="text-slate-500 text-xs mt-2">
-          Your annual DutyProof cost is just{' '}
-          <span className="font-bold text-slate-700">{((ANNUAL_COST / AVG_HOTWORK_FIRE_DAMAGE) * 100).toFixed(1)}%</span>{' '}
-          of the damage from a single hot work fire.
+      <div className="rounded-xl bg-red-950/5 border-2 border-red-200 p-6 text-center">
+        <p className="text-red-600 text-xs font-bold uppercase tracking-widest mb-3">One hot work fire costs</p>
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <span className="text-5xl sm:text-6xl font-black text-red-600" style={{ fontFamily: 'var(--font-display)' }}>
+            {Math.round(AVG_HOTWORK_FIRE_DAMAGE / ANNUAL_COST)}x
+          </span>
+          <div className="text-left">
+            <p className="text-slate-700 text-sm font-bold">a full year</p>
+            <p className="text-slate-500 text-sm">of DutyProof</p>
+          </div>
+        </div>
+        <p className="text-slate-400 text-xs">
+          Average property damage: <span className="font-semibold text-slate-600">${AVG_HOTWORK_FIRE_DAMAGE.toLocaleString()}</span> per incident (NFPA)
         </p>
       </div>
     </div>

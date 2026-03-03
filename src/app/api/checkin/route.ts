@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     try { body = await req.json() } catch {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
-    const { token, latitude, longitude, gps_accuracy } = body
+    const { token, latitude, longitude, gps_accuracy, device_time } = body
 
     if (!token || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
@@ -56,10 +56,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'This watch has ended' }, { status: 410 })
     }
 
+    // Use device_time as completed_at if provided (offline queue), otherwise server time.
+    // server_received_at is always the true server time for audit integrity.
+    const completedAt = (device_time && typeof device_time === 'string' && !isNaN(new Date(device_time).getTime()))
+      ? new Date(device_time).toISOString()
+      : serverTime
+
     // Mark check-in as completed via the DB function (bypasses immutability RLS)
     const { error: completeError } = await admin.rpc('complete_checkin', {
       p_checkin_id: checkIn.id,
-      p_completed_at: serverTime,
+      p_completed_at: completedAt,
       p_server_received_at: serverTime,
       p_latitude: latitude ?? null,
       p_longitude: longitude ?? null,

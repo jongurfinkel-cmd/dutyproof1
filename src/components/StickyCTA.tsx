@@ -25,15 +25,16 @@ export default function StickyCTA() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-        <div className="hidden sm:block text-sm text-slate-500 font-medium">
-          <span className="text-slate-900 font-bold">$199/mo</span> · Unlimited sites · 30-day money-back guarantee
+        <div className="text-sm text-slate-500 font-medium">
+          <span className="text-slate-900 font-bold">$199/mo</span>
+          <span className="hidden sm:inline"> · Unlimited sites · 30-day money-back guarantee</span>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-3">
           <Link
             href="/signup"
-            className="flex-1 sm:flex-none text-center px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-200/70 hover:-translate-y-px"
+            className="text-center px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-200/70 hover:-translate-y-px whitespace-nowrap"
           >
-            Get Started — $199/mo →
+            Get Started →
           </Link>
         </div>
       </div>

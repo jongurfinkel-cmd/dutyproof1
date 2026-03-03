@@ -1,26 +1,17 @@
+import Link from 'next/link'
+import PageHero from '@/components/PageHero'
+
 export const metadata = {
   title: 'SMS Terms & Consent — DutyProof',
   description: 'DutyProof SMS messaging terms, consent policy, and opt-out instructions.',
 }
 
-const LAST_UPDATED = 'March 2026'
+const LAST_UPDATED = 'February 2026'
 
 export default function SmsConsentPage() {
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="bg-slate-950 py-16">
-        <div className="max-w-3xl mx-auto px-6">
-          <p className="text-blue-500 text-xs font-bold tracking-widest uppercase mb-3">Legal</p>
-          <h1
-            className="text-4xl text-white mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-          >
-            SMS Terms &amp; Consent
-          </h1>
-          <p className="text-slate-500 text-sm">Last updated: {LAST_UPDATED}</p>
-        </div>
-      </section>
+      <PageHero tag="Legal" title="SMS Terms & Consent" meta={`Last updated: ${LAST_UPDATED}`} />
 
       {/* ── Content ── */}
       <section className="bg-white py-16">
@@ -73,8 +64,8 @@ export default function SmsConsentPage() {
                 Any message recipient can opt out at any time by replying <strong>STOP</strong> to any DutyProof SMS. Once opted out, no further messages will be sent to that phone number unless consent is provided again for a new watch.
               </p>
               <p>
-                Reply <strong>HELP</strong> to any message for assistance, or contact us at{' '}
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">support@dutyproof.com</a>.
+                Reply <strong>HELP</strong> to any message for assistance, or{' '}
+                <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contact us</Link>.
               </p>
             </div>
 
@@ -96,19 +87,15 @@ export default function SmsConsentPage() {
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Privacy</h2>
               <p>
                 Phone numbers and message logs are stored securely and used solely for fire watch compliance operations. We do not sell, share, or rent phone numbers to third parties for marketing purposes. For full details, see our{' '}
-                <a href="/privacy" className="text-blue-600 hover:text-blue-500 transition-colors">Privacy Policy</a>.
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-500 transition-colors">Privacy Policy</Link>.
               </p>
             </div>
 
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Contact</h2>
               <p>
-                Questions about DutyProof SMS? Contact us at{' '}
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">support@dutyproof.com</a>.
-              </p>
-              <p className="mt-3">
-                DutyProof<br />
-                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">support@dutyproof.com</a>
+                Questions about DutyProof SMS?{' '}
+                <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">Contact us</Link>.
               </p>
             </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import Link from 'next/link'
 
 export default function DashboardError({
   error,
@@ -25,12 +26,27 @@ export default function DashboardError({
         <p className="text-sm text-slate-500 mb-6">
           An unexpected error occurred. Please try again or contact support if the problem persists.
         </p>
-        <button
-          onClick={reset}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          Try again
-        </button>
+        {error.digest && (
+          <p className="text-xs text-slate-400 mb-4 font-mono">Error ID: {error.digest}</p>
+        )}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={reset}
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Try again
+          </button>
+          <Link
+            href="/dashboard"
+            className="px-5 py-2.5 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium rounded-lg transition-colors"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+        <p className="text-xs text-slate-400 mt-6">
+          Need help?{' '}
+          <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">Contact support</Link>
+        </p>
       </div>
     </div>
   )

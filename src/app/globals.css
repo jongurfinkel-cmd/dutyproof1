@@ -49,18 +49,6 @@ html {
   animation: tabFadeIn 0.25s ease forwards;
 }
 
-/* ── Facility ticker marquee ── */
-@keyframes ticker {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.ticker-track {
-  animation: ticker 28s linear infinite;
-}
-.ticker-track:hover {
-  animation-play-state: paused;
-}
-
 /* ── Shared fade-slide ── */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(14px); }
@@ -135,12 +123,53 @@ html {
 .ps4 { opacity: 0; animation: ps4 12s ease-in-out infinite; }
 .ps5 { opacity: 0; animation: ps5 12s ease-in-out infinite; }
 
+/* ── Hero headline shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.hero-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Stat counter reveal ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-reveal {
+  opacity: 0;
+}
+.stat-reveal.reveal-visible {
+  animation: countUp 0.5s ease forwards;
+}
+.stat-reveal.reveal-visible:nth-child(2) { animation-delay: 0.15s; }
+.stat-reveal.reveal-visible:nth-child(3) { animation-delay: 0.3s; }
+
 /* ── Hero glow breathe ── */
 @keyframes glowPulse {
   0%, 100% { opacity: 0.18; }
   50%      { opacity: 0.28; }
 }
 .glow-pulse { animation: glowPulse 4s ease-in-out infinite; }
+
+/* ── CTA button ring pulse ── */
+@keyframes ctaPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+  70%  { box-shadow: 0 0 0 14px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+.cta-pulse {
+  animation: ctaPulse 2.5s ease-out infinite;
+}
+
+/* ── Fade-up entrance (above-fold, no scroll trigger) ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
 
 /* ── Accessibility: respect user motion preferences ── */
 @media (prefers-reduced-motion: reduce) {
