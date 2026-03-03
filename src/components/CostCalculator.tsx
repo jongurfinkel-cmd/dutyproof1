@@ -2,7 +2,7 @@
 
 const AVG_HOTWORK_FIRE_DAMAGE = 292000
 const MONTHLY_COST = 199
-const ANNUAL_COST = 2388
+const ANNUAL_COST = 2399
 
 const risks = [
   { label: 'Single denied hot work claim', cost: 200000 },
@@ -35,7 +35,7 @@ export default function CostCalculator() {
           <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
             ${ANNUAL_COST.toLocaleString()}
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">pay 11 months, get 12</p>
+          <p className="text-slate-400 text-[11px] mt-0.5">locked rate for 12 months</p>
         </div>
       </div>
 

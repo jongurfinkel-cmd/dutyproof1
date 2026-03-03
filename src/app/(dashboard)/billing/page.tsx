@@ -248,14 +248,14 @@ export default function BillingPage() {
           <div className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl shadow-green-100 relative">
             <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                Save $0 — Pay for 11, get 12
+                Lock in your rate
               </div>
               <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
               <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$2,388</span>
+                <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$2,399</span>
                 <div className="text-green-200 text-base mb-3">/year</div>
               </div>
-              <p className="text-green-200 text-sm">Same plan. Pay for 11 months, get 12.</p>
+              <p className="text-green-200 text-sm">Same plan. One bill, locked rate for 12 months.</p>
             </div>
 
             <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
@@ -270,7 +270,7 @@ export default function BillingPage() {
                     Redirecting to checkout…
                   </span>
                 ) : (
-                  'Subscribe Annually — $2,388/yr →'
+                  'Subscribe Annually — $2,399/yr →'
                 )}
               </button>
               <p className="text-center text-slate-500 text-xs mt-3">

@@ -25,6 +25,12 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               How It Works
             </Link>
             <Link
+              href="/#from-the-field"
+              className="hidden md:block px-3.5 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-all"
+            >
+              From the Field
+            </Link>
+            <Link
               href="/#pricing"
               className="hidden md:block px-3.5 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-all"
             >
@@ -81,6 +87,13 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
             >
               How It Works
+            </Link>
+            <Link
+              href="/#from-the-field"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
+            >
+              From the Field
             </Link>
             <Link
               href="/#pricing"

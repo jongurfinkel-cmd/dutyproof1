@@ -53,13 +53,33 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Subscription and Billing</h2>
               <p className="mb-3">
-                Subscriptions are billed at a flat rate of $199 per month (monthly plan) or $2,388 per year (annual plan). Both plans include unlimited job sites and unlimited watches.
+                Subscriptions are billed at a flat rate of $199 per month (monthly plan) or $2,399 per year (annual plan). Both plans include unlimited job sites and unlimited watches.
               </p>
               <p className="mb-3">
                 All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring basis from the date your subscription begins. Prices may change with 30 days&apos; notice.
               </p>
               <p>
                 Payment processing is handled by Stripe. We do not store your full payment card information on our servers.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>4. SMS Communications</h2>
+              <p className="mb-3">
+                DutyProof sends automated SMS messages to phone numbers you provide when creating fire watches. These messages include check-in links, missed check-in alerts, and supervisor escalation notifications. Messages are time-sensitive and operational — they are not marketing messages.
+              </p>
+              <p className="mb-3">
+                By entering a phone number and starting a watch, you confirm that the phone number owner has given explicit consent to receive these automated messages from DutyProof. You are responsible for obtaining this consent before entering any phone number into the Service.
+              </p>
+              <p className="mb-3">
+                <strong>Message frequency:</strong> Varies based on watch check-in interval (typically every 15–60 minutes during an active watch). <strong>Msg &amp; data rates may apply.</strong>
+              </p>
+              <p className="mb-3">
+                <strong>Opt-out:</strong> Any message recipient may reply STOP at any time to stop receiving messages. Reply HELP for assistance. After opting out, no further messages will be sent to that number unless a new watch is created with renewed consent.
+              </p>
+              <p>
+                SMS messages are delivered via Twilio. Carriers are not liable for delayed or undelivered messages. For SMS-related questions, contact{' '}
+                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors">support@dutyproof.com</a>.
               </p>
             </div>
 

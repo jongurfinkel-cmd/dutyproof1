@@ -35,12 +35,6 @@ export default function StickyCTA() {
           >
             Get Started — $199/mo →
           </Link>
-          <a
-            href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
-            className="hidden sm:block px-4 py-2.5 text-slate-500 hover:text-slate-900 font-semibold text-sm rounded-xl border border-slate-200 hover:border-slate-300 transition-all"
-          >
-            Book a Demo
-          </a>
         </div>
       </div>
     </div>

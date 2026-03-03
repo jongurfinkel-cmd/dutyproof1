@@ -175,8 +175,12 @@ function SignupForm() {
               <p className="text-center text-slate-700 text-xs mt-2">
                 By signing up you agree to our{' '}
                 <Link href="/terms" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Terms</Link>
-                {' '}and{' '}
+                ,{' '}
                 <Link href="/privacy" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Privacy Policy</Link>
+                , and{' '}
+                <Link href="/sms-consent" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">SMS Terms</Link>.
+                DutyProof sends automated SMS to workers you designate during active watches.
+                Msg &amp; data rates may apply.
               </p>
             </form>
 
@@ -190,7 +194,7 @@ function SignupForm() {
         </div>
 
         <p className="text-center text-slate-700 text-xs mt-5">
-          $199/month flat rate · Annual option: $2,388/yr
+          $199/month flat rate · Annual option: $2,399/yr
         </p>
       </div>
     </div>

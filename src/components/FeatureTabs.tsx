@@ -5,7 +5,8 @@ import { useState } from 'react'
 const TABS = [
   { id: 0, label: 'SMS Check-Ins', icon: '📱' },
   { id: 1, label: 'Missed Alerts', icon: '🚨' },
-  { id: 2, label: 'PDF Reports', icon: '📋' },
+  { id: 2, label: 'Offline Mode', icon: '📡' },
+  { id: 3, label: 'PDF Reports', icon: '📋' },
 ]
 
 function SMSMockup() {
@@ -72,8 +73,71 @@ function EscalationMockup() {
           <span className="text-slate-400">Watch:</span> Ace Mechanical — Building D Weld<br />
           <span className="text-slate-400">Worker:</span> M. Rivera<br />
           <span className="text-slate-400">Was due:</span> 10:00 AM<br /><br />
-          <span className="text-slate-300">Immediate action required.</span>
+          Tap to acknowledge:<br />
+          <span className="text-amber-400 text-[10px] underline">dutyproof.com/ack/k9x3r...</span>
         </p>
+      </div>
+      <div className="rounded-xl bg-amber-950/30 border border-amber-700/40 p-4 shadow-xl">
+        <div className="text-amber-500 text-[9px] font-mono mb-2 flex items-center gap-1.5">
+          <span className="text-amber-400">✓</span> ACKNOWLEDGED · 10:03:12 AM
+        </div>
+        <p className="text-amber-300 text-xs leading-relaxed">
+          T. Okafor acknowledged the alert<br />
+          <span className="text-amber-400/70 text-[10px]">GPS: 34.052°N · Response time: 2m 25s</span>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function OfflineMockup() {
+  return (
+    <div className="space-y-3 w-full max-w-xs mx-auto">
+      {/* Phone showing offline indicator */}
+      <div className="rounded-2xl bg-slate-900 border border-slate-700 overflow-hidden shadow-2xl">
+        <div className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DP</div>
+            <div>
+              <div className="text-white text-xs font-semibold">Fire Watch Check-In</div>
+              <div className="text-slate-500 text-[10px]">Ace Mechanical — Bay 4</div>
+            </div>
+          </div>
+        </div>
+        {/* Offline banner */}
+        <div className="px-4 py-2 bg-amber-950/50 border-b border-amber-800/30 flex items-center justify-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500" />
+          <span className="text-amber-400 text-[10px] font-semibold">Offline — check-in will be queued</span>
+        </div>
+        {/* Big button */}
+        <div className="p-5">
+          <div className="w-full py-5 bg-green-500 text-white text-base font-black rounded-xl text-center shadow-lg">
+            CHECK IN NOW
+          </div>
+        </div>
+      </div>
+      {/* Queued confirmation */}
+      <div className="rounded-2xl bg-amber-950/30 border border-amber-700/40 p-4 shadow-xl">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-amber-900/50 border-2 border-amber-500 flex items-center justify-center">
+            <span className="text-amber-400 text-sm font-bold">✓</span>
+          </div>
+          <div>
+            <div className="text-white text-xs font-bold">Check-In Queued</div>
+            <div className="text-amber-300 text-[10px]">Saved to device · will sync automatically</div>
+          </div>
+        </div>
+        <div className="bg-amber-900/30 rounded-lg px-3 py-2 mt-2">
+          <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Recorded at (device)</div>
+          <div className="text-white text-sm font-bold">9:30:08 AM</div>
+        </div>
+        <div className="flex items-center gap-1.5 mt-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+          </span>
+          <span className="text-amber-400 text-[10px] font-semibold">Waiting for connection...</span>
+        </div>
       </div>
     </div>
   )
@@ -94,26 +158,41 @@ function PDFMockup() {
           <div className="text-[9px] text-slate-500">Ace Mechanical · Building D · Hot Work Watch</div>
           <div className="text-[9px] text-slate-500">Generated: Jun 14, 2025 · 14:38 UTC</div>
         </div>
-        <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
-          <div><div className="text-[8px] text-slate-400">Compliance</div><div className="text-sm font-bold text-green-700">93%</div></div>
-          <div><div className="text-[8px] text-slate-400">Check-ins</div><div className="font-bold text-slate-800">14</div></div>
-          <div><div className="text-[8px] text-slate-400">Missed</div><div className="font-bold text-red-600">1</div></div>
+        <div className="grid grid-cols-5 gap-1.5 pb-3 border-b border-slate-100">
+          <div><div className="text-[7px] text-slate-400">Compliance</div><div className="text-sm font-bold text-green-700">93%</div></div>
+          <div><div className="text-[7px] text-slate-400">Check-ins</div><div className="font-bold text-slate-800">14</div></div>
+          <div><div className="text-[7px] text-slate-400">Missed</div><div className="font-bold text-red-600">1</div></div>
+          <div><div className="text-[7px] text-slate-400">Alerts</div><div className="font-bold text-slate-800">1</div></div>
+          <div><div className="text-[7px] text-slate-400">Ack&apos;d</div><div className="font-bold text-amber-600">1</div></div>
+        </div>
+        {/* GPS Map placeholder */}
+        <div className="pb-3 border-b border-slate-100">
+          <div className="text-[8px] text-slate-400 uppercase tracking-widest mb-1.5">GPS Coverage Map</div>
+          <div className="w-full h-16 rounded bg-gradient-to-br from-green-50 via-green-100/50 to-blue-50 border border-slate-200 flex items-center justify-center">
+            <span className="text-[8px] text-slate-400">2x2 OpenStreetMap tile grid · zoom 16</span>
+          </div>
+          <div className="text-[7px] text-slate-400 mt-1">Center: 34.0521°, -118.2437° · 14 GPS-verified check-ins</div>
         </div>
         <div>
           <div className="text-[8px] text-slate-400 uppercase tracking-widest mb-2">Check-In Log</div>
           <div className="space-y-1.5">
-            {[{ t: '08:00', s: '✓', c: 'text-green-700' }, { t: '08:30', s: '✓', c: 'text-green-700' }, { t: '09:00', s: '✕', c: 'text-red-600' }, { t: '09:30', s: '✓', c: 'text-green-700' }].map((r) => (
+            {[
+              { t: '08:00', s: '✓', c: 'text-green-700', d: '· GPS verified' },
+              { t: '08:30', s: '✓', c: 'text-green-700', d: '· GPS verified' },
+              { t: '09:00', s: '✕', c: 'text-red-600', d: '· Alert → Supervisor ack\'d' },
+              { t: '09:30', s: '✓', c: 'text-green-700', d: '· GPS · offline → synced' },
+            ].map((r) => (
               <div key={r.t} className={`flex items-center gap-2 ${r.c}`}>
                 <span>{r.s}</span>
                 <span className="text-slate-500">{r.t} AM</span>
-                <span className="text-[8px]">{r.s === '✓' ? '· GPS verified' : '· Alert sent to supervisor'}</span>
+                <span className="text-[8px]">{r.d}</span>
               </div>
             ))}
             <div className="text-slate-400 text-[9px]">··· 10 more entries</div>
           </div>
         </div>
         <div className="border-t border-slate-100 pt-3 text-[8px] text-slate-400 text-center">
-          OSHA-ready · Tamper-proof · Server timestamps
+          OSHA-ready · GPS maps · Supervisor acknowledgments
         </div>
       </div>
     </div>
@@ -138,33 +217,49 @@ const TAB_CONTENT = [
     mockup: <SMSMockup />,
   },
   {
-    eyebrow: 'Automatic escalation',
-    headline: 'A missed check-in triggers\nan alert in under 60 seconds.',
+    eyebrow: 'Closed-loop escalation',
+    headline: 'Missed check-in?\nSupervisor acknowledges.',
     body: [
-      'When a check-in window closes without a response, DutyProof immediately marks it missed and fires an SMS to your supervisor, administrator, or any on-call contact you designate.',
-      'The miss is recorded permanently — immutable. OSHA inspectors, fire marshals, and insurance adjusters will see exactly what happened and when.',
+      'When a check-in window closes without a response, DutyProof marks it missed and fires an SMS to your supervisor in under 60 seconds — with a tap-to-acknowledge link.',
+      'The supervisor taps the link to confirm they saw the alert and are responding. Their acknowledgment is GPS-logged and timestamped. OSHA inspectors see not just that a gap was detected, but that management responded.',
     ],
     bullets: [
       'Escalation fires in < 60 seconds',
-      'Supervisor gets full context — job site, worker, due time',
-      'Miss recorded permanently, cannot be altered',
+      'Supervisor acknowledges via SMS link with GPS',
+      'Full response chain logged in the compliance report',
       'Next check-in cycle continues automatically',
     ],
     bulletColor: 'bg-red-100 text-red-700',
     mockup: <EscalationMockup />,
   },
   {
+    eyebrow: 'Works without signal',
+    headline: 'No signal?\nCheck-in still counts.',
+    body: [
+      'Hot work happens in basements, parking garages, and steel-framed buildings where cell service drops. DutyProof saves the check-in to the worker\'s phone with the device timestamp and GPS coordinates, then syncs it to the server the moment signal returns.',
+      'No false misses. No panicked calls to the office. The worker taps CHECK IN NOW like normal — they see a "queued" confirmation instead of an error.',
+    ],
+    bullets: [
+      'Check-in saved locally with device timestamp and GPS',
+      'Syncs automatically when connectivity returns',
+      'Works on iPhone and Android — no app needed',
+      'Server records both device time and sync time for full audit trail',
+    ],
+    bulletColor: 'bg-amber-100 text-amber-700',
+    mockup: <OfflineMockup />,
+  },
+  {
     eyebrow: 'Instant compliance proof',
     headline: 'One click.\nOSHA-ready PDF report.',
     body: [
-      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, SMS delivery receipts — formatted for OSHA inspections, fire marshal audits, and insurance claims.',
-      'This is the document you hand the fire marshal when they walk onto your job site.',
+      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, SMS delivery receipts, supervisor acknowledgments — formatted for OSHA inspections, fire marshal audits, and insurance claims.',
+      'Includes a GPS coverage map showing exactly where your worker was, and a separate map for supervisor acknowledgments. This is the document you hand the fire marshal when they walk onto your job site.',
     ],
     bullets: [
-      'Full timeline with GPS and dual timestamps',
-      'Missed check-in log with escalation records',
-      'Compliance score, job site info, worker record',
-      'Available the moment the watch ends',
+      'GPS coverage map + supervisor acknowledgment map',
+      'Full timeline with dual timestamps (device + server)',
+      'Missed check-in log with supervisor response chain',
+      'Compliance score with acknowledged count',
     ],
     bulletColor: 'bg-slate-100 text-slate-700',
     mockup: <PDFMockup />,

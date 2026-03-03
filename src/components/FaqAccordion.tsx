@@ -5,7 +5,7 @@ import { useState } from 'react'
 const FAQS = [
   {
     q: 'How much does DutyProof cost?',
-    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,388/year (pay for 11 months, get 12).',
+    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,399/year (annual rate locked for 12 months).',
   },
   {
     q: 'Does DutyProof meet OSHA hot work fire watch requirements?',
@@ -28,12 +28,16 @@ const FAQS = [
     a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones. On basic phones without GPS, the check-in still records with full timestamp and SMS confirmation.',
   },
   {
+    q: 'What if the job site has no cell service?',
+    a: 'DutyProof works offline. If the worker opened the check-in link before losing signal (basements, parking garages, steel-framed buildings), they can still tap CHECK IN NOW. The check-in is saved to their phone with the device timestamp and GPS coordinates, then syncs automatically to the server the moment connectivity returns. No false misses, no panicked calls to the office. The compliance report shows both the device time and the sync time for a complete audit trail.',
+  },
+  {
     q: 'What if my worker doesn\'t check in on time?',
-    a: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — no manual oversight needed. The miss is permanently recorded in the audit trail, and the next check-in cycle continues automatically. You get full visibility into exactly when coverage lapsed and who was notified.',
+    a: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — with a tap-to-acknowledge link. The supervisor taps the link to confirm they saw the alert, and their acknowledgment is GPS-logged and timestamped. The miss and the response are both permanently recorded in the audit trail. OSHA inspectors see not just that a gap was detected, but that management responded.',
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts on the monthly plan. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Annual plans are billed once at $2,388/year. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
+    a: 'No contracts on the monthly plan. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Annual plans are billed once at $2,399/year. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
   },
 ]
 

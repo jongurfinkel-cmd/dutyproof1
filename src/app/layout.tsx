@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Outfit, Syne } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { Analytics } from "@vercel/analytics/react";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,10 +26,12 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  themeColor: '#020617',
 }
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://dutyproof.com'),
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -82,6 +85,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${syne.variable} ${outfit.variable} antialiased`}>
         {children}
+        <ServiceWorkerRegistrar />
         <Analytics />
         <Toaster
           position="top-right"

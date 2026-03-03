@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderToBuffer, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { renderToBuffer, Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import { writeFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -32,13 +32,33 @@ const styles = StyleSheet.create({
   sampleBannerText: { fontSize: 8, color: '#92400e', fontFamily: 'Helvetica-Bold', textAlign: 'center' },
 })
 
+// ─── Map tile helpers (from src/lib/pdf.ts) ───
+function latLonToTile(lat, lon, zoom) {
+  const n = Math.pow(2, zoom)
+  const x = Math.floor(((lon + 180) / 360) * n)
+  const latRad = (lat * Math.PI) / 180
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
+  return { x, y }
+}
+
+function getMapTileUrls(lat, lon) {
+  const zoom = 16
+  const { x, y } = latLonToTile(lat, lon, zoom)
+  return [
+    `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x + 1}/${y}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x}/${y + 1}.png`,
+    `https://tile.openstreetmap.org/${zoom}/${x + 1}/${y + 1}.png`,
+  ]
+}
+
 // All times are America/New_York (EDT, UTC-4) on March 14, 2025 (after DST spring forward)
 // 8:00 AM EDT = 12:00 UTC, 8:30 AM EDT = 12:30 UTC, etc.
 const TZ = 'America/New_York'
 const checkIns = [
   { id: '1', scheduled_time: '2025-03-14T12:00:00Z', completed_at: '2025-03-14T12:01:23Z', server_received_at: '2025-03-14T12:01:24Z', status: 'completed', latitude: 40.7580, longitude: -73.8855, gps_accuracy: 8 },
   { id: '2', scheduled_time: '2025-03-14T12:30:00Z', completed_at: '2025-03-14T12:30:55Z', server_received_at: '2025-03-14T12:30:56Z', status: 'completed', latitude: 40.7581, longitude: -73.8854, gps_accuracy: 11 },
-  { id: '3', scheduled_time: '2025-03-14T13:00:00Z', completed_at: null, server_received_at: null, status: 'missed', latitude: null, longitude: null, gps_accuracy: null },
+  { id: '3', scheduled_time: '2025-03-14T13:00:00Z', completed_at: null, server_received_at: null, status: 'missed', latitude: null, longitude: null, gps_accuracy: null, escalation_sent_at: '2025-03-14T13:02:00Z', ack_at: '2025-03-14T13:05:30Z', ack_latitude: 40.7583, ack_longitude: -73.8852, ack_gps_accuracy: 15 },
   { id: '4', scheduled_time: '2025-03-14T13:30:00Z', completed_at: '2025-03-14T13:31:08Z', server_received_at: '2025-03-14T13:31:09Z', status: 'completed', latitude: 40.7579, longitude: -73.8856, gps_accuracy: 9 },
   { id: '5', scheduled_time: '2025-03-14T14:00:00Z', completed_at: '2025-03-14T14:00:47Z', server_received_at: '2025-03-14T14:00:48Z', status: 'completed', latitude: 40.7580, longitude: -73.8855, gps_accuracy: 7 },
   { id: '6', scheduled_time: '2025-03-14T14:30:00Z', completed_at: '2025-03-14T14:30:32Z', server_received_at: '2025-03-14T14:30:33Z', status: 'completed', latitude: 40.7582, longitude: -73.8853, gps_accuracy: 10 },
@@ -52,10 +72,25 @@ function fmt(ts) {
   return d.toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
 }
 
-const completed = checkIns.filter(c => c.status === 'completed').length
-const missed = checkIns.filter(c => c.status === 'missed').length
-const total = completed + missed
-const pct = Math.round((completed / total) * 100)
+const completedCIs = checkIns.filter(c => c.status === 'completed')
+const missedCIs = checkIns.filter(c => c.status === 'missed')
+const total = completedCIs.length + missedCIs.length
+const pct = Math.round((completedCIs.length / total) * 100)
+const acknowledgedCount = missedCIs.filter(c => c.ack_at).length
+
+// GPS averages for check-in coverage map
+const gpsCheckins = completedCIs.filter(c => c.latitude != null)
+const avgLat = gpsCheckins.reduce((s, c) => s + c.latitude, 0) / gpsCheckins.length
+const avgLon = gpsCheckins.reduce((s, c) => s + c.longitude, 0) / gpsCheckins.length
+const avgAccuracy = gpsCheckins.reduce((s, c) => s + c.gps_accuracy, 0) / gpsCheckins.length
+const checkinTiles = getMapTileUrls(avgLat, avgLon)
+
+// GPS averages for supervisor acknowledgment map
+const ackCheckins = missedCIs.filter(c => c.ack_at && c.ack_latitude != null)
+const ackAvgLat = ackCheckins.reduce((s, c) => s + c.ack_latitude, 0) / ackCheckins.length
+const ackAvgLon = ackCheckins.reduce((s, c) => s + c.ack_longitude, 0) / ackCheckins.length
+const ackAvgAccuracy = ackCheckins.reduce((s, c) => s + c.ack_gps_accuracy, 0) / ackCheckins.length
+const ackTiles = getMapTileUrls(ackAvgLat, ackAvgLon)
 
 const doc = React.createElement(
   Document,
@@ -147,17 +182,65 @@ const doc = React.createElement(
           React.createElement(Text, { style: styles.scoreLabel }, 'COMPLIANCE RATE')
         ),
         React.createElement(View, { style: styles.scoreCard },
-          React.createElement(Text, { style: [styles.scoreNumber, { color: '#16a34a' }] }, String(completed)),
+          React.createElement(Text, { style: [styles.scoreNumber, { color: '#16a34a' }] }, String(completedCIs.length)),
           React.createElement(Text, { style: styles.scoreLabel }, 'CHECK-INS COMPLETED')
         ),
         React.createElement(View, { style: styles.scoreCard },
-          React.createElement(Text, { style: [styles.scoreNumber, { color: '#dc2626' }] }, String(missed)),
+          React.createElement(Text, { style: [styles.scoreNumber, { color: '#dc2626' }] }, String(missedCIs.length)),
           React.createElement(Text, { style: styles.scoreLabel }, 'CHECK-INS MISSED')
         ),
         React.createElement(View, { style: styles.scoreCard },
           React.createElement(Text, { style: [styles.scoreNumber, { color: '#1e3a5f' }] }, '1'),
           React.createElement(Text, { style: styles.scoreLabel }, 'ALERTS SENT')
+        ),
+        React.createElement(View, { style: styles.scoreCard },
+          React.createElement(Text, { style: [styles.scoreNumber, { color: '#d97706' }] }, String(acknowledgedCount)),
+          React.createElement(Text, { style: styles.scoreLabel }, 'ACKNOWLEDGED')
         )
+      )
+    ),
+
+    // GPS Coverage Map
+    React.createElement(View, { style: styles.section },
+      React.createElement(Text, { style: styles.sectionTitle }, 'GPS COVERAGE MAP'),
+      React.createElement(
+        View,
+        { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+        ...checkinTiles.map((url, i) =>
+          React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+        )
+      ),
+      React.createElement(
+        Text,
+        { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
+        `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${gpsCheckins.length} GPS-verified check-in(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
+      ),
+      React.createElement(
+        Text,
+        { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
+        'Map data © OpenStreetMap contributors'
+      )
+    ),
+
+    // Supervisor Acknowledgment Map
+    React.createElement(View, { style: styles.section },
+      React.createElement(Text, { style: styles.sectionTitle }, 'SUPERVISOR ACKNOWLEDGMENT MAP'),
+      React.createElement(
+        View,
+        { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+        ...ackTiles.map((url, i) =>
+          React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+        )
+      ),
+      React.createElement(
+        Text,
+        { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
+        `Center: ${ackAvgLat.toFixed(5)}, ${ackAvgLon.toFixed(5)}  |  ${ackCheckins.length} GPS-verified acknowledgment(s)  |  Avg accuracy: ±${ackAvgAccuracy.toFixed(0)}m`
+      ),
+      React.createElement(
+        Text,
+        { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
+        'Map data © OpenStreetMap contributors'
       )
     ),
 
@@ -177,8 +260,15 @@ const doc = React.createElement(
               ? React.createElement(Text, { style: styles.timelineDetail },
                   `Device time: ${fmt(ci.completed_at)}  |  Server received: ${fmt(ci.server_received_at)}  |  GPS: ${ci.latitude?.toFixed(4)}, ${ci.longitude?.toFixed(4)} (±${ci.gps_accuracy}m)`
                 )
-              : React.createElement(Text, { style: styles.timelineDetail },
-                  'Scheduled window expired. Escalation SMS sent to supervisor within 60 seconds.'
+              : React.createElement(View, null,
+                  React.createElement(Text, { style: styles.timelineDetail },
+                    'Scheduled window expired. Escalation sent to supervisor.'
+                  ),
+                  ci.ack_at
+                    ? React.createElement(Text, { style: [styles.timelineDetail, { color: '#d97706' }] },
+                        `Supervisor acknowledged: ${fmt(ci.ack_at)}  |  GPS: ${ci.ack_latitude?.toFixed(5)}, ${ci.ack_longitude?.toFixed(5)} (±${ci.ack_gps_accuracy?.toFixed(0)}m)`
+                      )
+                    : null
                 )
           )
         )

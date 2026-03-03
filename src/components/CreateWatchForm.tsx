@@ -73,6 +73,7 @@ export default function CreateWatchForm() {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([])
   const [newItemLabel, setNewItemLabel] = useState('')
   const [newItemPhoto, setNewItemPhoto] = useState(false)
+  const [smsConsent, setSmsConsent] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -142,6 +143,10 @@ export default function CreateWatchForm() {
     }
     if (!form.assigned_phone.match(/^\+?[\d\s\-().]{10,}$/)) {
       toast.error('Please enter a valid worker phone number')
+      return
+    }
+    if (!smsConsent) {
+      toast.error('Please confirm SMS consent before starting the watch')
       return
     }
     if (escalationEnabled) {
@@ -586,6 +591,27 @@ export default function CreateWatchForm() {
         )}
       </div>
 
+      {/* ── SMS Consent ── */}
+      <div className="border border-blue-200 bg-blue-50 rounded-xl px-5 py-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={smsConsent}
+            onChange={(e) => setSmsConsent(e.target.checked)}
+            className="mt-0.5 rounded accent-blue-600 flex-shrink-0"
+          />
+          <span className="text-sm text-slate-700 leading-relaxed">
+            I confirm that the phone number owner(s) listed above have consented to receive
+            automated fire watch compliance SMS messages from DutyProof, including check-in
+            links and missed check-in alerts. Message frequency varies by watch schedule.
+            Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
+            <a href="/sms-consent" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">
+              SMS Terms
+            </a>
+          </span>
+        </label>
+      </div>
+
       {/* Actions */}
       <div className="pt-3 flex gap-3">
         <button
@@ -597,7 +623,7 @@ export default function CreateWatchForm() {
         </button>
         <button
           type="submit"
-          disabled={loading || facilities.length === 0 || checklistBlocking}
+          disabled={loading || facilities.length === 0 || checklistBlocking || !smsConsent}
           className="flex-1 py-3 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           {loading ? 'Starting Watch…' : 'Start Watch & Send SMS'}

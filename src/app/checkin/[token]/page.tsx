@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { format } from 'date-fns'
+import { queueCheckin, syncPendingCheckins } from '@/lib/offline-queue'
 
 type CheckInState =
   | { phase: 'loading' }
@@ -13,6 +14,7 @@ type CheckInState =
   | { phase: 'ready'; facilityName: string; assignedName: string; scheduledTime: string; nextTime: string }
   | { phase: 'submitting' }
   | { phase: 'confirmed'; nextCheckIn: string; serverTime: string; gpsCapture: boolean }
+  | { phase: 'queued'; deviceTime: string; gpsCapture: boolean }
   | { phase: 'error'; message: string }
 
 async function getLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | null> {
@@ -110,6 +112,11 @@ export default function CheckInPage() {
         }
         return
       }
+      // Service worker may return offline: true when network is down
+      if (data.offline) {
+        setState({ phase: 'queued', deviceTime, gpsCapture: location !== null })
+        return
+      }
       setState({
         phase: 'confirmed',
         nextCheckIn: data.nextCheckIn,
@@ -117,7 +124,19 @@ export default function CheckInPage() {
         gpsCapture: location !== null,
       })
     } catch {
-      setState({ phase: 'error', message: 'Network error. Please try again.' })
+      // Network error with no service worker — try to queue directly
+      try {
+        await queueCheckin({
+          token,
+          device_time: deviceTime,
+          latitude: location?.latitude ?? null,
+          longitude: location?.longitude ?? null,
+          gps_accuracy: location?.accuracy ?? null,
+        })
+        setState({ phase: 'queued', deviceTime, gpsCapture: location !== null })
+      } catch {
+        setState({ phase: 'error', message: 'No internet connection. Please try again when you have signal.' })
+      }
     }
   }
 
@@ -279,6 +298,57 @@ export default function CheckInPage() {
     )
   }
 
+  if (state.phase === 'queued') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+        <Logo />
+        <div className="bg-amber-950/30 border border-amber-700/40 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-900/40 border-2 border-amber-500 flex items-center justify-center">
+            <span className="text-amber-400 text-3xl font-bold">✓</span>
+          </div>
+          <h1
+            className="text-2xl text-white mb-2"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          >
+            Check-In Queued
+          </h1>
+          <p className="text-amber-300 text-sm mb-6">
+            Your check-in has been saved and will sync when you&apos;re back online.
+          </p>
+
+          {/* Device timestamp */}
+          <div className="bg-amber-900/30 rounded-xl px-6 py-4 mb-5">
+            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-widest mb-1">Recorded At (Device)</p>
+            <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+              {format(new Date(state.deviceTime), 'h:mm:ss a')}
+            </p>
+            <p className="text-amber-400 text-xs mt-1">
+              {format(new Date(state.deviceTime), 'EEEE, MMM d')}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-1.5 mb-4">
+            {state.gpsCapture ? (
+              <span className="text-[10px] text-green-500 font-semibold">📍 Location recorded</span>
+            ) : (
+              <span className="text-[10px] text-slate-500">Location not captured — GPS unavailable</span>
+            )}
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+            </span>
+            <span className="text-amber-400 text-xs font-semibold">Waiting for connection...</span>
+          </div>
+          <p className="text-slate-500 text-xs">
+            Keep this page open or close it — your check-in will sync automatically when service returns.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (state.phase === 'submitting') {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center" role="status" aria-label="Recording check-in">
@@ -322,9 +392,27 @@ function CheckInReady({
   onCheckIn: () => void
 }) {
   const [now, setNow] = useState(new Date())
+  const [online, setOnline] = useState(true)
+
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    setOnline(navigator.onLine)
+    const goOnline = () => {
+      setOnline(true)
+      // Safari fallback: sync queued check-ins when back online
+      syncPendingCheckins().catch(() => {})
+    }
+    const goOffline = () => setOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
   }, [])
 
   const diffSec = Math.floor((now.getTime() - new Date(scheduledTime).getTime()) / 1000)
@@ -362,6 +450,16 @@ function CheckInReady({
               <span className={`text-xs font-bold ${contextColor}`}>{timeContext}</span>
             </div>
           </div>
+
+          {/* Connectivity indicator */}
+          {!online && (
+            <div className="px-6 py-3 bg-amber-950/40 border-t border-amber-800/30 flex items-center justify-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+              </span>
+              <span className="text-amber-400 text-xs font-semibold">Offline — check-in will be queued</span>
+            </div>
+          )}
 
           {/* The big button */}
           <div className="p-6">

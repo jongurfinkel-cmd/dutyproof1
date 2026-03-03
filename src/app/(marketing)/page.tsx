@@ -5,6 +5,7 @@ import FaqAccordion from '@/components/FaqAccordion'
 import CostCalculator from '@/components/CostCalculator'
 import HeroProduct from '@/components/HeroProduct'
 import StickyCTA from '@/components/StickyCTA'
+import SocialProof from '@/components/SocialProof'
 
 export const metadata = {
   title: 'Fire Watch Compliance Software for Contractors',
@@ -47,20 +48,24 @@ export const metadata = {
 }
 
 const timelineItems = [
-  { time: '08:00 AM', status: 'completed', label: 'Checked in', detail: 'GPS 34.0521°N · SMS confirmed', delay: '0.1s' },
-  { time: '08:30 AM', status: 'completed', label: 'Checked in', detail: 'GPS 34.0519°N · SMS confirmed', delay: '0.5s' },
-  { time: '09:00 AM', status: 'missed',    label: 'MISSED — Alert sent to supervisor', detail: 'SMS escalation fired · 47 sec elapsed', delay: '0.9s' },
-  { time: '09:30 AM', status: 'completed', label: 'Checked in', detail: 'GPS 34.0522°N · SMS confirmed', delay: '1.3s' },
-  { time: '10:00 AM', status: 'pending',   label: 'Pending · due in 8 min', detail: 'SMS delivered · awaiting tap', delay: '1.7s' },
+  { time: '08:00 AM', status: 'completed',    label: 'Checked in', detail: 'GPS 34.0521°N · SMS confirmed', delay: '0.1s' },
+  { time: '08:30 AM', status: 'completed',    label: 'Checked in', detail: 'GPS 34.0519°N · SMS confirmed', delay: '0.5s' },
+  { time: '09:00 AM', status: 'missed',       label: 'MISSED — Alert sent to supervisor', detail: 'SMS escalation fired · 47 sec elapsed', delay: '0.9s' },
+  { time: '09:03 AM', status: 'acknowledged', label: 'Supervisor acknowledged', detail: 'T. Okafor · GPS 34.0518°N · 3 min response', delay: '1.1s' },
+  { time: '09:30 AM', status: 'completed',    label: 'Checked in (offline → synced)', detail: 'Device time 09:30:08 · synced at 09:31 · GPS verified', delay: '1.5s' },
+  { time: '10:00 AM', status: 'pending',      label: 'Pending · due in 8 min', detail: 'SMS delivered · awaiting tap', delay: '1.9s' },
 ]
 
 const includedFeatures = [
   'Unlimited active watches per job site',
   'Automated SMS check-ins (15 or 30 min intervals)',
   'GPS location capture on every check-in',
+  'Offline check-ins — works without signal',
   'Missed check-in escalation in < 60 seconds',
+  'Supervisor acknowledgment with GPS logging',
+  'Pre-watch safety checklists with photo capture',
   'Tamper-proof immutable audit log with full search',
-  'One-click OSHA-ready PDF reports',
+  'One-click OSHA-ready PDF reports with GPS maps',
   'Unlimited admin & supervisor accounts',
 ]
 
@@ -69,12 +74,8 @@ const FACILITY_TYPES = [
   'Welding Shops & Fabricators',
   'Pipefitters & Steamfitters',
   'General Contractors',
-  'Roofing Contractors',
   'Oil & Gas Operations',
-  'Industrial Facilities',
-  'Shipyards & Marine Fabrication',
   'HVAC & Plumbing Contractors',
-  'Infrastructure & Utility Work',
 ]
 
 const jsonLd = [
@@ -100,9 +101,11 @@ const jsonLd = [
     },
     featureList: [
       'Automated SMS fire watch check-ins',
+      'Offline check-ins — works without signal',
       'Missed check-in escalation in under 60 seconds',
+      'Supervisor acknowledgment with GPS logging',
       'Tamper-proof immutable audit log',
-      'OSHA-ready PDF compliance reports',
+      'OSHA-ready PDF compliance reports with GPS maps',
       'Unlimited job sites and active watches',
     ],
   },
@@ -125,7 +128,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'How much does DutyProof cost?',
-        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,388/year.' },
+        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,399/year.' },
       },
       {
         '@type': 'Question',
@@ -154,13 +157,18 @@ const jsonLd = [
       },
       {
         '@type': 'Question',
+        name: 'What if the job site has no cell service?',
+        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof works offline. If the worker opened the check-in link before losing signal, they can still tap CHECK IN NOW. The check-in saves to their phone with the device timestamp and GPS, then syncs automatically when connectivity returns. No false misses.' },
+      },
+      {
+        '@type': 'Question',
         name: 'What if my worker doesn\'t check in on time?',
-        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds. The miss is permanently recorded in the audit trail, and the next check-in cycle continues automatically.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — with a tap-to-acknowledge link. The supervisor taps it to confirm they saw the alert. Both the miss and the acknowledgment are permanently recorded in the audit trail.' },
       },
       {
         '@type': 'Question',
         name: 'Is there a contract or long-term commitment?',
-        acceptedAnswer: { '@type': 'Answer', text: 'No contracts on the monthly plan. $199/month, cancel any time. Annual plans are billed once at $2,388/year. Records retained for the life of your account.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'No contracts on the monthly plan. $199/month, cancel any time. Annual plans are billed once at $2,399/year. Records retained for the life of your account.' },
       },
     ],
   },
@@ -199,12 +207,9 @@ export default function LandingPage() {
             {/* ── Copy ── */}
             <div className="flex-1 text-center lg:text-left max-w-2xl lg:max-w-none lg:pt-4">
               <div className="mb-8">
-                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-300 text-sm font-bold tracking-wide mb-2">
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-300 text-sm font-bold tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-400 live-dot" />
                   Built by a Firefighter
-                </div>
-                <div className="text-slate-600 text-[10px] font-medium tracking-widest uppercase">
-                  OSHA 29 CFR 1910.252 · NFPA 51B · Hot Work Verification
                 </div>
               </div>
 
@@ -225,32 +230,28 @@ export default function LandingPage() {
                 DutyProof makes sure you can prove it.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-8">
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-8">
                 <Link
                   href="/signup"
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5 hover:shadow-blue-700/60"
                 >
                   Get Started — $199/mo →
                 </Link>
-                <a
-                  href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
-                  className="px-8 py-4 text-white/70 hover:text-white font-semibold rounded-xl text-base border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/8 transition-all"
+                <Link
+                  href="/#the-moment"
+                  className="text-slate-400 hover:text-slate-200 text-sm font-medium transition-colors underline underline-offset-4 decoration-slate-700 hover:decoration-slate-500"
                 >
-                  Book a 15-min Demo →
-                </a>
+                  See how it works ↓
+                </Link>
               </div>
 
-              <p className="text-slate-500 text-xs mb-6 text-center lg:text-left">30-day money-back guarantee — no questions asked.</p>
-
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 justify-center lg:justify-start text-sm text-slate-400 font-medium">
-                <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> Set up in under 2 minutes</span>
-                <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> OSHA-ready PDF reports</span>
-                <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> No app for workers</span>
-                <span className="flex items-center gap-2"><span className="text-green-400 font-bold">✓</span> Cancel any time — no contracts</span>
-              </div>
+              <p className="text-slate-500 text-xs mb-8 text-center lg:text-left">
+                30-day money-back guarantee — no questions asked.{' '}
+                <a href="mailto:jon@dutyproof.com" className="text-slate-400 hover:text-white transition-colors underline underline-offset-2">Questions? Email us.</a>
+              </p>
 
               {/* ── Risk stats strip — sourced from NFPA ── */}
-              <div className="mt-8 pt-6 border-t border-white/[0.07] grid grid-cols-3 gap-x-6 gap-y-5">
+              <div className="mt-8 pt-6 border-t border-white/[0.07] grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-5">
                 {([
                   {
                     n: '3,400+',
@@ -260,10 +261,10 @@ export default function LandingPage() {
                     highlight: false,
                   },
                   {
-                    n: '$292M',
-                    l: 'annual property damage from hot work fires',
-                    s: 'NFPA Hot Work Report',
-                    href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/hot-work',
+                    n: '63%',
+                    l: 'of hot work fires — no fire watch was present',
+                    s: 'NFPA 51B / Hot Work Data',
+                    href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b',
                     highlight: false,
                   },
                   {
@@ -317,27 +318,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
-      {/* ════════════════════════════════════════
-          PROOF STRIP
-      ════════════════════════════════════════ */}
-      <section className="bg-slate-900 border-b border-slate-800">
-        <div className="max-w-5xl mx-auto px-6 py-10">
-          <RevealOnScroll className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-            {[
-              { n: '< 60 sec', l: 'Missed check-in alert to supervisor' },
-              { n: 'Write-once', l: 'Audit log — no edits, no deletions, ever' },
-              { n: '1-click',   l: 'OSHA-ready PDF downloaded, any time' },
-              { n: '0 apps',   l: 'Workers need to install' },
-            ].map((s) => (
-              <div key={s.n}>
-                <div className="text-2xl text-white mb-0.5" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>{s.n}</div>
-                <div className="text-slate-500 text-xs">{s.l}</div>
-              </div>
-            ))}
-          </RevealOnScroll>
-        </div>
-      </section>
 
       {/* ════════════════════════════════════════
           THE MOMENT — hot work narrative
@@ -428,8 +408,8 @@ export default function LandingPage() {
                 Each row captures a server-side timestamp, location data, and a carrier-confirmed SMS delivery receipt.
               </p>
               <p className="text-slate-500 text-base leading-relaxed">
-                Missed a check-in? An alert fires to your supervisor or on-call admin within 60 seconds.
-                The miss is recorded permanently — whether or not it&apos;s ever resolved.
+                Missed a check-in? An alert fires to your supervisor within 60 seconds — with a tap-to-acknowledge link.
+                The miss, the alert, and the supervisor&apos;s response are all recorded permanently.
               </p>
             </RevealOnScroll>
 
@@ -441,8 +421,8 @@ export default function LandingPage() {
                     <div className="text-slate-500 text-xs mt-0.5">M. Rivera · 30 min · started 5h ago</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-green-600 text-sm font-bold">80%</div>
-                    <div className="text-slate-400 text-[10px]">compliance</div>
+                    <div className="text-green-600 text-sm font-bold">4 of 5</div>
+                    <div className="text-slate-400 text-[10px]">on time</div>
                   </div>
                 </div>
                 <div className="divide-y divide-slate-100">
@@ -453,19 +433,21 @@ export default function LandingPage() {
                       style={{ animationDelay: row.delay }}
                     >
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                        row.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        row.status === 'missed'    ? 'bg-red-100 text-red-600' :
-                                                     'bg-slate-100 text-slate-400'
+                        row.status === 'completed'    ? 'bg-green-100 text-green-700' :
+                        row.status === 'missed'       ? 'bg-red-100 text-red-600' :
+                        row.status === 'acknowledged' ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-slate-100 text-slate-400'
                       }`}>
-                        {row.status === 'completed' ? '✓' : row.status === 'missed' ? '✕' : '…'}
+                        {row.status === 'completed' ? '✓' : row.status === 'missed' ? '✕' : row.status === 'acknowledged' ? '✓' : '…'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-slate-400 text-[10px] font-mono shrink-0">{row.time}</span>
                           <span className={`text-xs font-semibold truncate ${
-                            row.status === 'completed' ? 'text-slate-800' :
-                            row.status === 'missed'    ? 'text-red-600' :
-                                                         'text-slate-500'
+                            row.status === 'completed'    ? 'text-slate-800' :
+                            row.status === 'missed'       ? 'text-red-600' :
+                            row.status === 'acknowledged' ? 'text-amber-700' :
+                                                            'text-slate-500'
                           }`}>{row.label}</span>
                         </div>
                         <div className="text-[10px] text-slate-400 mt-0.5 font-mono">{row.detail}</div>
@@ -492,7 +474,7 @@ export default function LandingPage() {
       <section className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
           <RevealOnScroll className="text-center mb-12">
-            <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">Built for the trades</div>
+            <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">Platform</div>
             <h2
               className="text-2xl sm:text-4xl lg:text-5xl text-slate-900 leading-tight"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
@@ -507,21 +489,21 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════
+          WHAT CONTRACTORS TOLD US
+      ════════════════════════════════════════ */}
+      <SocialProof />
+
+      {/* ════════════════════════════════════════
           PRICING + CALCULATOR
       ════════════════════════════════════════ */}
       <section id="pricing" className="py-24 bg-slate-50 border-t border-slate-100">
         <div className="max-w-5xl mx-auto px-6">
-          {/* ROI calculator — value anchoring before the price */}
-          <RevealOnScroll className="mb-16">
-            <CostCalculator />
-            <p className="text-slate-500 text-sm text-center mt-6">
-              One hot work fire causes an average of{' '}
-              <span className="font-semibold text-slate-700">$292,000</span> in property damage.
-              DutyProof costs <span className="font-semibold text-slate-700">$199/month</span>.
-            </p>
-          </RevealOnScroll>
-
-          <RevealOnScroll delay={100} className="text-center mb-14">
+          <RevealOnScroll className="text-center mb-14">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-slate-400 font-medium mb-10">
+              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300" />Write-once immutable audit log</span>
+              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300" />OSHA 29 CFR 1910.252 aligned</span>
+              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300" />30-day money-back guarantee</span>
+            </div>
             <h2 className="text-2xl sm:text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
               Simple, honest pricing
             </h2>
@@ -533,6 +515,11 @@ export default function LandingPage() {
             >
               ↓ Download a sample compliance report
             </a>
+          </RevealOnScroll>
+
+          {/* ROI calculator — value anchoring before the cards */}
+          <RevealOnScroll className="mb-16">
+            <CostCalculator />
           </RevealOnScroll>
 
           {/* Pricing cards */}
@@ -564,14 +551,8 @@ export default function LandingPage() {
                 >
                   Start Your First Watch →
                 </Link>
-                <a
-                  href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
-                  className="block text-center py-3 px-8 rounded-xl text-slate-600 hover:text-slate-900 font-semibold text-sm border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all mt-3"
-                >
-                  Book a 15-min Demo →
-                </a>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  30-day money-back guarantee · No setup fees · Annual option: $2,388/yr
+                  30-day money-back guarantee · No setup fees · Annual option: $2,399/yr
                 </p>
               </div>
             </RevealOnScroll>
@@ -580,22 +561,22 @@ export default function LandingPage() {
             <RevealOnScroll delay={100} className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl relative">
               <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                  Pay for 11, get 12
+                  Lock in your rate
                 </div>
                 <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
                 <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-6xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$2,388</span>
+                  <span className="text-4xl sm:text-6xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$2,399</span>
                   <div className="text-green-200 text-base mb-3">/year</div>
                 </div>
                 <p className="text-green-200 text-sm max-w-xs mx-auto">
-                  Same unlimited plan. Pay annually and save one month.
+                  Same unlimited plan. One bill, locked rate for 12 months.
                 </p>
               </div>
               <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="grid grid-cols-1 gap-y-2.5 mb-8">
                   {[
                     'Everything in the monthly plan',
-                    'One month free ($199 savings)',
+                    'Locked rate — no price increases for 12 months',
                     'Priority email & phone support',
                     'Dedicated onboarding assistance',
                     'Annual compliance summary report',
@@ -643,6 +624,17 @@ export default function LandingPage() {
           <RevealOnScroll delay={100}>
             <FaqAccordion />
           </RevealOnScroll>
+          <RevealOnScroll delay={200} className="text-center mt-12 pt-8 border-t border-slate-200">
+            <p className="text-slate-500 text-sm mb-4">Still have questions?{' '}
+              <a href="mailto:jon@dutyproof.com" className="text-blue-600 hover:text-blue-700 underline underline-offset-2 transition-colors">Email us</a>
+            </p>
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center px-8 py-3.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-sm shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
+            >
+              Get Started — $199/mo →
+            </Link>
+          </RevealOnScroll>
         </div>
       </section>
 
@@ -662,7 +654,7 @@ export default function LandingPage() {
             When the fire marshal<br />walks in, you&apos;ll<br />be ready.
           </h2>
           <p className="text-slate-400 text-lg leading-relaxed mb-4">
-            Set up your first watch in under two minutes. Launch pricing — lock in $199/mo.
+            Set up your first watch in under two minutes. $199/mo, unlimited sites.
           </p>
           <p className="text-slate-400 text-sm mb-10">
             If it&apos;s not for you, cancel in 30 days for a full refund. No questions asked.
@@ -672,17 +664,15 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
             >
-              Lock In Launch Pricing →
+              Get Started — $199/mo →
             </Link>
-            <a
-              href="mailto:jon@dutyproof.com?subject=Book%20a%20DutyProof%20Demo"
-              className="inline-flex items-center justify-center gap-2 px-9 py-5 text-white/70 hover:text-white font-semibold rounded-xl text-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/8 transition-all"
-            >
-              Book a 15-min Demo →
-            </a>
           </div>
           <p className="mt-4 text-slate-500 text-xs">
-            30-day money-back guarantee · Cancel any time · $2,388/yr annual option
+            30-day money-back guarantee · Cancel any time · $2,399/yr annual option
+          </p>
+          <p className="mt-2 text-slate-600 text-xs">
+            Want a walkthrough first?{' '}
+            <a href="mailto:jon@dutyproof.com?subject=DutyProof%20Demo" className="text-slate-400 hover:text-slate-200 transition-colors underline underline-offset-2">Email jon@dutyproof.com</a>
           </p>
           <p className="mt-3 text-slate-600 text-sm">
             Already have an account?{' '}
@@ -692,10 +682,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── Not a contractor? ── */}
-      <div className="bg-slate-950 border-t border-slate-800 py-5">
-        <p className="text-center text-slate-500 text-sm">
+      <div className="bg-slate-900 border-t border-slate-700 py-5">
+        <p className="text-center text-slate-400 text-sm">
           Not a contractor?{' '}
-          <Link href="/industries" className="text-slate-400 hover:text-slate-200 underline underline-offset-2 transition-colors">
+          <Link href="/industries" className="text-slate-300 hover:text-white underline underline-offset-2 transition-colors">
             DutyProof works anywhere a fire watch is required →
           </Link>
         </p>
