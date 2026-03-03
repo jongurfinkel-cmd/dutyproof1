@@ -2,7 +2,7 @@ import Link from 'next/link'
 import PageHero from '@/components/PageHero'
 
 export const metadata = {
-  title: 'Privacy Policy — DutyProof',
+  title: 'Privacy Policy',
   description: 'DutyProof Privacy Policy — how we collect, use, and protect your data.',
 }
 

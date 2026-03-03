@@ -33,10 +33,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: 'https://dutyproof.com/login',
+      url: 'https://dutyproof.com/support/walkthrough',
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.5,
+      priority: 0.6,
     },
     {
       url: 'https://dutyproof.com/terms',
@@ -49,6 +49,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
+    },
+    {
+      url: 'https://dutyproof.com/sms-consent',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.2,
     },
   ]
 }

@@ -243,6 +243,29 @@ export default function SupportPage() {
                 </div>
               </div>
 
+              {/* Direct contact */}
+              <div className="rounded-2xl border-2 border-slate-200 p-7">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </div>
+                <h2 className="font-bold text-slate-900 text-base mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+                  Direct contact
+                </h2>
+                <p className="text-slate-500 text-sm mb-3">
+                  Prefer to reach out directly?
+                </p>
+                <div className="space-y-1.5 text-sm">
+                  <a href="mailto:support@dutyproof.com" className="block text-blue-600 hover:text-blue-500 transition-colors font-medium">
+                    support@dutyproof.com
+                  </a>
+                  <a href="tel:+18333897766" className="block text-slate-600 hover:text-slate-900 transition-colors">
+                    +1 (833) 389-7766
+                  </a>
+                </div>
+              </div>
+
               {/* Walkthrough */}
               <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/30 p-7">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import PageHero from '@/components/PageHero'
 
 export const metadata = {
-  title: 'Terms of Service — DutyProof',
+  title: 'Terms of Service',
   description: 'DutyProof Terms of Service.',
 }
 

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import PageHero from '@/components/PageHero'
 
 export const metadata = {
-  title: 'SMS Terms & Consent — DutyProof',
+  title: 'SMS Terms & Consent',
   description: 'DutyProof SMS messaging terms, consent policy, and opt-out instructions.',
 }
 

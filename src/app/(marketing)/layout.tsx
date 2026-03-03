@@ -202,8 +202,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-slate-800">
             <div className="flex items-center gap-5 text-xs text-slate-600">
               <Link href="/security" className="hover:text-slate-400 transition-colors">Security</Link>
-              <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms of Service</Link>
-              <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
+              <Link href="/sms-consent" className="hover:text-slate-400 transition-colors">SMS Terms</Link>
             </div>
             <span className="text-slate-700 text-xs">© {new Date().getFullYear()} DutyProof</span>
           </div>
