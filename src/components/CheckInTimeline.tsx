@@ -13,7 +13,7 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
 
   if (sorted.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-400 text-sm">
+      <div className="text-center py-12 text-slate-500 text-sm">
         No check-ins recorded yet.
       </div>
     )
@@ -44,7 +44,7 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                   ? 'bg-green-100 text-green-600 ring-4 ring-white'
                   : ci.status === 'missed'
                   ? 'bg-red-100 text-red-600 ring-4 ring-white'
-                  : 'bg-slate-100 text-slate-400 ring-4 ring-white'
+                  : 'bg-slate-100 text-slate-500 ring-4 ring-white'
               }`}>
                 {ci.status === 'completed' ? '✓' : ci.status === 'missed' ? '✕' : '…'}
               </div>
@@ -119,7 +119,7 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                         )}
                       </div>
                     ) : ci.escalation_sent_at ? (
-                      <div className="text-slate-400 mt-0.5 italic">Awaiting supervisor acknowledgment</div>
+                      <div className="text-slate-500 mt-0.5 italic">Awaiting supervisor acknowledgment</div>
                     ) : null}
                   </div>
                 )}

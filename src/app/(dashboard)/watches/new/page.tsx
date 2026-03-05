@@ -10,7 +10,7 @@ export default function NewWatchPage() {
         >
           Start New Fire Watch
         </h2>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-slate-500 text-sm mt-1">
           Fill in all required fields. The fire watcher will receive an SMS with their first check-in link immediately.
         </p>
       </div>

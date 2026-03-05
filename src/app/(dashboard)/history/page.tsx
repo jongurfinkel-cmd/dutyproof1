@@ -198,7 +198,7 @@ export default function HistoryPage() {
           >
             Watch History
           </h2>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             {watches.length} completed watch{watches.length !== 1 ? 'es' : ''}
             {filtered.length !== watches.length && ` · ${filtered.length} shown`}
           </p>
@@ -241,7 +241,7 @@ export default function HistoryPage() {
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" width="15" height="15" viewBox="0 0 15 15" fill="none">
                 <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
                 <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
@@ -287,12 +287,12 @@ export default function HistoryPage() {
               {dateFrom || dateTo
                 ? `${dateFrom || '…'} → ${dateTo || '…'}`
                 : 'Date range'}
-              {dateFilterOpen && <span className="text-slate-400 ml-0.5">×</span>}
+              {dateFilterOpen && <span className="text-slate-500 ml-0.5">×</span>}
             </button>
             {dateFilterOpen && (
               <div className="flex flex-col sm:flex-row gap-3 items-center mt-2">
                 <div className="flex items-center gap-2 flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">From</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">From</label>
                   <input
                     type="date"
                     value={dateFrom}
@@ -301,7 +301,7 @@ export default function HistoryPage() {
                   />
                 </div>
                 <div className="flex items-center gap-2 flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">To</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">To</label>
                   <input
                     type="date"
                     value={dateTo}
@@ -326,11 +326,11 @@ export default function HistoryPage() {
           >
             No completed watches yet
           </h3>
-          <p className="text-slate-400 text-sm">Completed watches will appear here with full audit trails.</p>
+          <p className="text-slate-500 text-sm">Completed watches will appear here with full audit trails.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <p className="text-slate-400 text-sm">No watches match your search.</p>
+          <p className="text-slate-500 text-sm">No watches match your search.</p>
           <button
             onClick={() => { setSearch(''); setFacilityFilter(''); setDateFrom(''); setDateTo('') }}
             className="mt-3 text-blue-600 hover:text-blue-500 text-sm font-semibold"
@@ -355,7 +355,7 @@ export default function HistoryPage() {
                     <th
                       key={label}
                       className={`text-left px-5 py-4 text-[10px] font-bold uppercase tracking-widest select-none${mobileHide ? ' hidden sm:table-cell' : ''} ${
-                        key ? 'cursor-pointer text-slate-400 hover:text-slate-600 transition-colors' : 'text-slate-400'
+                        key ? 'cursor-pointer text-slate-500 hover:text-slate-600 transition-colors' : 'text-slate-500'
                       }`}
                       onClick={key ? () => handleSort(key) : undefined}
                       aria-sort={key && sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
@@ -371,7 +371,7 @@ export default function HistoryPage() {
                       </span>
                     </th>
                   ))}
-                  <th className="text-right px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Report</th>
+                  <th className="text-right px-5 py-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Report</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -383,7 +383,7 @@ export default function HistoryPage() {
                     <tr key={w.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="font-semibold text-slate-800">{w.facilities.name}</div>
-                        {w.location && <div className="text-xs text-slate-400 mt-0.5">{w.location}</div>}
+                        {w.location && <div className="text-xs text-slate-500 mt-0.5">{w.location}</div>}
                       </td>
                       <td className="px-5 py-4 text-slate-600 whitespace-nowrap hidden sm:table-cell">{w.assigned_name}</td>
                       <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{format(new Date(w.start_time), 'MMM d, h:mm a')}</td>
@@ -398,13 +398,13 @@ export default function HistoryPage() {
                               />
                             </div>
                             <span className={`font-bold text-sm ${pctColor}`}>{pct}%</span>
-                            <span className="text-slate-400 text-xs">({w._completed}/{total})</span>
+                            <span className="text-slate-500 text-xs">({w._completed}/{total})</span>
                           </div>
                         ) : (
                           <span className="text-slate-300">—</span>
                         )}
                       </td>
-                      <td className="px-5 py-4 text-slate-400 max-w-[180px] truncate hidden sm:table-cell">{w.reason || '—'}</td>
+                      <td className="px-5 py-4 text-slate-500 max-w-[180px] truncate hidden sm:table-cell">{w.reason || '—'}</td>
                       <td className="px-5 py-4 text-right">
                         <Link
                           href={`/watches/${w.id}`}
@@ -421,7 +421,7 @@ export default function HistoryPage() {
           </div>
           {totalPages > 1 && (
             <nav className="flex items-center justify-between px-5 py-3 border-t border-slate-100" aria-label="Pagination">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-500">
                 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, sorted.length)} of {sorted.length}
               </span>
               <div className="flex items-center gap-1">

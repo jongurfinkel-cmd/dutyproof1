@@ -174,7 +174,7 @@ export default function WatchDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <Link href="/dashboard" className="text-slate-400 hover:text-slate-600 text-sm transition-colors">
+          <Link href="/dashboard" className="text-slate-500 hover:text-slate-600 text-sm transition-colors">
             ← Back to Dashboard
           </Link>
           <h2
@@ -183,10 +183,10 @@ export default function WatchDetailPage() {
           >
             {watch.facilities.name}
             {watch.location && (
-              <span className="text-slate-400 font-semibold"> — {watch.location}</span>
+              <span className="text-slate-500 font-semibold"> — {watch.location}</span>
             )}
           </h2>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             {watch.status === 'active' ? (
               <span className="inline-flex items-center gap-1.5 text-green-600 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -260,63 +260,63 @@ export default function WatchDetailPage() {
       {/* Watch Info */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
         <h3
-          className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4"
+          className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4"
         >
           Watch Details
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-3 text-sm">
           {watch.location && (
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Location</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Location</div>
               <div className="font-semibold text-slate-800">{watch.location}</div>
             </div>
           )}
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Fire Watcher</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Fire Watcher</div>
             <div className="font-semibold text-slate-800">{watch.assigned_name}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Phone</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Phone</div>
             <div className="font-semibold text-slate-800">{watch.assigned_phone}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Interval</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Interval</div>
             <div className="font-semibold text-slate-800">Every {watch.check_interval_min} min</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Started</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Started</div>
             <div className="font-semibold text-slate-800">{format(new Date(watch.start_time), 'MMM d, h:mm a')}</div>
           </div>
           {watch.ended_at && (
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Ended</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Ended</div>
               <div className="font-semibold text-slate-800">{format(new Date(watch.ended_at), 'MMM d, h:mm a')}</div>
             </div>
           )}
           {watch.planned_end_time && !watch.ended_at && (
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Expected End</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Expected End</div>
               <div className="font-semibold text-slate-800">{format(new Date(watch.planned_end_time), 'MMM d, h:mm a')}</div>
             </div>
           )}
           {nextPending && watch.status === 'active' && (
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Next Check-in</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Next Check-in</div>
               <div className="font-semibold text-slate-800">{format(new Date(nextPending.scheduled_time), 'h:mm a')}</div>
             </div>
           )}
           {watch.escalation_phone && (
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Supervisor</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Supervisor</div>
               <div className="font-semibold text-slate-800">{watch.escalation_phone}</div>
               {watch.escalation_delay_min > 0 && (
-                <div className="text-[10px] text-slate-400 mt-0.5">Alert after {watch.escalation_delay_min} min</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Alert after {watch.escalation_delay_min} min</div>
               )}
             </div>
           )}
           {watch.reason && (
             <div className="col-span-2 md:col-span-3">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Reason</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Reason</div>
               <div className="font-semibold text-slate-800">{watch.reason}</div>
             </div>
           )}
@@ -326,7 +326,7 @@ export default function WatchDetailPage() {
         {nextPending && watch.status === 'active' && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Current Check-in Link</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Current Check-in Link</div>
               <div className="text-xs text-slate-500 font-mono truncate">
                 {`${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`}
               </div>
@@ -373,7 +373,7 @@ export default function WatchDetailPage() {
               {pct}%
             </span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-2 uppercase tracking-widest font-semibold">Compliance</div>
+          <div className="text-[10px] text-slate-500 mt-2 uppercase tracking-widest font-semibold">Compliance</div>
         </div>
         {[
           { label: 'Completed', value: completed.length, color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
@@ -382,7 +382,7 @@ export default function WatchDetailPage() {
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl border ${s.bg} p-5 text-center shadow-sm`}>
             <div className={`text-2xl font-bold ${s.color}`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
-            <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-semibold">{s.label}</div>
+            <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-semibold">{s.label}</div>
           </div>
         ))}
       </div>
@@ -391,7 +391,7 @@ export default function WatchDetailPage() {
       {checklistItems.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pre-Watch Safety Checklist</h3>
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Pre-Watch Safety Checklist</h3>
             {watch.checklist_completed_at ? (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -435,7 +435,7 @@ export default function WatchDetailPage() {
                       </div>
                     )}
                     {item.requires_photo && !completion?.photo_url && (
-                      <span className="text-[10px] text-slate-400 font-semibold">📷 Photo required</span>
+                      <span className="text-[10px] text-slate-500 font-semibold">📷 Photo required</span>
                     )}
                     {completion && (
                       <p className="text-[10px] text-green-600 mt-1">
@@ -455,7 +455,7 @@ export default function WatchDetailPage() {
 
       {/* Timeline */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Timeline</h3>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-5">Check-In Timeline</h3>
         <CheckInTimeline checkIns={checkIns} alerts={alerts} />
       </div>
     </div>

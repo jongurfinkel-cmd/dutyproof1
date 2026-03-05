@@ -180,7 +180,7 @@ export default function DashboardPage() {
             >
               Active Watches
             </h2>
-            <p className="text-slate-400 text-sm mt-1">Loading...</p>
+            <p className="text-slate-500 text-sm mt-1">Loading...</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -240,7 +240,7 @@ export default function DashboardPage() {
             Active Watches
           </h2>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-500 text-sm">
               {watches.length === 0
                 ? 'No active watches'
                 : `${watches.length} watch${watches.length !== 1 ? 'es' : ''} in progress`}
@@ -310,7 +310,7 @@ export default function DashboardPage() {
           <h3 className="text-lg font-bold text-slate-800 mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
             Failed to load watches
           </h3>
-          <p className="text-slate-400 text-sm mb-5 max-w-sm mx-auto">
+          <p className="text-slate-500 text-sm mb-5 max-w-sm mx-auto">
             There was an error loading your watches. Please try again.
           </p>
           <button
@@ -332,7 +332,7 @@ export default function DashboardPage() {
             >
               No active fire watches
             </h3>
-            <p className="text-slate-400 text-sm mb-7 max-w-sm mx-auto">
+            <p className="text-slate-500 text-sm mb-7 max-w-sm mx-auto">
               Start a watch to begin automated SMS check-ins and compliance documentation.
             </p>
             <Link
@@ -352,7 +352,7 @@ export default function DashboardPage() {
               <div key={step} className="px-7 py-6">
                 <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-black flex items-center justify-center mb-3">{step}</div>
                 <p className="font-bold text-slate-800 text-sm mb-1">{title}</p>
-                <p className="text-slate-400 text-xs leading-relaxed mb-3">{desc}</p>
+                <p className="text-slate-500 text-xs leading-relaxed mb-3">{desc}</p>
                 <Link href={href} className="text-blue-600 hover:text-blue-500 text-xs font-semibold transition-colors">{cta}</Link>
               </div>
             ))}

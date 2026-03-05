@@ -184,7 +184,7 @@ export default function FacilitiesPage() {
           >
             Job Sites
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Manage the job sites and locations you oversee.</p>
+          <p className="text-slate-500 text-sm mt-1">Manage the job sites and locations you oversee.</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -208,7 +208,7 @@ export default function FacilitiesPage() {
           </h3>
           <form onSubmit={handleAdd} className="space-y-4 max-w-lg">
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                 Job Site Name <span className="text-red-400">*</span>
               </label>
               <input
@@ -221,7 +221,7 @@ export default function FacilitiesPage() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                 Address <span className="text-slate-300 normal-case">(optional)</span>
               </label>
               <input
@@ -233,7 +233,7 @@ export default function FacilitiesPage() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                 Timezone
               </label>
               <select
@@ -276,7 +276,7 @@ export default function FacilitiesPage() {
           >
             No job sites yet
           </h3>
-          <p className="text-slate-400 text-sm mb-2">Add a job site to get started with fire watch tracking.</p>
+          <p className="text-slate-500 text-sm mb-2">Add a job site to get started with fire watch tracking.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -284,10 +284,10 @@ export default function FacilitiesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Name</th>
-                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:table-cell">Address</th>
-                  <th className="text-left px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:table-cell">Timezone</th>
-                  <th className="text-right px-5 py-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Actions</th>
+                  <th className="text-left px-5 py-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Name</th>
+                  <th className="text-left px-5 py-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:table-cell">Address</th>
+                  <th className="text-left px-5 py-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:table-cell">Timezone</th>
+                  <th className="text-right px-5 py-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -297,7 +297,7 @@ export default function FacilitiesPage() {
                       <td colSpan={4} className="px-5 py-4">
                         <form onSubmit={handleSaveEdit} className="flex flex-wrap gap-3 items-end">
                           <div className="flex-1 min-w-[140px]">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Name</label>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Name</label>
                             <input
                               type="text"
                               value={editForm.name}
@@ -307,7 +307,7 @@ export default function FacilitiesPage() {
                             />
                           </div>
                           <div className="flex-1 min-w-[180px]">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Address</label>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Address</label>
                             <input
                               type="text"
                               value={editForm.address}
@@ -317,7 +317,7 @@ export default function FacilitiesPage() {
                             />
                           </div>
                           <div className="min-w-[160px]">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Timezone</label>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Timezone</label>
                             <select
                               value={editForm.timezone}
                               onChange={(e) => setEditForm((p) => ({ ...p, timezone: e.target.value }))}
@@ -389,14 +389,14 @@ export default function FacilitiesPage() {
                             <>
                               <button
                                 onClick={() => startEdit(f)}
-                                className="px-3 py-1.5 text-slate-400 hover:text-blue-600 font-semibold text-sm transition-colors rounded-lg hover:bg-blue-50"
+                                className="px-3 py-1.5 text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors rounded-lg hover:bg-blue-50"
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteRequest(f.id, f.name)}
                                 disabled={deletingId === f.id}
-                                className="px-3 py-1.5 text-slate-400 hover:text-red-600 font-semibold text-sm transition-colors rounded-lg hover:bg-red-50 disabled:text-slate-300"
+                                className="px-3 py-1.5 text-slate-500 hover:text-red-600 font-semibold text-sm transition-colors rounded-lg hover:bg-red-50 disabled:text-slate-300"
                               >
                                 {deletingId === f.id ? 'Checking…' : 'Delete'}
                               </button>

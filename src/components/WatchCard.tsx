@@ -90,7 +90,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
               <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
             </div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[10px] text-slate-500">
                 Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
               </span>
               {watch.checklist_token && (
@@ -115,10 +115,10 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
 
           {/* Interval + live countdown */}
           <div className="text-right shrink-0">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Interval</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Interval</div>
             <div className="text-lg font-bold text-slate-700">{watch.check_interval_min}m</div>
             {countdown && (
-              <div className={`text-[10px] font-bold mt-0.5 ${countdown.late ? 'text-red-500' : 'text-slate-400'}`}>
+              <div className={`text-[10px] font-bold mt-0.5 ${countdown.late ? 'text-red-500' : 'text-slate-500'}`}>
                 {countdown.late
                   ? `${Math.abs(countdown.remaining)}m late`
                   : `${countdown.remaining}m left`}
@@ -129,17 +129,17 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Worker</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Worker</div>
             <div className="text-slate-700 font-medium truncate">{watch.assigned_name}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Phone</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider">Phone</div>
             <div className="text-slate-700 font-medium truncate">{watch.assigned_phone}</div>
           </div>
         </div>
 
         {watch.reason && (
-          <p className="text-xs text-slate-400 italic mt-3 truncate">{watch.reason}</p>
+          <p className="text-xs text-slate-500 italic mt-3 truncate">{watch.reason}</p>
         )}
       </div>
 

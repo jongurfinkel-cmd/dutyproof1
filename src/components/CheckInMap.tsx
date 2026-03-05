@@ -118,7 +118,13 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
     })
 
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 })
+      const totalMarkers = sortedGeo.length + ackPoints.length
+      if (totalMarkers <= 1) {
+        // Single point: use a sensible zoom so the surrounding area is visible
+        map.setView(bounds.getCenter(), 15)
+      } else {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 })
+      }
     }
 
     return () => {
@@ -132,10 +138,10 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
           Check-In Locations
         </h3>
-        <div className="flex items-center gap-3 text-[10px] font-semibold">
+        <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-600">
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow" />
             Completed

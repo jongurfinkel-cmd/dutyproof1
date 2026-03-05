@@ -45,7 +45,7 @@ function Divider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 py-1">
       <div className="flex-1 h-px bg-slate-100" />
-      <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.12em]">{label}</span>
+      <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.12em]">{label}</span>
       <div className="flex-1 h-px bg-slate-100" />
     </div>
   )
@@ -212,7 +212,7 @@ export default function CreateWatchForm() {
 
       {/* ── Where / What ── */}
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Job Site <span className="text-red-400">*</span>
         </label>
         {facilities.length === 0 ? (
@@ -238,7 +238,7 @@ export default function CreateWatchForm() {
       </div>
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Location / Area <span className="text-slate-300 normal-case">(optional)</span>
         </label>
         <input
@@ -251,7 +251,7 @@ export default function CreateWatchForm() {
       </div>
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Reason for Watch <span className="text-slate-300 normal-case">(optional)</span>
         </label>
         <input
@@ -266,7 +266,7 @@ export default function CreateWatchForm() {
       <Divider label="Worker" />
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Fire Watcher Name <span className="text-red-400">*</span>
         </label>
         <input
@@ -280,7 +280,7 @@ export default function CreateWatchForm() {
       </div>
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Worker&apos;s Phone <span className="text-red-400">*</span>
         </label>
         <input
@@ -293,7 +293,7 @@ export default function CreateWatchForm() {
           placeholder="+1 (212) 000-0000"
           className={inputClass}
         />
-        <p className="text-xs text-slate-400 mt-1.5">
+        <p className="text-xs text-slate-500 mt-1.5">
           Include country code, e.g. <span className="font-mono">+1 212 000 0000</span>. SMS check-in links go here.
         </p>
       </div>
@@ -301,7 +301,7 @@ export default function CreateWatchForm() {
       <Divider label="Timing" />
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Check-in Interval <span className="text-red-400">*</span>
         </label>
         <div className="flex gap-2">
@@ -327,7 +327,7 @@ export default function CreateWatchForm() {
                 onChange={() => set('check_interval_min', opt.value)}
               />
               <span className="font-bold text-sm">{opt.label}</span>
-              {opt.hint && <span className="text-[10px] text-slate-400">{opt.hint}</span>}
+              {opt.hint && <span className="text-[10px] text-slate-500">{opt.hint}</span>}
             </label>
           ))}
         </div>
@@ -349,7 +349,7 @@ export default function CreateWatchForm() {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Start Time <span className="text-red-400">*</span>
           </label>
           <button
@@ -367,11 +367,11 @@ export default function CreateWatchForm() {
           required
           className={inputClass}
         />
-        <p className="text-xs text-slate-400 mt-1.5">First SMS will be sent at this time.</p>
+        <p className="text-xs text-slate-500 mt-1.5">First SMS will be sent at this time.</p>
       </div>
 
       <div>
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Expected End Time <span className="text-slate-300 normal-case">(optional)</span>
         </label>
         <input
@@ -381,7 +381,7 @@ export default function CreateWatchForm() {
           min={form.start_time}
           className={inputClass}
         />
-        <p className="text-xs text-slate-400 mt-1.5">For your audit trail and reports. Watch continues until manually ended.</p>
+        <p className="text-xs text-slate-500 mt-1.5">For your audit trail and reports. Watch continues until manually ended.</p>
       </div>
 
       {/* ── Supervisor Escalation ── */}
@@ -395,7 +395,7 @@ export default function CreateWatchForm() {
         >
           <div>
             <p className="text-sm font-bold text-slate-800">Supervisor Escalation</p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Alert a supervisor by SMS when a check-in is missed
             </p>
           </div>
@@ -407,7 +407,7 @@ export default function CreateWatchForm() {
         {escalationEnabled && (
           <div className="border-t border-slate-200 px-5 py-4 bg-slate-50 space-y-4">
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                 Supervisor / Admin Phone <span className="text-red-400">*</span>
               </label>
               <input
@@ -419,10 +419,10 @@ export default function CreateWatchForm() {
                 placeholder="+1 (212) 000-0000"
                 className={inputClass}
               />
-              <p className="text-xs text-slate-400 mt-1.5">Include country code. Alert SMS goes here.</p>
+              <p className="text-xs text-slate-500 mt-1.5">Include country code. Alert SMS goes here.</p>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                 Alert Delay
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -452,7 +452,7 @@ export default function CreateWatchForm() {
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1.5">
+              <p className="text-xs text-slate-500 mt-1.5">
                 How long after a missed check-in before the supervisor is texted.
               </p>
             </div>
@@ -471,7 +471,7 @@ export default function CreateWatchForm() {
         >
           <div>
             <p className="text-sm font-bold text-slate-800">Pre-Watch Safety Checklist</p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Worker completes safety items via SMS link before rounds begin
             </p>
           </div>
@@ -484,7 +484,7 @@ export default function CreateWatchForm() {
           <div className="border-t border-slate-200 px-5 py-4 bg-slate-50 space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Add</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quick Add</p>
                 {PRESET_ITEMS.some((p) => !checklistItems.some((i) => i.label === p.label)) && (
                   <button
                     type="button"
@@ -525,7 +525,7 @@ export default function CreateWatchForm() {
 
             {checklistItems.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
                   Checklist ({checklistItems.length} item{checklistItems.length !== 1 ? 's' : ''})
                 </p>
                 <div className="space-y-2">
@@ -551,7 +551,7 @@ export default function CreateWatchForm() {
             )}
 
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Custom Item</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Custom Item</p>
               <div className="flex gap-2">
                 <input
                   type="text"

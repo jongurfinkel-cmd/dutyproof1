@@ -121,7 +121,7 @@ export default function BillingPage() {
         <div className="text-center mt-8">
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-slate-400 hover:text-slate-600 text-sm transition-colors"
+            className="text-slate-500 hover:text-slate-600 text-sm transition-colors"
           >
             ← Back to dashboard
           </button>
@@ -286,7 +286,7 @@ export default function BillingPage() {
       <div className="text-center mt-8">
         <button
           onClick={() => router.push('/dashboard')}
-          className="text-slate-400 hover:text-slate-600 text-sm transition-colors"
+          className="text-slate-500 hover:text-slate-600 text-sm transition-colors"
         >
           ← Back to dashboard
         </button>
