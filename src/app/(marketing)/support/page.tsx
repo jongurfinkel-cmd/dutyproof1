@@ -256,14 +256,9 @@ export default function SupportPage() {
                 <p className="text-slate-500 text-sm mb-3">
                   Prefer to reach out directly?
                 </p>
-                <div className="space-y-1.5 text-sm">
-                  <a href="mailto:support@dutyproof.com" className="block text-blue-600 hover:text-blue-500 transition-colors font-medium">
-                    support@dutyproof.com
-                  </a>
-                  <a href="tel:+18333897766" className="block text-slate-600 hover:text-slate-900 transition-colors">
-                    +1 (833) 389-7766
-                  </a>
-                </div>
+                <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:text-blue-500 transition-colors font-medium text-sm">
+                  support@dutyproof.com
+                </a>
               </div>
 
               {/* Walkthrough */}

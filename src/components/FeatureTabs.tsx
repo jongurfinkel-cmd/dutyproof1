@@ -27,7 +27,7 @@ function SMSMockup() {
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DP</div>
         <div>
           <div className="text-white text-xs font-semibold">DutyProof</div>
-          <div className="text-slate-500 text-[10px]">+1 (833) 389-7766</div>
+          <div className="text-slate-500 text-[10px]">Automated SMS</div>
         </div>
       </div>
       <div className="p-4 space-y-3">

@@ -206,7 +206,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
               <Link href="/sms-consent" className="hover:text-slate-400 transition-colors">SMS Terms</Link>
             </div>
-            <span className="text-slate-700 text-xs">© {new Date().getFullYear()} DutyProof</span>
+            <span className="text-slate-700 text-xs">© {new Date().getFullYear()} Gurfinkel Ventures LLC. DutyProof is a product of Gurfinkel Ventures LLC.</span>
           </div>
         </div>
       </footer>
