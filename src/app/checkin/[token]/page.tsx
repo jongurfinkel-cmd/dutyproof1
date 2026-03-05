@@ -160,8 +160,8 @@ export default function CheckInPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
-        <div className="bg-red-950/40 border border-red-800/50 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-900/50 flex items-center justify-center">
+        <div className="bg-red-950 border border-red-800 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-900 flex items-center justify-center">
             <span className="text-red-400 text-2xl font-bold">✕</span>
           </div>
           <h1
@@ -183,8 +183,8 @@ export default function CheckInPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
-        <div className="bg-amber-950/30 border border-amber-700/40 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900/40 flex items-center justify-center">
+        <div className="bg-amber-950 border border-amber-700 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
           </div>
           <h1
@@ -227,7 +227,7 @@ export default function CheckInPage() {
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900/30 flex items-center justify-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900 flex items-center justify-center">
             <span className="text-amber-400 text-2xl font-bold">!</span>
           </div>
           <h1
@@ -252,8 +252,8 @@ export default function CheckInPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
-        <div className="bg-green-950/30 border border-green-800/40 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900/50 border-2 border-green-500 flex items-center justify-center">
+        <div className="bg-green-950 border border-green-800 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900 border-2 border-green-500 flex items-center justify-center">
             <span className="text-green-400 text-3xl font-bold">✓</span>
           </div>
           <h1
@@ -267,7 +267,7 @@ export default function CheckInPage() {
           </p>
 
           {/* Server timestamp */}
-          <div className="bg-green-900/30 rounded-xl px-6 py-4 mb-4">
+          <div className="bg-green-900 rounded-xl px-6 py-4 mb-4">
             <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest mb-1">Recorded At</p>
             <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
               {format(new Date(state.serverTime), 'h:mm:ss a')}
@@ -278,7 +278,7 @@ export default function CheckInPage() {
           </div>
 
           {/* Next check-in */}
-          <div className="bg-slate-900/60 rounded-xl px-6 py-4 mb-5 border border-slate-800/60">
+          <div className="bg-slate-900 rounded-xl px-6 py-4 mb-5 border border-slate-800">
             <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">Next Check-In Due</p>
             <p className="text-white text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
               {format(new Date(state.nextCheckIn), 'h:mm a')}
@@ -307,8 +307,8 @@ export default function CheckInPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
-        <div className="bg-amber-950/30 border border-amber-700/40 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-900/40 border-2 border-amber-500 flex items-center justify-center">
+        <div className="bg-amber-950 border border-amber-700 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-900 border-2 border-amber-500 flex items-center justify-center">
             <span className="text-amber-400 text-3xl font-bold">✓</span>
           </div>
           <h1
@@ -322,7 +322,7 @@ export default function CheckInPage() {
           </p>
 
           {/* Device timestamp */}
-          <div className="bg-amber-900/30 rounded-xl px-6 py-4 mb-5">
+          <div className="bg-amber-900 rounded-xl px-6 py-4 mb-5">
             <p className="text-[10px] text-amber-400 font-bold uppercase tracking-widest mb-1">Recorded At (Device)</p>
             <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
               {format(new Date(state.deviceTime), 'h:mm:ss a')}
@@ -459,7 +459,7 @@ function CheckInReady({
 
           {/* Connectivity indicator */}
           {!online && (
-            <div className="px-6 py-3 bg-amber-950/40 border-t border-amber-800/30 flex items-center justify-center gap-2">
+            <div className="px-6 py-3 bg-amber-950 border-t border-amber-800 flex items-center justify-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
               </span>

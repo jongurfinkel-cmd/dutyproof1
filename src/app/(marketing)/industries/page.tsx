@@ -136,7 +136,7 @@ export default function IndustriesPage() {
               in a 24-hour period, the authority having jurisdiction shall be notified,
               and the building shall be evacuated or an approved fire watch shall be provided.&rdquo;
             </blockquote>
-            <p className="text-slate-400 text-sm mt-3 text-left pl-6">
+            <p className="text-slate-500 text-sm mt-3 text-left pl-6">
               NFPA 101, Life Safety Code §9.6.1.6 — applies to all occupancy types
             </p>
           </RevealOnScroll>
@@ -172,7 +172,7 @@ export default function IndustriesPage() {
                   </h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-3">{ind.trigger}</p>
                   <div className="pt-3 border-t border-slate-100">
-                    <p className="text-slate-400 text-xs leading-relaxed">{ind.stakes}</p>
+                    <p className="text-slate-500 text-xs leading-relaxed">{ind.stakes}</p>
                   </div>
                 </div>
               </RevealOnScroll>

@@ -24,18 +24,18 @@ export default function CostCalculator() {
       {/* Cost summary */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Monthly</p>
+          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Monthly</p>
           <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
             ${MONTHLY_COST}
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">flat rate · unlimited sites</p>
+          <p className="text-slate-500 text-[11px] mt-0.5">flat rate · unlimited sites</p>
         </div>
         <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Annual</p>
+          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Annual</p>
           <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
             ${ANNUAL_COST.toLocaleString()}
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">locked rate for 12 months</p>
+          <p className="text-slate-500 text-[11px] mt-0.5">locked rate for 12 months</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export default function CostCalculator() {
               </div>
               <div className="text-right">
                 <p className="text-green-700 text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{roi}:1</p>
-                <p className="text-slate-400 text-[10px]">ROI</p>
+                <p className="text-slate-500 text-[10px]">ROI</p>
               </div>
             </div>
           )
@@ -70,7 +70,7 @@ export default function CostCalculator() {
             <p className="text-slate-500 text-sm">of DutyProof</p>
           </div>
         </div>
-        <p className="text-slate-400 text-xs">
+        <p className="text-slate-500 text-xs">
           Average property damage: <span className="font-semibold text-slate-600">${AVG_HOTWORK_FIRE_DAMAGE.toLocaleString()}</span> per incident (NFPA)
         </p>
       </div>

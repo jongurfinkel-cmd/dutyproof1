@@ -161,13 +161,13 @@ export default function SocialProof() {
                 >
                   {s.value}
                 </div>
-                <div className="text-slate-600 text-xs font-medium">{s.label}</div>
+                <div className="text-slate-400 text-xs font-medium">{s.label}</div>
               </div>
             ))}
           </div>
         </RevealOnScroll>
 
-        <p className="text-center text-slate-600 text-xs mb-12">
+        <p className="text-center text-slate-500 text-xs mb-12">
           Collected from trade professionals across the field, 2025–2026.
           These responses shaped every feature in DutyProof. We&apos;re onboarding our first partners now.
         </p>

@@ -174,7 +174,7 @@ export default function AckPage() {
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900/30 flex items-center justify-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-900 flex items-center justify-center">
             <span className="text-amber-400 text-2xl font-bold">!</span>
           </div>
           <h1
@@ -199,8 +199,8 @@ export default function AckPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
-        <div className="bg-green-950/30 border border-green-800/40 rounded-2xl p-8 max-w-sm w-full">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900/50 border-2 border-green-500 flex items-center justify-center">
+        <div className="bg-green-950 border border-green-800 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900 border-2 border-green-500 flex items-center justify-center">
             <span className="text-green-400 text-3xl font-bold">✓</span>
           </div>
           <h1
@@ -212,7 +212,7 @@ export default function AckPage() {
           <p className="text-green-300 text-sm mb-6">
             Your acknowledgment has been recorded and timestamped.
           </p>
-          <div className="bg-green-900/30 rounded-xl px-6 py-4 mb-5">
+          <div className="bg-green-900 rounded-xl px-6 py-4 mb-5">
             <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest mb-1">Server Timestamp</p>
             <p className="text-white text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
               {format(new Date(state.serverTime), 'h:mm:ss a')}
@@ -264,7 +264,7 @@ export default function AckPage() {
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-4">
           {/* Alert banner */}
-          <div className="bg-red-950/60 border-b border-red-800/40 px-6 py-4">
+          <div className="bg-red-950 border-b border-red-800 px-6 py-4">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <span className="text-red-400 text-[10px] font-bold tracking-widest uppercase">Missed Check-In Alert</span>

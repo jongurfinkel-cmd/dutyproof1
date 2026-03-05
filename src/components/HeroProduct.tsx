@@ -13,7 +13,7 @@ function DashboardInner() {
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
         </div>
-        <div className="flex-1 bg-slate-900/70 rounded px-3 py-0.5 text-[9px] text-slate-500 font-mono truncate">
+        <div className="flex-1 bg-slate-900 rounded px-3 py-0.5 text-[9px] text-slate-500 font-mono truncate">
           app.dutyproof.com/dashboard
         </div>
       </div>
@@ -23,7 +23,7 @@ function DashboardInner() {
         <span className="text-white font-black text-xs" style={{ fontFamily: 'var(--font-display)' }}>
           DutyProof
         </span>
-        <div className="flex items-center gap-1.5 bg-red-950/60 border border-red-600/40 text-red-400 text-[9px] font-bold px-2.5 py-1 rounded-lg">
+        <div className="flex items-center gap-1.5 bg-red-950 border border-red-600 text-red-400 text-[9px] font-bold px-2.5 py-1 rounded-lg">
           <span className="w-1.5 h-1.5 rounded-full bg-red-400 live-dot" />
           1 MISSED CHECK-IN
         </div>
@@ -33,7 +33,7 @@ function DashboardInner() {
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <span className="text-white text-xs font-bold">Active Watches</span>
-          <button className="text-[9px] font-bold text-blue-400 border border-blue-600/40 bg-blue-950/30 px-2.5 py-1 rounded-lg">
+          <button className="text-[9px] font-bold text-blue-400 border border-blue-600 bg-blue-950 px-2.5 py-1 rounded-lg">
             + New Watch
           </button>
         </div>
@@ -45,7 +45,7 @@ function DashboardInner() {
             { v: '1',   l: 'Missed',     c: 'text-red-400'   },
             { v: '87%', l: 'Compliance', c: 'text-blue-300'  },
           ] as const).map(s => (
-            <div key={s.l} className="bg-slate-800/50 rounded-xl p-2.5 text-center">
+            <div key={s.l} className="bg-slate-800 rounded-xl p-2.5 text-center">
               <div className={`text-sm font-black ${s.c}`} style={{ fontFamily: 'var(--font-display)' }}>{s.v}</div>
               <div className="text-slate-500 text-[8px] mt-0.5">{s.l}</div>
             </div>
@@ -53,7 +53,7 @@ function DashboardInner() {
         </div>
 
         {/* Alert banner */}
-        <div className="flex items-start gap-2 bg-red-950/30 border border-red-600/25 rounded-xl p-2.5 mb-3">
+        <div className="flex items-start gap-2 bg-red-950 border border-red-600 rounded-xl p-2.5 mb-3">
           <span className="text-red-400 text-[9px] font-black shrink-0 mt-px">⚠</span>
           <p className="text-red-300 text-[9px] leading-snug">
             <span className="font-bold">Ace Mechanical — Building D</span> missed 2 min ago. Supervisor notified.
@@ -61,7 +61,7 @@ function DashboardInner() {
         </div>
 
         {/* GPS Location Map */}
-        <div className="bg-slate-800/30 border border-slate-700/40 rounded-xl p-2.5 mb-3">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-2.5 mb-3">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Check-In Locations</span>
             <div className="flex items-center gap-2 text-[7px]">
@@ -70,7 +70,7 @@ function DashboardInner() {
               <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" />Ack</span>
             </div>
           </div>
-          <div className="relative w-full h-[100px] rounded-lg overflow-hidden bg-slate-900/80 border border-slate-800">
+          <div className="relative w-full h-[100px] rounded-lg overflow-hidden bg-slate-900 border border-slate-800">
             {/* Fake map grid */}
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 240 100" preserveAspectRatio="none">
               {/* Road grid */}
@@ -96,7 +96,7 @@ function DashboardInner() {
               <text x="130" y="40" fill="#64748b" fontSize="5" fontWeight="600">BLDG D</text>
             </svg>
             {/* Live indicator */}
-            <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-slate-900/90 border border-slate-700/60 text-[7px] text-green-400 font-bold px-1.5 py-0.5 rounded">
+            <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-slate-900 border border-slate-700 text-[7px] text-green-400 font-bold px-1.5 py-0.5 rounded">
               <span className="w-1 h-1 rounded-full bg-green-400 live-dot" />LIVE
             </div>
           </div>
@@ -104,7 +104,7 @@ function DashboardInner() {
 
         {/* Cards */}
         <div className="space-y-2">
-          <div className="bg-red-950/20 border border-red-600/30 rounded-xl p-3 cursor-default hover:border-red-500/50 transition-colors">
+          <div className="bg-red-950 border border-red-600 rounded-xl p-3 cursor-default hover:border-red-500/50 transition-colors">
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <div className="min-w-0">
                 <p className="text-white text-[10px] font-bold truncate">Ace Mechanical — Building D</p>
@@ -112,10 +112,10 @@ function DashboardInner() {
               </div>
               <span className="shrink-0 text-[8px] font-bold text-red-400 bg-red-500/15 border border-red-500/25 px-2 py-0.5 rounded-full">✕ MISSED</span>
             </div>
-            <p className="text-red-400/70 text-[8px]">Missed at 10:00 AM · Alert fired 2 min ago</p>
+            <p className="text-red-400 text-[8px]">Missed at 10:00 AM · Alert fired 2 min ago</p>
           </div>
 
-          <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-3 cursor-default hover:border-slate-600 transition-colors">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-3 cursor-default hover:border-slate-600 transition-colors">
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <div className="min-w-0">
                 <p className="text-white text-[10px] font-bold truncate">Harbor Steel — Welding Bay 2</p>
@@ -126,12 +126,12 @@ function DashboardInner() {
               </span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="text-green-400/80 text-[8px]">✓ Checked in 3 min ago · next in 27 min</p>
-              <button className="shrink-0 text-[8px] text-blue-400 bg-blue-950/30 border border-blue-700/30 px-2 py-0.5 rounded font-semibold">PDF ↓</button>
+              <p className="text-green-400 text-[8px]">✓ Checked in 3 min ago · next in 27 min</p>
+              <button className="shrink-0 text-[8px] text-blue-400 bg-blue-950 border border-blue-700 px-2 py-0.5 rounded font-semibold">PDF ↓</button>
             </div>
           </div>
 
-          <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-3 cursor-default hover:border-slate-600 transition-colors">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-3 cursor-default hover:border-slate-600 transition-colors">
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <div className="min-w-0">
                 <p className="text-white text-[10px] font-bold truncate">Delta Pipeline — Pipe Shop</p>
@@ -143,7 +143,7 @@ function DashboardInner() {
             </div>
             <div className="flex items-center justify-between gap-2">
               <p className="text-slate-500 text-[8px]">SMS sent · due in 8 min · awaiting tap</p>
-              <button className="shrink-0 text-[8px] text-blue-400 bg-blue-950/30 border border-blue-700/30 px-2 py-0.5 rounded font-semibold">PDF ↓</button>
+              <button className="shrink-0 text-[8px] text-blue-400 bg-blue-950 border border-blue-700 px-2 py-0.5 rounded font-semibold">PDF ↓</button>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ function PhoneInner() {
       <div className="ps1 absolute inset-0 flex flex-col items-center pt-14 px-4">
         <div className="text-slate-600 text-[9px] font-medium mb-5 tracking-widest uppercase">Tue, Jun 14</div>
         <div className="text-white text-4xl font-thin mb-6 tracking-tight">9:41</div>
-        <div className="w-full rounded-2xl bg-slate-800/80 border border-slate-700/50 backdrop-blur p-3">
+        <div className="w-full rounded-2xl bg-slate-800 border border-slate-700 backdrop-blur p-3">
           <div className="flex items-start gap-2.5">
             <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-[9px] font-bold">DP</div>
             <div className="flex-1 min-w-0">
@@ -191,7 +191,7 @@ function PhoneInner() {
           <p className="text-white text-[10px] font-bold mt-0.5">Fire extinguisher accessible</p>
         </div>
         {/* Camera viewfinder with real job site photo */}
-        <div className="relative flex-1 rounded-2xl overflow-hidden border border-slate-700/60" style={{ minHeight: 200 }}>
+        <div className="relative flex-1 rounded-2xl overflow-hidden border border-slate-700" style={{ minHeight: 200 }}>
           <Image
             src="/hero-extinguisher.jpg"
             alt="Fire extinguisher at job site for safety verification"
@@ -231,7 +231,7 @@ function PhoneInner() {
             { label: 'Hot works area clear',          done: true  },
             { label: 'Sprinkler system verified',     done: false },
           ].map((item, i) => (
-            <div key={i} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${item.done ? 'bg-green-950/50 border border-green-800/40' : 'bg-slate-900 border border-slate-800'}`}>
+            <div key={i} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${item.done ? 'bg-green-950 border border-green-800' : 'bg-slate-900 border border-slate-800'}`}>
               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-[8px] font-bold ${item.done ? 'border-green-500 bg-green-500 text-white' : 'border-slate-600'}`}>
                 {item.done ? '✓' : ''}
               </div>
@@ -259,12 +259,12 @@ function PhoneInner() {
 
       {/* State 5 — confirmed */}
       <div className="ps5 absolute inset-0 pt-12 px-4 flex flex-col items-center justify-center text-center">
-        <div className="w-14 h-14 rounded-full bg-green-900/50 border-2 border-green-500 flex items-center justify-center mb-3">
+        <div className="w-14 h-14 rounded-full bg-green-900 border-2 border-green-500 flex items-center justify-center mb-3">
           <span className="text-green-400 text-xl font-black">✓</span>
         </div>
         <p className="text-white text-sm font-black mb-1">Check-In Confirmed</p>
         <p className="text-green-400 text-[9px] mb-4">Recorded & timestamped</p>
-        <div className="w-full bg-green-950/30 border border-green-800/30 rounded-xl px-4 py-3">
+        <div className="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-3">
           <p className="text-[8px] text-green-500 font-bold uppercase tracking-widest mb-1">Next Check-In Due</p>
           <p className="text-white text-lg font-black">10:30 AM</p>
           <p className="text-green-400 text-[8px]">Monday, Jun 14</p>
@@ -288,7 +288,7 @@ function CreateWatchMockup() {
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
         </div>
-        <div className="flex-1 bg-slate-900/70 rounded px-3 py-0.5 text-[9px] text-slate-500 font-mono truncate">
+        <div className="flex-1 bg-slate-900 rounded px-3 py-0.5 text-[9px] text-slate-500 font-mono truncate">
           app.dutyproof.com/watches/new
         </div>
       </div>
@@ -300,33 +300,33 @@ function CreateWatchMockup() {
             <p className="text-white font-black text-xs">New Fire Watch</p>
             <p className="text-slate-500 text-[8px]">Ready to monitor in under 2 minutes</p>
           </div>
-          <span className="text-[8px] font-bold text-blue-400 bg-blue-950/40 border border-blue-700/40 px-2 py-1 rounded-lg whitespace-nowrap">2 min setup</span>
+          <span className="text-[8px] font-bold text-blue-400 bg-blue-950 border border-blue-700 px-2 py-1 rounded-lg whitespace-nowrap">2 min setup</span>
         </div>
 
         {/* Fields */}
         <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 mb-3">
           <div>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Job Site *</p>
-            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800/50 ring-1 ring-white/[0.04] text-[9px] text-slate-300 font-medium">
+            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800 ring-1 ring-white/[0.04] text-[9px] text-slate-300 font-medium">
               <span className="truncate">Ace Mechanical</span>
               <span className="text-slate-600 ml-1 shrink-0">▾</span>
             </div>
           </div>
           <div>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Work Area</p>
-            <div className="px-2.5 py-1.5 border border-blue-500/60 rounded-lg bg-blue-950/40 text-[9px] text-blue-300 font-medium ring-1 ring-blue-500/25">
+            <div className="px-2.5 py-1.5 border border-blue-500/60 rounded-lg bg-blue-950 text-[9px] text-blue-300 font-medium ring-1 ring-blue-500/25">
               Building D
             </div>
           </div>
           <div>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Fire Watcher *</p>
-            <div className="px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800/50 ring-1 ring-white/[0.04] text-[9px] text-slate-300">
+            <div className="px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800 ring-1 ring-white/[0.04] text-[9px] text-slate-300">
               J. Martinez
             </div>
           </div>
           <div>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Phone *</p>
-            <div className="px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800/50 ring-1 ring-white/[0.04] text-[9px] text-slate-500 font-mono">
+            <div className="px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800 ring-1 ring-white/[0.04] text-[9px] text-slate-500 font-mono">
               +1 (213) •••-••••
             </div>
           </div>
@@ -337,7 +337,7 @@ function CreateWatchMockup() {
           <div>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Interval *</p>
             <div className="flex gap-1.5">
-              <div className="flex-1 py-1.5 text-center border-2 border-blue-500 bg-blue-950/50 text-blue-300 rounded-lg text-[9px] font-black leading-tight">
+              <div className="flex-1 py-1.5 text-center border-2 border-blue-500 bg-blue-950 text-blue-300 rounded-lg text-[9px] font-black leading-tight">
                 15 min<br /><span className="text-[7px] font-normal text-blue-500">most AHJs</span>
               </div>
               <div className="flex-1 py-1.5 text-center border-2 border-slate-700 text-slate-600 rounded-lg text-[9px] font-bold">30 min</div>
@@ -346,7 +346,7 @@ function CreateWatchMockup() {
           </div>
           <div className="flex flex-col gap-1.5">
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Options</p>
-            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700/60 rounded-lg bg-slate-800/40">
+            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800">
               <div>
                 <p className="text-[8px] font-bold text-slate-300">Supervisor Alert</p>
                 <p className="text-[7px] text-slate-600">On missed check-in</p>
@@ -355,7 +355,7 @@ function CreateWatchMockup() {
                 <span className="absolute right-0.5 top-0.5 w-2.5 h-2.5 bg-white rounded-full shadow" />
               </div>
             </div>
-            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700/60 rounded-lg bg-slate-800/40">
+            <div className="flex items-center justify-between px-2.5 py-1.5 border border-slate-700 rounded-lg bg-slate-800">
               <div>
                 <p className="text-[8px] font-bold text-slate-300">NFPA Checklist</p>
                 <p className="text-[7px] text-slate-600">Pre-watch safety</p>

@@ -86,12 +86,12 @@ export default function HeroStats() {
           >
             <AnimatedNumber value={s.n} visible={visible} />
           </div>
-          <div className={`text-xs leading-snug ${s.highlight ? 'text-orange-300/70' : 'text-slate-400'}`}>{s.l}</div>
+          <div className={`text-xs leading-snug ${s.highlight ? 'text-orange-300' : 'text-slate-400'}`}>{s.l}</div>
           <a
             href={s.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-600 hover:text-slate-400 text-[9px] mt-0.5 inline-block transition-colors"
+            className="text-slate-500 hover:text-slate-400 text-[9px] mt-0.5 inline-block transition-colors"
           >
             {s.s} ↗
           </a>
