@@ -69,32 +69,32 @@ function EscalationMockup() {
         </div>
         <div className="text-white text-sm font-bold mb-0.5">Ace Mechanical — Building D Weld</div>
         <div className="text-red-400 text-xs font-medium mb-3">OVERDUE — last check-in 47 min ago</div>
-        <div className="text-xs text-slate-400 space-y-0.5">
-          <div><span className="text-slate-600">Worker:</span> M. Rivera</div>
-          <div><span className="text-slate-600">Alert fired:</span> 10:00:47 AM (47s elapsed)</div>
-          <div><span className="text-slate-600">Notified:</span> Supervisor · (347) 821-4567</div>
+        <div className="text-xs text-slate-300 space-y-0.5">
+          <div><span className="text-slate-400">Worker:</span> M. Rivera</div>
+          <div><span className="text-slate-400">Alert fired:</span> 10:00:47 AM (47s elapsed)</div>
+          <div><span className="text-slate-400">Notified:</span> Supervisor · (347) 821-4567</div>
         </div>
       </div>
       <div className="rounded-xl bg-slate-900 border border-slate-700 p-4 shadow-xl">
-        <div className="text-slate-600 text-[9px] font-mono mb-2.5 flex items-center gap-1.5">
-          <span className="text-red-500">▲</span> ESCALATION SMS · 10:00:47 AM
+        <div className="text-slate-400 text-[9px] font-mono mb-2.5 flex items-center gap-1.5">
+          <span className="text-red-400">▲</span> ESCALATION SMS · 10:00:47 AM
         </div>
         <p className="text-white text-xs leading-relaxed">
           🚨 <span className="text-red-400 font-semibold">MISSED CHECK-IN</span><br /><br />
-          <span className="text-slate-400">Watch:</span> Ace Mechanical — Building D Weld<br />
-          <span className="text-slate-400">Worker:</span> M. Rivera<br />
-          <span className="text-slate-400">Was due:</span> 10:00 AM<br /><br />
+          <span className="text-slate-300">Watch:</span> Ace Mechanical — Building D Weld<br />
+          <span className="text-slate-300">Worker:</span> M. Rivera<br />
+          <span className="text-slate-300">Was due:</span> 10:00 AM<br /><br />
           Tap to acknowledge:<br />
           <span className="text-amber-400 text-[10px] underline">dutyproof.com/ack/k9x3r...</span>
         </p>
       </div>
-      <div className="rounded-xl bg-amber-950/30 border border-amber-700/40 p-4 shadow-xl">
-        <div className="text-amber-500 text-[9px] font-mono mb-2 flex items-center gap-1.5">
-          <span className="text-amber-400">✓</span> ACKNOWLEDGED · 10:03:12 AM
+      <div className="rounded-xl bg-amber-950/50 border border-amber-600/50 p-4 shadow-xl">
+        <div className="text-amber-400 text-[9px] font-mono mb-2 flex items-center gap-1.5">
+          <span className="text-amber-300">✓</span> ACKNOWLEDGED · 10:03:12 AM
         </div>
-        <p className="text-amber-300 text-xs leading-relaxed">
+        <p className="text-amber-200 text-xs leading-relaxed">
           T. Okafor acknowledged the alert<br />
-          <span className="text-amber-400/70 text-[10px]">GPS: 34.052°N · Response time: 2m 25s</span>
+          <span className="text-amber-300 text-[10px]">GPS: 34.052°N · Response time: 2m 25s</span>
         </p>
       </div>
     </div>
