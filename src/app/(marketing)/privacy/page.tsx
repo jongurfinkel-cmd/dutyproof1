@@ -173,7 +173,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>11. Contact</h2>
               <p>
-                Questions about this policy or requests related to your data?{' '}
+                DutyProof is a product of Gurfinkel Ventures LLC. Questions about this policy or requests related to your data?{' '}
                 <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">
                   Contact us
                 </Link>.

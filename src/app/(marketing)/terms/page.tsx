@@ -155,7 +155,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>14. Contact</h2>
               <p>
-                Questions about these Terms?{' '}
+                DutyProof is a product of Gurfinkel Ventures LLC. Questions about these Terms?{' '}
                 <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">
                   Contact us
                 </Link>.

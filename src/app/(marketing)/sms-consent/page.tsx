@@ -21,14 +21,14 @@ export default function SmsConsentPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>About DutyProof SMS</h2>
               <p>
-                DutyProof sends automated SMS messages to support fire watch compliance operations. All messages are time-sensitive and operational in nature — DutyProof does not send marketing or promotional text messages.
+                DutyProof sends operational SMS alerts and check-in reminders to workers and supervisors during active fire watches. All messages are time-sensitive and operational in nature — DutyProof does not send marketing or promotional text messages. SMS messaging is optional and not required to use the DutyProof platform.
               </p>
             </div>
 
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Types of Messages</h2>
               <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Check-in links:</strong> SMS messages containing a unique link for the fire watcher to confirm they are on-site and actively monitoring. Sent at regular intervals (typically every 15–60 minutes) during an active fire watch.</li>
+                <li><strong>Check-in reminders:</strong> SMS messages containing a unique link for the fire watcher to confirm they are on-site and actively monitoring. Sent at regular intervals (typically every 15–60 minutes) during an active fire watch.</li>
                 <li><strong>Missed check-in alerts:</strong> Notifications sent to the fire watcher when a check-in is overdue, prompting immediate action.</li>
                 <li><strong>Supervisor escalation alerts:</strong> Notifications sent to a designated supervisor when a fire watcher misses a check-in, enabling rapid response.</li>
                 <li><strong>Pre-watch safety checklist:</strong> A one-time SMS with a link to complete required safety verification items before a watch begins.</li>
@@ -36,25 +36,31 @@ export default function SmsConsentPage() {
             </div>
 
             <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>How Consent Is Collected</h2>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Consent</h2>
               <p className="mb-3">
-                Before any SMS messages are sent, the account holder (the person creating the fire watch) must check an explicit consent checkbox confirming that all phone number owners have agreed to receive automated fire watch compliance messages from DutyProof.
+                By submitting this form you agree to receive operational SMS alerts from DutyProof regarding fire watch patrols and compliance notifications.
               </p>
               <p className="mb-3">
-                This consent is collected via a web form on the &quot;Start New Watch&quot; page at the time phone numbers are entered. The consent checkbox reads:
+                Recipients are added by the account holder, but each phone number owner must provide explicit consent to receive SMS notifications before any messages are sent. Consent is collected via a web consent form at the time phone numbers are entered.
               </p>
-              <div className="border border-slate-200 bg-slate-50 rounded-xl p-4 text-slate-700 italic">
-                &quot;I confirm that the phone number owner(s) listed above have consented to receive automated fire watch compliance SMS messages from DutyProof, including check-in links and missed check-in alerts. Message frequency varies by watch schedule. Msg &amp; data rates may apply. Reply STOP to opt out.&quot;
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-4 text-slate-700">
+                <p className="font-semibold text-slate-900 mb-2">By providing your phone number, you agree to:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Receive operational fire watch compliance SMS alerts from DutyProof</li>
+                  <li>Message frequency varies by watch schedule</li>
+                  <li>Message and data rates may apply</li>
+                </ul>
+                <p className="mt-3 font-medium">Reply STOP to unsubscribe. Reply HELP for help.</p>
               </div>
               <p className="mt-3">
-                A watch cannot be started without checking this box. The consent timestamp is recorded with each watch.
+                SMS messaging is optional. The consent timestamp is recorded with each watch. A watch cannot be started without consent from the phone number owner(s).
               </p>
             </div>
 
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Message Frequency</h2>
               <p>
-                Message frequency varies based on the check-in interval set by the account holder — typically every 15 to 60 minutes during an active fire watch. Watches are temporary and end when the fire watch period is complete. No recurring messages are sent outside of active watches.
+                Message frequency varies based on the check-in interval configured for each watch — typically every 15 to 60 minutes during an active fire watch. Watches are temporary and end when the fire watch period is complete. No recurring messages are sent outside of active watches.
               </p>
             </div>
 
@@ -94,7 +100,7 @@ export default function SmsConsentPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Contact</h2>
               <p>
-                Questions about DutyProof SMS?{' '}
+                DutyProof is a product of Gurfinkel Ventures LLC. Questions about DutyProof SMS?{' '}
                 <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">Contact us</Link>.
               </p>
             </div>
