@@ -141,8 +141,11 @@ export default function PrivacyPage() {
 
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>7. Worker and Third-Party Data</h2>
+              <p className="mb-3">
+                Customers are responsible for ensuring they have the necessary rights and permissions to provide phone numbers and other personal data for workers, supervisors, and other recipients entered into DutyProof. Each SMS recipient must provide their own affirmative consent before messages are sent to their number.
+              </p>
               <p>
-                You are responsible for ensuring you have appropriate authorization to submit worker phone numbers and other personal information to the Service. By entering a worker&apos;s phone number, you represent that you have the right to send transactional SMS messages to that number in connection with a fire watch you have organized and that the worker is aware they will receive such messages.
+                DutyProof does not sell, rent, or share phone numbers collected for SMS messaging with third parties for their own marketing purposes.
               </p>
             </div>
 

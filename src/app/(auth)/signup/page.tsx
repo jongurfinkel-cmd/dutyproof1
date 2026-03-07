@@ -173,14 +173,10 @@ function SignupForm() {
                 Secured by Stripe · Cancel any time
               </p>
               <p className="text-center text-slate-700 text-xs mt-2">
-                By signing up you agree to our{' '}
-                <Link href="/terms" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Terms</Link>
-                ,{' '}
-                <Link href="/privacy" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Privacy Policy</Link>
-                , and{' '}
-                <Link href="/sms-consent" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">SMS Terms</Link>.
-                DutyProof sends automated SMS to workers you designate during active watches.
-                Msg &amp; data rates may apply.
+                By signing up, you agree to our{' '}
+                <Link href="/terms" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">Privacy Policy</Link>.
               </p>
             </form>
 
@@ -194,7 +190,7 @@ function SignupForm() {
         </div>
 
         <p className="text-center text-slate-700 text-xs mt-5">
-          $199/month flat rate · Annual option: $2,399/yr
+          $199/month flat rate · Cancel any time · 30-day money-back guarantee
         </p>
       </div>
     </div>

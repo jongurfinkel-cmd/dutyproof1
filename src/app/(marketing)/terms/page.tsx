@@ -44,7 +44,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Subscription and Billing</h2>
               <p className="mb-3">
-                Subscriptions are billed at a flat rate of $199 per month (monthly plan) or $2,399 per year (annual plan). Both plans include unlimited job sites and unlimited watches.
+                Subscriptions are billed at a flat rate of $199 per month. The plan includes unlimited job sites and unlimited watches. There are no per-user fees or setup costs.
               </p>
               <p className="mb-3">
                 All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring basis from the date your subscription begins. Prices may change with 30 days&apos; notice.
@@ -57,16 +57,16 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>4. SMS Communications</h2>
               <p className="mb-3">
-                DutyProof sends automated SMS messages to phone numbers you provide when creating fire watches. These messages include check-in links, missed check-in alerts, and supervisor escalation notifications. Messages are time-sensitive and operational — they are not marketing messages.
+                DutyProof offers optional SMS notifications as part of the Service. When enabled, these messages include check-in links, missed check-in alerts, and supervisor escalation notifications. Messages are time-sensitive and operational — they are not marketing messages. SMS is not required to use the DutyProof platform.
               </p>
               <p className="mb-3">
-                By entering a phone number and starting a watch, you confirm that the phone number owner has given explicit consent to receive these automated messages from DutyProof. You are responsible for obtaining this consent before entering any phone number into the Service.
+                The customer is responsible for ensuring that each message recipient has provided valid, affirmative consent to receive SMS messages from DutyProof where required by law and carrier policy. Consent must be obtained directly from the phone number owner before any messages are sent.
               </p>
               <p className="mb-3">
                 <strong>Message frequency:</strong> Varies based on watch check-in interval (typically every 15–60 minutes during an active watch). <strong>Msg &amp; data rates may apply.</strong>
               </p>
               <p className="mb-3">
-                <strong>Opt-out:</strong> Any message recipient may reply STOP at any time to stop receiving messages. Reply HELP for assistance. After opting out, no further messages will be sent to that number unless a new watch is created with renewed consent.
+                <strong>Opt-out:</strong> Any message recipient may reply STOP at any time to stop receiving messages. Reply HELP for assistance. After opting out, no further messages will be sent to that number unless renewed consent is provided.
               </p>
               <p>
                 SMS messages are delivered via Twilio. Carriers are not liable for delayed or undelivered messages. For SMS-related questions,{' '}
