@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       check_interval_min,
       assigned_name,
       assigned_phone,
+      sms_enabled,
       escalation_phone,
       escalation_delay_min,
       start_time,
@@ -49,8 +50,13 @@ export async function POST(req: NextRequest) {
       checklist_items,
     } = body
 
-    if (!facility_id || !check_interval_min || !assigned_name || !assigned_phone || !start_time) {
+    if (!facility_id || !check_interval_min || !assigned_name || !start_time) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Phone is required only when SMS is enabled
+    if (sms_enabled && !assigned_phone) {
+      return NextResponse.json({ error: 'Phone number is required when SMS is enabled' }, { status: 400 })
     }
 
     // Validate check_interval_min is a safe integer in allowed range
@@ -65,9 +71,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Validate phone numbers are E.164 format
+    // Validate phone numbers are E.164 format (only when provided)
     const e164Regex = /^\+[1-9]\d{1,14}$/
-    if (!e164Regex.test(assigned_phone)) {
+    if (assigned_phone && !e164Regex.test(assigned_phone)) {
       return NextResponse.json({ error: 'assigned_phone must be E.164 format (e.g. +12125551234)' }, { status: 400 })
     }
     if (escalation_phone && !e164Regex.test(escalation_phone)) {
@@ -186,25 +192,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to create checklist. Please try again.' }, { status: 500 })
       }
 
-      // Send immediate checklist SMS
-      const checklistUrl = `${appUrl}/checklist/${checklist_token}`
-      const checklistSid = await sendChecklistSMS(
-        assigned_phone,
-        assigned_name,
-        displayName,
-        checklistUrl
-      )
+      // Send checklist SMS only if SMS is enabled
+      if (sms_enabled && assigned_phone) {
+        const checklistUrl = `${appUrl}/checklist/${checklist_token}`
+        const checklistSid = await sendChecklistSMS(
+          assigned_phone,
+          assigned_name,
+          displayName,
+          checklistUrl
+        )
 
-      const { error: clAlertErr } = await admin.from('alerts').insert({
-        watch_id: watch.id,
-        alert_type: checklistSid ? 'sms_sent' : 'sms_failed',
-        recipient_phone: assigned_phone,
-        recipient_name: assigned_name,
-        message: `Safety checklist SMS sent`,
-        delivery_status: checklistSid ? 'sent' : 'failed',
-        twilio_sid: checklistSid,
-      })
-      if (clAlertErr) console.error('Failed to log checklist alert:', clAlertErr)
+        const { error: clAlertErr } = await admin.from('alerts').insert({
+          watch_id: watch.id,
+          alert_type: checklistSid ? 'sms_sent' : 'sms_failed',
+          recipient_phone: assigned_phone,
+          recipient_name: assigned_name,
+          message: `Safety checklist SMS sent`,
+          delivery_status: checklistSid ? 'sent' : 'failed',
+          twilio_sid: checklistSid,
+        })
+        if (clAlertErr) console.error('Failed to log checklist alert:', clAlertErr)
+      }
     }
 
     // Create first check-in row
@@ -235,45 +243,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create check-in' }, { status: 500 })
     }
 
-    // Send first check-in SMS
-    const twilioSid = await sendCheckInSMS(
-      assigned_phone,
-      displayName,
-      assigned_name,
-      checkInUrl,
-      scheduledTime
-    )
+    // Send first check-in SMS only if SMS is enabled
+    let twilioSid: string | null = null
+    if (sms_enabled && assigned_phone) {
+      twilioSid = await sendCheckInSMS(
+        assigned_phone,
+        displayName,
+        assigned_name,
+        checkInUrl,
+        scheduledTime
+      )
 
-    // Log alert
-    const { error: ciAlertErr } = await admin.from('alerts').insert({
-      watch_id: watch.id,
-      check_in_id: checkIn.id,
-      alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
-      recipient_phone: assigned_phone,
-      recipient_name: assigned_name,
-      message: `Check-in SMS for ${scheduledTime.toISOString()}`,
-      delivery_status: twilioSid ? 'sent' : 'failed',
-      twilio_sid: twilioSid,
-    })
-    if (ciAlertErr) console.error('Failed to log check-in alert:', ciAlertErr)
-
-    if (!twilioSid) {
-      const { error: failAlertErr } = await admin.from('alerts').insert({
+      // Log alert
+      const { error: ciAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
-        alert_type: 'sms_failed',
+        check_in_id: checkIn.id,
+        alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
         recipient_phone: assigned_phone,
         recipient_name: assigned_name,
-        message: `FAILED to send first check-in SMS to ${assigned_name}`,
-        delivery_status: 'failed',
+        message: `Check-in SMS for ${scheduledTime.toISOString()}`,
+        delivery_status: twilioSid ? 'sent' : 'failed',
+        twilio_sid: twilioSid,
       })
-      if (failAlertErr) console.error('Failed to log SMS failure alert:', failAlertErr)
+      if (ciAlertErr) console.error('Failed to log check-in alert:', ciAlertErr)
+
+      if (!twilioSid) {
+        const { error: failAlertErr } = await admin.from('alerts').insert({
+          watch_id: watch.id,
+          alert_type: 'sms_failed',
+          recipient_phone: assigned_phone,
+          recipient_name: assigned_name,
+          message: `FAILED to send first check-in SMS to ${assigned_name}`,
+          delivery_status: 'failed',
+        })
+        if (failAlertErr) console.error('Failed to log SMS failure alert:', failAlertErr)
+      }
     }
 
     // Log watch_started alert
     const { error: startAlertErr } = await admin.from('alerts').insert({
       watch_id: watch.id,
       alert_type: 'watch_started',
-      message: `Watch started at ${displayName}`,
+      message: `Watch started at ${displayName}${sms_enabled ? '' : ' (manual mode — no SMS)'}`,
     })
     if (startAlertErr) console.error('Failed to log watch_started alert:', startAlertErr)
 

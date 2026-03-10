@@ -73,6 +73,7 @@ export default function CreateWatchForm() {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([])
   const [newItemLabel, setNewItemLabel] = useState('')
   const [newItemPhoto, setNewItemPhoto] = useState(false)
+  const [smsEnabled, setSmsEnabled] = useState(false)
   const [smsConsent, setSmsConsent] = useState(false)
 
   useEffect(() => {
@@ -141,13 +142,15 @@ export default function CreateWatchForm() {
       toast.error('Please select a job site')
       return
     }
-    if (!form.assigned_phone.match(/^\+?[\d\s\-().]{10,}$/)) {
-      toast.error('Please enter a valid worker phone number')
-      return
-    }
-    if (!smsConsent) {
-      toast.error('Please confirm SMS consent before starting the watch')
-      return
+    if (smsEnabled) {
+      if (!form.assigned_phone.match(/^\+?[\d\s\-().]{10,}$/)) {
+        toast.error('Please enter a valid worker phone number')
+        return
+      }
+      if (!smsConsent) {
+        toast.error('Please confirm SMS consent before starting the watch')
+        return
+      }
     }
     if (escalationEnabled) {
       if (!form.escalation_phone) {
@@ -181,6 +184,8 @@ export default function CreateWatchForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          assigned_phone: smsEnabled ? form.assigned_phone : null,
+          sms_enabled: smsEnabled,
           check_interval_min: resolvedInterval,
           escalation_phone: escalationEnabled ? form.escalation_phone : null,
           escalation_delay_min: escalationEnabled ? parseInt(form.escalation_delay_min) : 0,
@@ -192,9 +197,11 @@ export default function CreateWatchForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to start watch')
       toast.success(
-        checklistEnabled && checklistItems.length > 0
-          ? 'Watch started! Safety checklist & check-in SMS sent.'
-          : 'Watch started! First check-in SMS sent.'
+        !smsEnabled
+          ? 'Watch started! (No SMS — manual monitoring mode)'
+          : checklistEnabled && checklistItems.length > 0
+            ? 'Watch started! Safety checklist & check-in SMS sent.'
+            : 'Watch started! First check-in SMS sent.'
       )
       router.push('/dashboard')
     } catch (err: unknown) {
@@ -279,23 +286,57 @@ export default function CreateWatchForm() {
         />
       </div>
 
-      <div>
-        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-          Worker&apos;s Phone <span className="text-red-400">*</span>
-        </label>
-        <input
-          type="tel"
-          value={form.assigned_phone}
-          onChange={(e) => set('assigned_phone', e.target.value)}
-          onBlur={() => handlePhoneBlur('assigned_phone')}
-          required
-          autoComplete="tel"
-          placeholder="+1 (212) 000-0000"
-          className={inputClass}
-        />
-        <p className="text-xs text-slate-500 mt-1.5">
-          Include country code, e.g. <span className="font-mono">+1 212 000 0000</span>. SMS check-in links go here.
-        </p>
+      {/* ── SMS Notifications Toggle ── */}
+      <div className="border border-slate-200 rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => {
+            setSmsEnabled((prev) => {
+              if (prev) {
+                // Turning off SMS — clear phone and consent
+                setForm((f) => ({ ...f, assigned_phone: '' }))
+                setSmsConsent(false)
+              }
+              return !prev
+            })
+          }}
+          role="switch"
+          aria-checked={smsEnabled}
+          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
+        >
+          <div>
+            <p className="text-sm font-bold text-slate-800">SMS Check-in Reminders</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Send check-in links and alerts to the worker via text message (optional)
+            </p>
+          </div>
+          <div aria-hidden="true" className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${smsEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${smsEnabled ? 'left-5' : 'left-0.5'}`} />
+          </div>
+        </button>
+
+        {smsEnabled && (
+          <div className="border-t border-slate-200 px-5 py-4 bg-slate-50 space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Worker&apos;s Phone <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="tel"
+                value={form.assigned_phone}
+                onChange={(e) => set('assigned_phone', e.target.value)}
+                onBlur={() => handlePhoneBlur('assigned_phone')}
+                required
+                autoComplete="tel"
+                placeholder="+1 (212) 000-0000"
+                className={inputClass}
+              />
+              <p className="text-xs text-slate-500 mt-1.5">
+                Include country code, e.g. <span className="font-mono">+1 212 000 0000</span>. SMS check-in links go here.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <Divider label="Timing" />
@@ -367,7 +408,7 @@ export default function CreateWatchForm() {
           required
           className={inputClass}
         />
-        <p className="text-xs text-slate-500 mt-1.5">First SMS will be sent at this time.</p>
+        <p className="text-xs text-slate-500 mt-1.5">{smsEnabled ? 'First SMS will be sent at this time.' : 'Watch begins recording at this time.'}</p>
       </div>
 
       <div>
@@ -591,26 +632,31 @@ export default function CreateWatchForm() {
         )}
       </div>
 
-      {/* ── SMS Consent ── */}
-      <div className="border border-blue-200 bg-blue-50 rounded-xl px-5 py-4">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={smsConsent}
-            onChange={(e) => setSmsConsent(e.target.checked)}
-            className="mt-0.5 rounded accent-blue-600 flex-shrink-0"
-          />
-          <span className="text-sm text-slate-700 leading-relaxed">
-            I confirm that the phone number owner(s) listed above have consented to receive
-            automated fire watch compliance SMS messages from DutyProof, including check-in
-            links and missed check-in alerts. Message frequency varies by watch schedule.
-            Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
-            <a href="/sms-consent" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">
-              SMS Terms
-            </a>
-          </span>
-        </label>
-      </div>
+      {/* ── SMS Consent (only when SMS is enabled) ── */}
+      {smsEnabled && (
+        <div className="border border-blue-200 bg-blue-50 rounded-xl px-5 py-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={smsConsent}
+              onChange={(e) => setSmsConsent(e.target.checked)}
+              className="mt-0.5 rounded accent-blue-600 flex-shrink-0"
+            />
+            <span className="text-sm text-slate-700 leading-relaxed">
+              I agree to receive automated SMS text messages from DutyProof related to fire watch
+              patrol reminders, missed check-in alerts, supervisor escalation alerts, and safety
+              checklist links. Message frequency varies based on watch activity and check-in schedules.
+              Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.
+              SMS consent is not required to use DutyProof.{' '}
+              <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Terms</a>
+              {' · '}
+              <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Privacy</a>
+              {' · '}
+              <a href="/sms-consent" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">SMS Terms</a>
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="pt-3 flex gap-3">
@@ -623,10 +669,10 @@ export default function CreateWatchForm() {
         </button>
         <button
           type="submit"
-          disabled={loading || facilities.length === 0 || checklistBlocking || !smsConsent}
+          disabled={loading || facilities.length === 0 || checklistBlocking || (smsEnabled && !smsConsent)}
           className="flex-1 py-3 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
-          {loading ? 'Starting Watch…' : 'Start Watch & Send SMS'}
+          {loading ? 'Starting Watch…' : smsEnabled ? 'Start Watch & Send SMS' : 'Start Watch'}
         </button>
       </div>
     </form>
