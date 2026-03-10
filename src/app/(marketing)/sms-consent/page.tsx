@@ -36,27 +36,81 @@ export default function SmsConsentPage() {
             </div>
 
             <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Consent</h2>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>How SMS Opt-In Works</h2>
               <p className="mb-3">
-                SMS consent is optional and is not required to use the DutyProof platform. DutyProof can support fire watch workflows without SMS, depending on how the account administrator configures the watch.
+                SMS is an optional feature in DutyProof. Users can create and manage fire watches without enabling SMS. When creating a watch, SMS is controlled by a toggle that is <strong>off by default</strong>. Below is exactly what users see in the application:
               </p>
-              <p className="mb-3">
-                Each phone number owner must provide explicit, affirmative consent to receive SMS text messages before any messages are sent. Consent is collected via a checkbox-based opt-in at the time phone numbers are entered. The checkbox is unchecked by default — the recipient must actively select it.
-              </p>
+
+              {/* ── Step 1: SMS OFF (default) ── */}
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-xs font-bold flex-shrink-0">1</span>
+                  <p className="font-semibold text-slate-900">Default State — SMS Off</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">When creating a fire watch, the SMS toggle is off by default. No phone number field or SMS consent is shown. The user can start a watch without SMS.</p>
+                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">SMS Check-in Reminders</p>
+                      <p className="text-xs text-slate-500">Send check-in links and alerts to the worker via text message (optional)</p>
+                    </div>
+                    <div className="relative w-11 h-6 rounded-full bg-slate-200 flex-shrink-0 ml-4">
+                      <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 bg-white border border-slate-200 rounded-lg px-4 py-3">
+                  <span className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg">Start Watch</span>
+                  <p className="text-xs text-slate-500 mt-2">Button does not mention SMS — watch starts without any text messages.</p>
+                </div>
+              </div>
+
+              {/* ── Step 2: SMS ON ── */}
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex-shrink-0">2</span>
+                  <p className="font-semibold text-slate-900">User Enables SMS (Optional)</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">If the user chooses to enable SMS, the toggle turns on and a phone number field appears. A separate, unchecked consent checkbox is required before SMS can be sent.</p>
+                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">SMS Check-in Reminders</p>
+                      <p className="text-xs text-slate-500">Send check-in links and alerts to the worker via text message (optional)</p>
+                    </div>
+                    <div className="relative w-11 h-6 rounded-full bg-blue-600 flex-shrink-0 ml-4">
+                      <span className="absolute top-0.5 left-5 w-5 h-5 bg-white rounded-full shadow" />
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-200 px-4 py-3 bg-slate-50">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Worker&apos;s Phone *</p>
+                    <div className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-400 bg-white">+1 (212) 000-0000</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Step 3: Consent checkbox ── */}
               <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700">
-                <p className="font-semibold text-slate-900 mb-3">Sample Consent Experience</p>
-                <p className="text-xs text-slate-500 mb-4">This is a preview of the opt-in presented to each SMS recipient within the DutyProof application:</p>
-                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex-shrink-0">3</span>
+                  <p className="font-semibold text-slate-900">SMS Consent Checkbox (Unchecked by Default)</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">This consent checkbox only appears when SMS is enabled. It is unchecked by default and must be actively selected by the user before any SMS messages can be sent. The button changes to &ldquo;Start Watch &amp; Send SMS&rdquo; only when SMS is enabled.</p>
+                <div className="bg-white border border-blue-200 rounded-lg p-4">
                   <label className="flex items-start gap-3 cursor-default">
                     <input type="checkbox" disabled className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-blue-600" />
                     <span className="text-sm text-slate-800 leading-relaxed">
-                      I agree to receive SMS text messages from DutyProof related to fire watch patrol reminders, missed check-in alerts, supervisor escalation alerts, and safety checklist links. Message frequency varies based on watch activity and check-in schedules. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help. SMS consent is not required to use DutyProof.
+                      I agree to receive automated SMS text messages from DutyProof related to fire watch patrol reminders, missed check-in alerts, supervisor escalation alerts, and safety checklist links. Message frequency varies based on watch activity and check-in schedules. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help. SMS consent is not required to use DutyProof.
                     </span>
                   </label>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <Link href="/terms" className="text-blue-600 hover:text-blue-500 transition-colors">Terms of Service</Link>
                   <Link href="/privacy" className="text-blue-600 hover:text-blue-500 transition-colors">Privacy Policy</Link>
+                </div>
+                <div className="mt-3 bg-white border border-slate-200 rounded-lg px-4 py-3">
+                  <span className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg">Start Watch &amp; Send SMS</span>
+                  <p className="text-xs text-slate-500 mt-2">Button label changes to include &ldquo;Send SMS&rdquo; only when SMS is enabled and consent is given.</p>
                 </div>
               </div>
             </div>
