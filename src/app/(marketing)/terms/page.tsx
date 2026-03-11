@@ -6,7 +6,7 @@ export const metadata = {
   description: 'DutyProof Terms of Service.',
 }
 
-const LAST_UPDATED = 'February 2026'
+const LAST_UPDATED = 'March 2026'
 
 export default function TermsPage() {
   return (
@@ -27,7 +27,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>1. Description of Service</h2>
               <p>
-                DutyProof is a fire watch compliance platform that automates SMS-based check-ins, escalates missed check-ins to designated supervisors, and generates compliance documentation for welding contractors, pipefitters, mechanical contractors, and other businesses subject to hot work fire watch requirements. The Service is a documentation and notification tool. It does not constitute legal advice, and compliance with local, state, or federal fire safety regulations remains the sole responsibility of the customer.
+                DutyProof is a fire watch compliance platform that generates secure, GPS-verified check-in links for active hot work watches. Check-in links are delivered via QR code, copied link, or optional SMS. The platform escalates missed check-ins to designated supervisors and generates compliance documentation for welding contractors, pipefitters, mechanical contractors, and other businesses subject to hot work fire watch requirements. The Service is a documentation and notification tool. It does not constitute legal advice, and compliance with local, state, or federal fire safety regulations remains the sole responsibility of the customer.
               </p>
             </div>
 
@@ -90,7 +90,7 @@ export default function TermsPage() {
                 You retain ownership of all data you and your workers submit to the Service, including job site information, worker records, check-in logs, and compliance reports. We do not claim ownership of your data.
               </p>
               <p>
-                You grant us a limited license to store, process, and transmit your data as necessary to operate the Service and provide you with the features you use, including sending SMS messages to workers and generating PDF reports.
+                You grant us a limited license to store, process, and transmit your data as necessary to operate the Service and provide you with the features you use, including delivering check-in links and generating PDF reports.
               </p>
             </div>
 

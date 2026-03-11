@@ -6,7 +6,7 @@ export const metadata = {
   description: 'DutyProof Privacy Policy — how we collect, use, and protect your data.',
 }
 
-const LAST_UPDATED = 'February 2026'
+const LAST_UPDATED = 'March 2026'
 
 export default function PrivacyPage() {
   return (
@@ -39,17 +39,17 @@ export default function PrivacyPage() {
 
               <h3 className="text-slate-800 font-semibold text-sm mb-2">Worker Information</h3>
               <p className="mb-4">
-                To send SMS check-in links, you provide the name and mobile phone number of the fire watch worker assigned to each watch. This information is stored with the watch record and included in compliance reports.
+                You provide the name of the fire watch worker assigned to each watch. If you choose to enable optional SMS delivery, you also provide the worker&apos;s mobile phone number. This information is stored with the watch record and included in compliance reports.
               </p>
 
               <h3 className="text-slate-800 font-semibold text-sm mb-2">Check-In Data</h3>
               <p className="mb-4">
-                When a worker completes a check-in by tapping the SMS link, we capture:
+                When a worker completes a check-in via the check-in link (delivered by QR code, copied link, or optional SMS), we capture:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 mb-4">
                 <li>A server-side timestamp at the moment the check-in is recorded</li>
                 <li>The worker&apos;s GPS coordinates, if location permission is granted by the worker&apos;s device</li>
-                <li>SMS delivery status from our SMS provider</li>
+                <li>SMS delivery status from our SMS provider (if SMS delivery was enabled)</li>
               </ul>
               <p>
                 GPS coordinates are used solely to verify the worker&apos;s location at the time of check-in and are included in compliance reports. Location is captured only at the moment of check-in — we do not track worker location continuously.
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
 
               <h3 className="text-slate-800 font-semibold text-sm mb-2 mt-4">Supervisor / Escalation Contacts</h3>
               <p className="mb-4">
-                If you configure escalation alerts, you provide a supervisor&apos;s phone number. This number is used only to send missed check-in alert SMS messages and is not used for any other purpose.
+                If you choose to configure optional SMS escalation alerts, you provide a supervisor&apos;s phone number. This number is used only to send missed check-in alert messages and is not used for any other purpose.
               </p>
 
               <h3 className="text-slate-800 font-semibold text-sm mb-2">Payment Information</h3>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>2. How We Use Your Information</h2>
               <ul className="list-disc pl-5 space-y-2">
-                <li>To operate the Service: authenticate users, send check-in SMS messages, record check-in events, and generate compliance reports</li>
+                <li>To operate the Service: authenticate users, generate and deliver check-in links (via QR code, copied link, or optional SMS), record check-in events, and generate compliance reports</li>
                 <li>To send missed check-in escalation alerts to designated supervisors</li>
                 <li>To generate and store PDF compliance reports on your behalf</li>
                 <li>To process billing and manage your subscription</li>
@@ -82,12 +82,15 @@ export default function PrivacyPage() {
             </div>
 
             <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. SMS Messaging</h2>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. SMS Messaging (Optional)</h2>
               <p className="mb-3">
-                Worker phone numbers are used exclusively to deliver fire watch check-in links and confirmation messages via SMS. Supervisor phone numbers are used exclusively to deliver missed check-in alert messages. These are transactional messages directly related to the service you have configured.
+                SMS messaging is an optional delivery channel — it is not required to use DutyProof. Check-in links can also be delivered via QR code or copied link. When a supervisor enables optional SMS delivery, worker phone numbers are used exclusively to deliver fire watch check-in links via text message. Supervisor phone numbers, when provided, are used exclusively to deliver missed check-in alert messages.
+              </p>
+              <p className="mb-3">
+                SMS is only sent when a supervisor explicitly enables it and the recipient has provided affirmative consent. These are transactional messages directly related to the service the account administrator has configured.
               </p>
               <p>
-                Message and data rates may apply to recipients based on their carrier plan. Workers and supervisors receive SMS messages because a DutyProof account administrator has provided their number and started an active watch. If a worker or supervisor believes they are receiving messages in error, they should contact the account administrator or <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contact us</Link>.
+                Message and data rates may apply to recipients based on their carrier plan. Recipients may reply STOP at any time to opt out of SMS messages. If a worker or supervisor believes they are receiving messages in error, they should contact the account administrator or <Link href="/support" className="text-blue-600 hover:text-blue-500 transition-colors">contact us</Link>.
               </p>
             </div>
 
@@ -102,7 +105,7 @@ export default function PrivacyPage() {
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <p className="font-semibold text-slate-800 mb-1">Twilio</p>
-                  <p>Our SMS delivery provider. Worker and supervisor phone numbers are transmitted to Twilio for the purpose of sending check-in and escalation messages.</p>
+                  <p>Our SMS delivery provider. When optional SMS delivery is enabled, worker and supervisor phone numbers are transmitted to Twilio for the purpose of sending check-in and escalation messages.</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <p className="font-semibold text-slate-800 mb-1">Stripe</p>
@@ -142,7 +145,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>7. Worker and Third-Party Data</h2>
               <p className="mb-3">
-                Customers are responsible for ensuring they have the necessary rights and permissions to provide phone numbers and other personal data for workers, supervisors, and other recipients entered into DutyProof. Each SMS recipient must provide their own affirmative consent before messages are sent to their number.
+                Customers are responsible for ensuring they have the necessary rights and permissions to provide personal data for workers, supervisors, and other recipients entered into DutyProof. If optional SMS delivery is enabled, each SMS recipient must provide their own affirmative consent before messages are sent to their number.
               </p>
               <p>
                 DutyProof does not sell, rent, or share phone numbers collected for SMS messaging with third parties for their own marketing purposes.
