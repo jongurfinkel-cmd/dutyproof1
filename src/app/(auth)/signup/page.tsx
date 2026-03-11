@@ -77,7 +77,7 @@ function SignupForm() {
           {/* What you get */}
           <div className="px-8 py-5 border-b border-slate-800 space-y-2">
             {[
-              'Automated SMS check-ins — no app for workers',
+              'Automated check-in links — no app for workers',
               'Missed check-in alerts in under 60 seconds',
               'One-click PDF compliance reports',
             ].map((item) => (

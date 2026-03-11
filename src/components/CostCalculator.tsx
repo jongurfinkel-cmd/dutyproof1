@@ -2,7 +2,7 @@
 
 const AVG_HOTWORK_FIRE_DAMAGE = 292000
 const MONTHLY_COST = 199
-const ANNUAL_COST = 2399
+const YEARLY_COST = MONTHLY_COST * 12
 
 const risks = [
   { label: 'Single denied hot work claim', cost: 200000 },
@@ -22,27 +22,18 @@ export default function CostCalculator() {
       </div>
 
       {/* Cost summary */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
-          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Monthly</p>
-          <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-            ${MONTHLY_COST}
-          </p>
-          <p className="text-slate-500 text-[11px] mt-0.5">flat rate · unlimited sites</p>
-        </div>
-        <div className="rounded-xl bg-white border border-slate-200 p-4 text-center">
-          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Annual</p>
-          <p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
-            ${ANNUAL_COST.toLocaleString()}
-          </p>
-          <p className="text-slate-500 text-[11px] mt-0.5">locked rate for 12 months</p>
-        </div>
+      <div className="rounded-xl bg-white border border-slate-200 p-4 text-center mb-6">
+        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">DutyProof</p>
+        <p className="text-3xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+          ${MONTHLY_COST}<span className="text-base font-bold text-slate-500">/mo</span>
+        </p>
+        <p className="text-slate-500 text-[11px] mt-0.5">flat rate · unlimited sites · cancel any time</p>
       </div>
 
       {/* ROI table */}
       <div className="space-y-2 mb-6">
         {risks.map((r) => {
-          const roi = Math.round(r.cost / ANNUAL_COST)
+          const roi = Math.round(r.cost / YEARLY_COST)
           return (
             <div key={r.label} className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-3">
               <div>
@@ -63,7 +54,7 @@ export default function CostCalculator() {
         <p className="text-red-600 text-xs font-bold uppercase tracking-widest mb-3">One hot work fire costs</p>
         <div className="flex items-center justify-center gap-3 mb-3">
           <span className="text-5xl sm:text-6xl font-black text-red-600" style={{ fontFamily: 'var(--font-display)' }}>
-            {Math.round(AVG_HOTWORK_FIRE_DAMAGE / ANNUAL_COST)}x
+            {Math.round(AVG_HOTWORK_FIRE_DAMAGE / YEARLY_COST)}x
           </span>
           <div className="text-left">
             <p className="text-slate-700 text-sm font-bold">a full year</p>

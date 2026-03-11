@@ -296,7 +296,7 @@ export default function CheckInPage() {
             )}
           </div>
           <p className="text-slate-500 text-xs">
-            You will receive an SMS with a new link when that window opens.
+            You will receive a new check-in link when that window opens.
           </p>
         </div>
       </div>
@@ -482,7 +482,7 @@ function CheckInReady({
 
         <p className="text-slate-600 text-xs text-center max-w-xs mx-auto leading-relaxed">
           Tap the button to record your check-in. GPS is captured if your browser allows it — if not, your check-in still records without location.
-          You will receive an SMS for your next window.
+          Your next check-in link will be available when the next window opens.
         </p>
       </div>
     </div>

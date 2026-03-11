@@ -267,7 +267,7 @@ export default function ChecklistPage() {
               <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">What Happens Next</p>
             </div>
             <p className="text-slate-300 text-xs leading-relaxed">
-              You will receive an SMS with your first check-in link when the window opens. Tap it to confirm you are on-site.
+              You will receive your first check-in link when the window opens. Tap it to confirm you are on-site.
             </p>
           </div>
           <p className="text-slate-600 text-xs">

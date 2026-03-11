@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 const includedFeatures = [
   'Unlimited job sites',
   'Unlimited active watches',
-  'Automated SMS check-ins (any interval)',
+  'Automated check-in verification (any interval)',
   'Missed check-in escalation in < 60 seconds',
   'Tamper-proof immutable audit log',
   'One-click OSHA-ready PDF reports',
@@ -21,7 +21,6 @@ type SubStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'i
 export default function BillingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [annualLoading, setAnnualLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
   const [subStatus, setSubStatus] = useState<SubStatus | undefined>(undefined)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -42,20 +41,18 @@ export default function BillingPage() {
     loadStatus()
   }, [])
 
-  async function startCheckout(annual?: boolean) {
-    if (annual) setAnnualLoading(true)
-    else setLoading(true)
+  async function startCheckout() {
+    setLoading(true)
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annual: !!annual }),
+        body: JSON.stringify({}),
       })
       const data = await res.json()
       if (!res.ok) {
         toast.error(data.error || 'Something went wrong. Please try again.')
         setLoading(false)
-        setAnnualLoading(false)
         return
       }
       if (data.url) {
@@ -63,12 +60,10 @@ export default function BillingPage() {
       } else {
         toast.error('Something went wrong. Please try again.')
         setLoading(false)
-        setAnnualLoading(false)
       }
     } catch {
       toast.error('Something went wrong. Please try again.')
       setLoading(false)
-      setAnnualLoading(false)
     }
   }
 
@@ -188,7 +183,7 @@ export default function BillingPage() {
         <div className="rounded-3xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 to-white overflow-hidden shadow-xl shadow-amber-100 mb-6">
           <div className="bg-amber-600 px-4 py-6 sm:px-8 sm:py-8 text-center">
             <div className="text-white font-black text-xl mb-1">Payment Failed</div>
-            <p className="text-amber-100 text-sm">SMS check-ins may be paused until resolved.</p>
+            <p className="text-amber-100 text-sm">Watch features may be paused until resolved.</p>
           </div>
           <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
             <button
@@ -227,8 +222,8 @@ export default function BillingPage() {
               </div>
 
               <button
-                onClick={() => startCheckout(false)}
-                disabled={loading || annualLoading || statusLoading}
+                onClick={() => startCheckout()}
+                disabled={loading || statusLoading}
                 className="w-full py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
               >
                 {loading ? (
@@ -237,46 +232,11 @@ export default function BillingPage() {
                     Redirecting to checkout…
                   </span>
                 ) : (
-                  'Subscribe Monthly — $199/mo →'
+                  'Subscribe — $199/mo →'
                 )}
               </button>
               <p className="text-center text-slate-500 text-xs mt-3">
-                Secured by Stripe · Cancel any time
-              </p>
-            </div>
-          </div>
-
-          {/* Annual plan */}
-          <div className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl shadow-green-100 relative">
-            <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                Lock in your rate
-              </div>
-              <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
-              <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$2,399</span>
-                <div className="text-green-200 text-base mb-3">/year</div>
-              </div>
-              <p className="text-green-200 text-sm">Same plan. One bill, locked rate for 12 months.</p>
-            </div>
-
-            <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
-              <button
-                onClick={() => startCheckout(true)}
-                disabled={loading || annualLoading || statusLoading}
-                className="w-full py-4 px-8 rounded-xl bg-green-700 hover:bg-green-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
-              >
-                {annualLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Redirecting to checkout…
-                  </span>
-                ) : (
-                  'Subscribe Annually — $2,399/yr →'
-                )}
-              </button>
-              <p className="text-center text-slate-500 text-xs mt-3">
-                Secured by Stripe · Billed once per year
+                Secured by Stripe · Cancel any time · 30-day money-back guarantee
               </p>
             </div>
           </div>

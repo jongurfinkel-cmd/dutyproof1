@@ -43,14 +43,14 @@ export const metadata: Metadata = {
     template: '%s | DutyProof',
   },
   description:
-    'Fire watch verification software for welding, pipefitting, and mechanical contractors. SMS check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
+    'Fire watch verification software for welding, pipefitting, and mechanical contractors. Automated check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',
     'OSHA fire watch compliance',
     'NFPA 51B fire watch',
     'welding fire watch log software',
-    'fire watch SMS check-in',
+    'fire watch check-in software',
     'contractor fire watch documentation',
     'fire watch audit log',
   ],
@@ -61,14 +61,14 @@ export const metadata: Metadata = {
     siteName: 'DutyProof',
     title: 'DutyProof — Fire Watch Verification Software',
     description:
-      'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
+      'Stop pencil-whipping your fire watch logs. Automated check-in verification, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'DutyProof — Fire Watch Verification Software' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'DutyProof — Fire Watch Verification Software',
     description:
-      'Stop pencil-whipping your fire watch logs. Automated SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
+      'Stop pencil-whipping your fire watch logs. Automated check-in verification, tamper-proof audit logs, and OSHA-ready PDF reports for hot work contractors.',
     images: ['/opengraph-image'],
   },
   robots: { index: true, follow: true },

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
+import { QRCodeSVG } from 'qrcode.react'
 import CheckInTimeline from '@/components/CheckInTimeline'
 import CheckInMapDynamic from '@/components/CheckInMapDynamic'
 import toast from 'react-hot-toast'
@@ -199,16 +200,6 @@ export default function WatchDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end">
-          {watch.status === 'active' && (
-            <button
-              onClick={handleResendSms}
-              disabled={resendingSms}
-              title="Resend the current check-in SMS to the worker"
-              className="px-4 py-2.5 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            >
-              {resendingSms ? 'Sending…' : 'Resend SMS'}
-            </button>
-          )}
           <button
             onClick={handleDownloadReport}
             disabled={downloading}
@@ -322,33 +313,58 @@ export default function WatchDetailPage() {
           )}
         </div>
 
-        {/* Copy check-in link — fallback if SMS delivery fails */}
-        {nextPending && watch.status === 'active' && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Current Check-in Link</div>
-              <div className="text-xs text-slate-500 font-mono truncate">
-                {`${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`}
+        {/* Check-In Link Delivery — primary method */}
+        {nextPending && watch.status === 'active' && (() => {
+          const checkinUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`
+          return (
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Check-In Link Delivery</h3>
+              <div className="flex flex-col sm:flex-row gap-5">
+                {/* QR Code */}
+                <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                  <QRCodeSVG value={checkinUrl} size={140} level="M" includeMargin={false} />
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Scan to check in</span>
+                </div>
+                {/* Actions */}
+                <div className="flex-1 flex flex-col gap-3 justify-center">
+                  {/* Copy Link — primary action */}
+                  <button
+                    onClick={() => {
+                      try {
+                        navigator.clipboard.writeText(checkinUrl).then(() => {
+                          setCopiedLink(true)
+                          setTimeout(() => setCopiedLink(false), 2000)
+                        }).catch(() => toast.error('Unable to copy to clipboard'))
+                      } catch {
+                        toast.error('Unable to copy to clipboard')
+                      }
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    {copiedLink ? 'Copied to Clipboard ✓' : 'Copy Check-In Link'}
+                  </button>
+                  {/* Link preview */}
+                  <div className="text-xs text-slate-400 font-mono truncate px-1">{checkinUrl}</div>
+                  {/* Send by SMS — secondary/optional */}
+                  {watch.assigned_phone && (
+                    <button
+                      onClick={handleResendSms}
+                      disabled={resendingSms}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      {resendingSms ? 'Sending…' : 'Send Link via SMS (optional)'}
+                    </button>
+                  )}
+                  <p className="text-[10px] text-slate-400 leading-relaxed px-1">
+                    Share this link with the fire watcher via QR code, copy &amp; paste, or optional SMS. No app download required.
+                  </p>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => {
-                try {
-                  const url = `${window.location.origin}/checkin/${nextPending.token}`
-                  navigator.clipboard.writeText(url).then(() => {
-                    setCopiedLink(true)
-                    setTimeout(() => setCopiedLink(false), 2000)
-                  }).catch(() => toast.error('Unable to copy to clipboard'))
-                } catch {
-                  toast.error('Unable to copy to clipboard')
-                }
-              }}
-              className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg transition-all"
-            >
-              {copiedLink ? '✓ Copied' : 'Copy Link'}
-            </button>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
       {/* Compliance Score */}

@@ -1,24 +1,21 @@
 import Link from 'next/link'
 import RevealOnScroll from '@/components/RevealOnScroll'
-import FeatureTabs from '@/components/FeatureTabs'
 import FaqAccordion from '@/components/FaqAccordion'
-import CostCalculator from '@/components/CostCalculator'
-import HeroProduct from '@/components/HeroProduct'
 import StickyCTA from '@/components/StickyCTA'
 import SocialProof from '@/components/SocialProof'
-import HeroStats from '@/components/HeroStats'
+import InteractiveDemo from '@/components/InteractiveDemo'
 
 export const metadata = {
   title: 'Fire Watch Compliance Software for Contractors',
   description:
-    'Stop pencil-whipping your fire watch logs. DutyProof sends automated SMS check-ins every 15–30 min, alerts supervisors in under 60 seconds on a miss, and generates one-click OSHA-ready PDF audit reports. $199/mo flat rate — unlimited sites.',
+    'Stop pencil-whipping your fire watch logs. DutyProof automates check-in verification every 15–30 min, alerts supervisors in under 60 seconds on a miss, and generates one-click OSHA-ready PDF audit reports. $199/mo flat rate — unlimited sites.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',
     'OSHA fire watch compliance',
     'NFPA 51B fire watch',
     'welding fire watch log software',
-    'fire watch SMS check-in',
+    'fire watch check-in software',
     'contractor fire watch documentation',
     'hot work permit fire watch',
     'mechanical contractor fire watch',
@@ -27,7 +24,7 @@ export const metadata = {
   openGraph: {
     title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Automated SMS check-ins, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate for hot work contractors.',
+      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate for hot work contractors.',
     url: 'https://dutyproof.com',
     siteName: 'DutyProof',
     type: 'website',
@@ -44,30 +41,22 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Automated SMS check-ins, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
+      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
   },
 }
 
-const timelineItems = [
-  { time: '08:00 AM', status: 'completed',    label: 'Checked in', detail: 'GPS 34.0521°N · SMS confirmed', delay: '0.1s' },
-  { time: '08:30 AM', status: 'completed',    label: 'Checked in', detail: 'GPS 34.0519°N · SMS confirmed', delay: '0.5s' },
-  { time: '09:00 AM', status: 'missed',       label: 'MISSED — Alert sent to supervisor', detail: 'SMS escalation fired · 47 sec elapsed', delay: '0.9s' },
-  { time: '09:03 AM', status: 'acknowledged', label: 'Supervisor acknowledged', detail: 'T. Okafor · GPS 34.0518°N · 3 min response', delay: '1.1s' },
-  { time: '09:30 AM', status: 'completed',    label: 'Checked in (offline → synced)', detail: 'Device time 09:30:08 · synced at 09:31 · GPS verified', delay: '1.5s' },
-  { time: '10:00 AM', status: 'pending',      label: 'Pending · due in 8 min', detail: 'SMS delivered · awaiting tap', delay: '1.9s' },
-]
 
 const includedFeatures = [
-  'Unlimited active watches per job site',
-  'Automated SMS check-ins (15 or 30 min intervals)',
-  'GPS location capture on every check-in',
-  'Offline check-ins — works without signal',
-  'Missed check-in escalation in < 60 seconds',
-  'Supervisor acknowledgment with GPS logging',
-  'Pre-watch safety checklists with photo capture',
-  'Tamper-proof immutable audit log with full search',
-  'One-click OSHA-ready PDF reports with GPS maps',
-  'Unlimited admin & supervisor accounts',
+  'Run as many watches as you need — no extra charge',
+  'Workers get a check-in link every 15 or 30 min — they tap to verify',
+  'Every check-in shows where your guy was standing',
+  'Works even when there\'s no cell service on site',
+  'If someone misses a check-in, your super knows in under 60 seconds',
+  'Supervisors tap to confirm they saw the alert — that gets logged too',
+  'Pre-watch safety checklist with photos before the torch lights',
+  'Records can\'t be edited or deleted — ever',
+  'One click to download a PDF you can hand to any inspector',
+  'Add as many admins and supers as you want',
 ]
 
 const jsonLd = [
@@ -79,7 +68,7 @@ const jsonLd = [
     operatingSystem: 'Web',
     url: 'https://dutyproof.com',
     description:
-      'Fire watch verification platform for hot work contractors. SMS check-ins, tamper-proof audit logs, and OSHA-ready PDF reports for welding, pipefitting, and mechanical contractors.',
+      'Fire watch verification platform for hot work contractors. Automated check-in links, tamper-proof audit logs, and OSHA-ready PDF reports for welding, pipefitting, and mechanical contractors.',
     offers: {
       '@type': 'Offer',
       price: '199',
@@ -92,7 +81,7 @@ const jsonLd = [
       },
     },
     featureList: [
-      'Automated SMS fire watch check-ins',
+      'Automated fire watch check-in verification',
       'Offline check-ins — works without signal',
       'Missed check-in escalation in under 60 seconds',
       'Supervisor acknowledgment with GPS logging',
@@ -120,7 +109,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'How much does DutyProof cost?',
-        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,399/year.' },
+        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.' },
       },
       {
         '@type': 'Question',
@@ -144,8 +133,8 @@ const jsonLd = [
       },
       {
         '@type': 'Question',
-        name: 'What phone does the fire watch worker need?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates.' },
+        name: 'What does the fire watch worker need?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Any smartphone with a web browser — no app to download, no login required. DutyProof generates a secure check-in link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates. Links can be delivered via optional SMS, shared manually, or accessed from the dashboard.' },
       },
       {
         '@type': 'Question',
@@ -155,12 +144,12 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'What if my worker doesn\'t check in on time?',
-        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — with a tap-to-acknowledge link. The supervisor taps it to confirm they saw the alert. Both the miss and the acknowledgment are permanently recorded in the audit trail.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'DutyProof automatically marks the check-in as missed and alerts your supervisor within 60 seconds — with a tap-to-acknowledge link. The supervisor taps it to confirm they saw the alert. Both the miss and the acknowledgment are permanently recorded in the audit trail. Alerts can be delivered via dashboard notification or optional SMS.' },
       },
       {
         '@type': 'Question',
         name: 'Is there a contract or long-term commitment?',
-        acceptedAnswer: { '@type': 'Answer', text: 'No contracts on the monthly plan. $199/month, cancel any time. Annual plans are billed once at $2,399/year. Records retained for the life of your account.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'No contracts. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Records retained for the life of your account.' },
       },
     ],
   },
@@ -176,7 +165,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════
           HERO
       ════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-slate-950 min-h-[calc(100vh-4rem)] flex flex-col justify-center">
+      <section className="relative overflow-hidden bg-slate-950">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -185,71 +174,11 @@ export default function LandingPage() {
             backgroundSize: '28px 28px',
           }}
         />
-        <div
-          aria-hidden
-          className="glow-pulse pointer-events-none absolute -top-48 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(ellipse, #1d4ed8 0%, transparent 68%)' }}
-        />
+        {/* Glow moved into InteractiveDemo for phase-reactive color */}
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-20">
-          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-10 lg:gap-20">
-
-            {/* ── Copy ── */}
-            <div className="flex-1 text-center lg:text-left max-w-2xl lg:max-w-none lg:pt-4">
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-300 text-sm font-bold tracking-wide" style={{ boxShadow: '0 0 20px rgba(251,146,60,0.15)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-4-4-6-4-10z" fill="#fb923c" />
-                    <path d="M12 8c0 2-2 3-2 5a2 2 0 0 0 4 0c0-2-2-3-2-5z" fill="#fbbf24" />
-                  </svg>
-                  Built by Firefighters
-                </div>
-              </div>
-
-              <h1
-                className="text-3xl sm:text-5xl lg:text-[6.5rem] text-white leading-[0.9] tracking-tight mb-8"
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-              >
-                Stop pencil-<br />
-                whipping<br />
-                <span className="text-transparent bg-clip-text hero-shimmer" style={{ backgroundImage: 'linear-gradient(90deg, #fb923c, #fbbf24, #fb923c, #fbbf24, #fb923c)' }}>
-                  your logs.
-                </span>
-              </h1>
-
-              <p className="text-slate-400 text-xl leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-                <span className="text-white font-semibold">Most hot work fires start after the welder leaves.</span>{' '}
-                Your fire watch either happened — or it didn&apos;t.{' '}
-                <span className="text-slate-200">DutyProof makes sure you can prove it.</span>
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-8">
-                <Link
-                  href="/signup"
-                  className="cta-pulse px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5 hover:shadow-blue-700/60"
-                >
-                  Get Started — $199/mo →
-                </Link>
-                <Link
-                  href="/#the-moment"
-                  className="text-slate-400 hover:text-slate-200 text-sm font-medium transition-colors underline underline-offset-4 decoration-slate-700 hover:decoration-slate-500"
-                >
-                  See how it works ↓
-                </Link>
-              </div>
-
-              <p className="text-slate-400 text-sm mb-8 text-center lg:text-left">
-                30-day money-back guarantee — no questions asked.{' '}
-                <Link href="/support/walkthrough" className="text-slate-300 hover:text-white transition-colors underline underline-offset-2">Talk to our team.</Link>
-              </p>
-
-              {/* ── Risk stats strip — sourced from NFPA ── */}
-              <HeroStats />
-            </div>
-
-            {/* ── Interactive product showcase ── */}
-            <HeroProduct />
-
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 lg:pt-12 pb-8 lg:pb-12">
+          <div className="fade-up">
+            <InteractiveDemo />
           </div>
         </div>
       </section>
@@ -257,16 +186,16 @@ export default function LandingPage() {
       <div id="sticky-sentinel" />
 
       {/* ════════════════════════════════════════
-          TRUST STRIP
+          TRUST STRIP + STATS
       ════════════════════════════════════════ */}
       <div className="bg-slate-900 border-b border-slate-800 py-3 overflow-hidden">
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 px-6">
           {([
-            'Unlimited sites',
-            'No per-user fees',
-            'OSHA 29 CFR 1910.252 aligned',
+            'All your sites, one price',
+            'Meets OSHA fire watch requirements',
             'NFPA 51B ready',
-            'Works offline',
+            'Works without cell service',
+            'No app to install',
           ] as const).map((item) => (
             <span key={item} className="inline-flex items-center gap-1.5 text-slate-400 text-xs font-medium whitespace-nowrap">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
@@ -281,6 +210,23 @@ export default function LandingPage() {
       ════════════════════════════════════════ */}
       <section id="the-moment" className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
+          {/* NFPA stats — set up the fear */}
+          <RevealOnScroll className="mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+              {([
+                { n: '4,630', l: 'structure fires per year caused by hot work', s: 'NFPA', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: false },
+                { n: '$355M', l: 'in property damage every year', s: 'NFPA', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: true },
+                { n: '48 min', l: 'avg time before a post-weld fire ignites', s: 'NFPA 51B', href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b', highlight: false },
+              ] as const).map((stat) => (
+                <div key={stat.n} className={`text-center p-4 rounded-xl ${stat.highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
+                  <div className={`text-2xl sm:text-3xl font-black leading-none mb-1 ${stat.highlight ? 'text-red-600' : 'text-slate-900'}`} style={{ fontFamily: 'var(--font-display)' }}>{stat.n}</div>
+                  <div className={`text-xs leading-snug ${stat.highlight ? 'text-red-600' : 'text-slate-500'}`}>{stat.l}</div>
+                  <a href={stat.href} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-600 text-[9px] mt-1 inline-block transition-colors">{stat.s} ↗</a>
+                </div>
+              ))}
+            </div>
+          </RevealOnScroll>
+
           <RevealOnScroll className="text-center mb-16">
             <h2
               className="text-2xl sm:text-4xl lg:text-5xl text-slate-900 max-w-3xl mx-auto leading-tight"
@@ -297,12 +243,12 @@ export default function LandingPage() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 Without DutyProof
               </div>
-              <div className="space-y-5 text-slate-600 text-base leading-relaxed">
+              <div className="space-y-4 text-slate-600 text-base leading-relaxed">
                 <p>
-                  Your welder finished at 3 PM. Your fire watch says he stayed the full post-weld period. Nobody verified that. Now the fire marshal wants documentation.
+                  Your welder finished at 3 PM. Fire watch says he stayed. Nobody verified. Now the fire marshal wants documentation.
                 </p>
                 <p>
-                  You hand them a paper log — handwritten times, no GPS, no proof anyone was actually there. The claim is disputed. Litigation begins. Your premium goes up.
+                  You hand them a paper log — handwritten times, no GPS, no proof anyone was there. Claim disputed. Litigation begins.
                 </p>
               </div>
               <div className="mt-7 p-4 rounded-xl bg-red-50 border border-red-200">
@@ -342,18 +288,12 @@ export default function LandingPage() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
                 With DutyProof
               </div>
-              <div className="space-y-5 text-slate-600 text-base leading-relaxed">
+              <div className="space-y-4 text-slate-600 text-base leading-relaxed">
                 <p>
-                  The fire marshal asks for your fire watch records.
-                  You open a browser, click Download Report, and hand them a PDF in under 60 seconds.
+                  Fire marshal asks for records. You pull up the app, hit Download. PDF in hand in under 60 seconds.
                 </p>
                 <p>
-                  Every check-in GPS-verified, server-timestamped, and carrier-confirmed.
-                  Continuous coverage documented from the moment the torch went out.
-                  Immutable — it says exactly what happened and when.
-                </p>
-                <p>
-                  Your documentation speaks for itself. Inquiry closed.
+                  Every check-in shows where your guy was and when. The record can&apos;t be changed after the fact. Inquiry closed.
                 </p>
               </div>
               <div className="mt-7 p-5 rounded-xl bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 relative overflow-hidden">
@@ -366,216 +306,6 @@ export default function LandingPage() {
                 <div className="text-blue-700 text-sm font-medium pl-11">PDF generated. Fire marshal satisfied. Claim supported.</div>
               </div>
             </div>
-          </RevealOnScroll>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          WORKER EXPERIENCE — zero friction
-      ════════════════════════════════════════ */}
-      <section className="relative py-16 bg-slate-950 overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        />
-        <div className="relative max-w-5xl mx-auto px-6">
-          <RevealOnScroll className="text-center mb-12">
-            <div className="text-orange-500 text-xs font-bold tracking-widest uppercase mb-3">Zero friction for the field</div>
-            <h2
-              className="text-2xl sm:text-4xl lg:text-5xl text-white leading-tight mb-3"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-            >
-              Nothing to install.<br />Nothing to learn.
-            </h2>
-            <p className="text-slate-400 text-lg">Your fire watch worker keeps their phone. That&apos;s it.</p>
-          </RevealOnScroll>
-
-          <RevealOnScroll delay={100}>
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto_1fr] gap-y-6 sm:gap-x-0 items-start mb-6">
-              {/* Step 1 */}
-              <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                </div>
-                <div className="text-white font-bold text-base mb-1.5">Gets a text</div>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-[220px] mx-auto">
-                  DutyProof sends an SMS with a secure check-in link at each interval. No app to download.
-                </p>
-              </div>
-              {/* Arrow 1→2 */}
-              <div className="hidden sm:flex items-center justify-center pt-5" aria-hidden="true">
-                <svg width="32" height="16" viewBox="0 0 32 16" fill="none"><path d="M0 8h28m0 0l-5-5m5 5l-5 5" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              {/* Step 2 */}
-              <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
-                  </svg>
-                </div>
-                <div className="text-white font-bold text-base mb-1.5">Taps the link</div>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-[220px] mx-auto">
-                  One tap opens the check-in page. GPS coordinates and timestamp captured automatically.
-                </p>
-              </div>
-              {/* Arrow 2→3 */}
-              <div className="hidden sm:flex items-center justify-center pt-5" aria-hidden="true">
-                <svg width="32" height="16" viewBox="0 0 32 16" fill="none"><path d="M0 8h28m0 0l-5-5m5 5l-5 5" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              {/* Step 3 */}
-              <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div className="text-white font-bold text-base mb-1.5">Done</div>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-[220px] mx-auto">
-                  Check-in logged to the immutable audit trail. Supervisor sees it in real time.
-                </p>
-              </div>
-            </div>
-            {/* Speed badge */}
-            <div className="text-center mb-8">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                Under 10 seconds. Every time.
-              </span>
-            </div>
-          </RevealOnScroll>
-
-          {/* Offline callout */}
-          <RevealOnScroll delay={200}>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-6 py-5 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
-                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
-                  <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
-                  <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-                  <line x1="12" y1="20" x2="12.01" y2="20" />
-                </svg>
-              </div>
-              <div className="text-center sm:text-left">
-                <div className="text-amber-300 font-bold text-sm mb-0.5">No signal? No problem.</div>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  Works underground, in parking garages, inside steel structures. Check-ins save to the phone and sync automatically when connectivity returns.
-                </p>
-              </div>
-            </div>
-          </RevealOnScroll>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          LIVE DEMO — animated timeline
-      ════════════════════════════════════════ */}
-      <section id="demo" className="py-24 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
-            <RevealOnScroll className="flex-1">
-              <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">Tamper-proof by design</div>
-              <h2
-                className="text-2xl sm:text-4xl lg:text-5xl text-slate-900 leading-tight mb-5"
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-              >
-                An immutable audit trail,<br />building in real time.
-              </h2>
-              <p className="text-slate-500 text-base leading-relaxed mb-5">
-                Every check-in is <span className="text-slate-800 font-medium">written once and locked</span> — no edits, no deletions, no backdating.
-                Each row captures a server-side timestamp, location data, and a carrier-confirmed SMS delivery receipt.
-              </p>
-              <p className="text-slate-500 text-base leading-relaxed">
-                Missed a check-in? An alert fires to your supervisor <span className="text-slate-800 font-medium">within 60 seconds</span> — with a tap-to-acknowledge link.
-                The miss, the alert, and the supervisor&apos;s response are all recorded permanently.
-              </p>
-            </RevealOnScroll>
-
-            <RevealOnScroll delay={100} className="flex-shrink-0 w-full max-w-md timeline-trigger">
-              <div className="text-center mb-3">
-                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-xs font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-dot" />
-                  Live audit trail preview
-                </span>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-                <div className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-                  <div>
-                    <div className="font-bold text-slate-900 text-sm">Ace Mechanical — Building D Weld</div>
-                    <div className="text-slate-500 text-xs mt-0.5">M. Rivera · 30 min · started 5h ago</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-green-600 text-sm font-bold">4 of 5</div>
-                    <div className="text-slate-400 text-[10px]">on time</div>
-                  </div>
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {timelineItems.map((row) => (
-                    <div
-                      key={row.time}
-                      className="anim-row flex items-center gap-3.5 px-5 py-3"
-                      style={{ animationDelay: row.delay }}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                        row.status === 'completed'    ? 'bg-green-100 text-green-700' :
-                        row.status === 'missed'       ? 'bg-red-100 text-red-600' :
-                        row.status === 'acknowledged' ? 'bg-amber-100 text-amber-700' :
-                                                        'bg-slate-100 text-slate-400'
-                      }`}>
-                        {row.status === 'completed' ? '✓' : row.status === 'missed' ? '✕' : row.status === 'acknowledged' ? '✓' : '…'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-400 text-[10px] font-mono shrink-0">{row.time}</span>
-                          <span className={`text-xs font-semibold truncate ${
-                            row.status === 'completed'    ? 'text-slate-800' :
-                            row.status === 'missed'       ? 'text-red-600' :
-                            row.status === 'acknowledged' ? 'text-amber-700' :
-                                                            'text-slate-500'
-                          }`}>{row.label}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5 font-mono">{row.detail}</div>
-                      </div>
-                      {row.status === 'pending' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 live-dot flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 text-[10px] text-slate-400 flex items-center justify-between">
-                  <span>Write-once · server timestamps · no edits, no deletions</span>
-                  <Link href="/security" className="underline underline-offset-2 hover:text-slate-600 transition-colors whitespace-nowrap">How we protect records →</Link>
-                </div>
-              </div>
-            </RevealOnScroll>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          FEATURE TABS — interactive
-      ════════════════════════════════════════ */}
-      <section className="py-24 bg-white border-t border-slate-100">
-        <div className="max-w-5xl mx-auto px-6">
-          <RevealOnScroll className="text-center mb-12">
-            <div className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-3">How it works</div>
-            <h2
-              className="text-2xl sm:text-4xl lg:text-5xl text-slate-900 leading-tight"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-            >
-              Built for the way hot work<br />contractors actually operate.
-            </h2>
-          </RevealOnScroll>
-          <RevealOnScroll delay={100}>
-            <FeatureTabs />
           </RevealOnScroll>
         </div>
       </section>
@@ -605,26 +335,17 @@ export default function LandingPage() {
             <p className="text-slate-500 text-lg">One price. Everything included. No surprises.</p>
           </RevealOnScroll>
 
-          {/* ROI calculator — value anchoring before the cards */}
-          <RevealOnScroll className="mb-16">
-            <CostCalculator />
-          </RevealOnScroll>
-
-          {/* Pricing cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Single facility card */}
+          {/* Pricing card — single plan */}
+          <div className="max-w-lg mx-auto mb-8">
             <RevealOnScroll className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100 relative">
               <div className="bg-blue-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                  Most popular
-                </div>
                 <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Flat Rate — Unlimited Sites</div>
                 <div className="flex items-end justify-center gap-1 mb-1">
                   <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$199</span>
                   <div className="text-blue-200 text-base mb-3 text-left leading-snug">/month</div>
                 </div>
                 <p className="text-blue-200 text-sm max-w-xs mx-auto">
-                  Unlimited job sites. Unlimited watches. No per-user fees. No surprises.
+                  Cover all your job sites. Run as many watches as you need. No surprises on the bill.
                 </p>
               </div>
               <div className="px-4 py-6 sm:px-8 sm:py-8">
@@ -643,61 +364,7 @@ export default function LandingPage() {
                   Start Your First Watch →
                 </Link>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  30-day money-back guarantee · No setup fees · Annual option: $2,399/yr
-                </p>
-              </div>
-            </RevealOnScroll>
-
-            {/* Annual / GC Enterprise card */}
-            <RevealOnScroll delay={100} className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-2xl shadow-green-100 relative">
-              <div className="bg-green-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                  Priority support included
-                </div>
-                <div className="text-green-200 text-xs font-bold tracking-widest uppercase mb-3">Annual Commitment</div>
-                <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-6xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$2,399</span>
-                  <div className="text-green-200 text-base mb-3">/year</div>
-                </div>
-                <p className="text-green-200 text-sm max-w-xs mx-auto">
-                  Same unlimited plan. One bill, locked rate for 12 months.
-                </p>
-              </div>
-              <div className="px-4 py-6 sm:px-8 sm:py-8">
-                <div className="grid grid-cols-1 gap-y-2.5 mb-8">
-                  {[
-                    'Everything in the monthly plan',
-                    'Locked rate — no price increases for 12 months',
-                    'Priority email & phone support',
-                    'Dedicated onboarding assistance',
-                    'Annual compliance summary report',
-                  ].map((f) => (
-                    <div key={f} className="flex items-center gap-3">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
-                      <span className="text-slate-700 text-sm">{f}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* Rate protection callout */}
-                <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                    </div>
-                    <div>
-                      <p className="text-green-800 text-sm font-semibold">Rate protection</p>
-                      <p className="text-green-600 text-xs">Your price is locked for 12 months. No increases, guaranteed.</p>
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  href="/signup"
-                  className="block text-center py-4 px-8 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold text-base shadow-lg transition-all hover:-translate-y-0.5"
-                >
-                  Start Annual Plan →
-                </Link>
-                <p className="text-center text-slate-500 text-xs mt-3">
-                  Billed annually · Cancel any time
+                  30-day money-back guarantee · No setup fees · Cancel any time
                 </p>
               </div>
             </RevealOnScroll>
@@ -714,12 +381,12 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <div className="text-slate-900 font-bold text-sm mb-2">What&apos;s in the compliance report</div>
+                  <div className="text-slate-900 font-bold text-sm mb-2">What the inspector gets</div>
                   <ul className="space-y-1.5 text-slate-500 text-xs">
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />GPS coverage map for every check-in</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Server-timestamped, immutable check-in log</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Missed check-in alerts + supervisor acknowledgments</li>
-                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Print-ready, one-click download</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Map showing where every check-in happened</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Exact times — can&apos;t be changed after the fact</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Any missed rounds and how fast your super responded</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Print it or email it — takes one click</li>
                   </ul>
                   <a
                     href="/sample-report.pdf"
@@ -792,11 +459,11 @@ export default function LandingPage() {
             When someone asks<br />&ldquo;where&apos;s the <span className="text-transparent bg-clip-text hero-shimmer" style={{ backgroundImage: 'linear-gradient(90deg, #60a5fa, #93c5fd, #60a5fa, #93c5fd, #60a5fa)' }}>proof</span>?&rdquo;<br />you&apos;ll have it.
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-400 text-lg mb-8">
-            <span>GPS-stamped</span>
+            <span>Location tracked</span>
             <span className="text-slate-600" aria-hidden="true">/</span>
-            <span>Time-verified</span>
+            <span>Time stamped</span>
             <span className="text-slate-600" aria-hidden="true">/</span>
-            <span className="text-white font-semibold">Every check-in documented</span>
+            <span className="text-white font-semibold">Every round documented</span>
           </div>
 
           {/* Mission */}
@@ -809,11 +476,10 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-slate-300 text-sm leading-relaxed italic">
-                  &ldquo;Built by people who watched hot work fires happen because the paperwork said everything was fine.
-                  DutyProof exists to close the gap between what the log says and what actually happened.&rdquo;
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  We talked to over 100 contractors about how fire watch actually works on the job.
+                  Not one said the paperwork side is handled. That&apos;s why we built this.
                 </p>
-                <p className="text-orange-400/60 text-xs mt-2.5 not-italic font-semibold">— The DutyProof Team</p>
               </div>
             </div>
           </div>
@@ -823,17 +489,16 @@ export default function LandingPage() {
             {([
               { step: '1', label: 'Sign up' },
               { step: '2', label: 'Add your site' },
-              { step: '3', label: 'Enter phone' },
-              { step: '4', label: 'Start watch' },
+              { step: '3', label: 'Start watch' },
             ] as const).map((s, i) => (
               <div key={s.step} className="flex items-start">
                 <div className="flex flex-col items-center gap-2 w-20 sm:w-24">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
-                    i === 3 ? 'bg-green-500/20 border border-green-500/40 text-green-400' : 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
+                    i === 2 ? 'bg-green-500/20 border border-green-500/40 text-green-400' : 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
                   }`}>{s.step}</div>
                   <span className="text-slate-300 text-xs font-medium text-center">{s.label}</span>
                 </div>
-                {i < 3 && (
+                {i < 2 && (
                   <div className="flex items-center pt-3.5" aria-hidden="true">
                     <svg width="20" height="12" viewBox="0 0 20 12" fill="none" className="text-slate-600 flex-shrink-0">
                       <path d="M0 6h16m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

@@ -3,8 +3,8 @@
 import { useState } from 'react'
 
 const TabIcons = [
-  // SMS bubble
-  <svg key="sms" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+  // Check-in link
+  <svg key="checkin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>,
   // Alert bell
   <svg key="alert" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>,
   // Wifi-off
@@ -14,7 +14,7 @@ const TabIcons = [
 ]
 
 const TABS = [
-  { id: 0, label: 'SMS Check-Ins' },
+  { id: 0, label: 'Check-In Links' },
   { id: 1, label: 'Missed Alerts' },
   { id: 2, label: 'Offline Mode' },
   { id: 3, label: 'PDF Reports' },
@@ -27,7 +27,7 @@ function SMSMockup() {
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DP</div>
         <div>
           <div className="text-white text-xs font-semibold">DutyProof</div>
-          <div className="text-slate-500 text-[10px]">Automated SMS</div>
+          <div className="text-slate-500 text-[10px]">Automated Check-In</div>
         </div>
       </div>
       <div className="p-4 space-y-3">
@@ -62,7 +62,7 @@ function SMSMockup() {
 function EscalationMockup() {
   return (
     <div className="space-y-3 w-full max-w-xs mx-auto">
-      <div className="rounded-xl border-2 border-red-800/60 bg-red-950/40 p-4 shadow-2xl">
+      <div className="rounded-xl border-2 border-red-700 bg-red-950 p-4 shadow-2xl">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
           <span className="text-red-400 text-[9px] font-bold tracking-widest uppercase">Missed Check-In</span>
@@ -75,9 +75,9 @@ function EscalationMockup() {
           <div><span className="text-slate-400">Notified:</span> Supervisor · (347) 821-4567</div>
         </div>
       </div>
-      <div className="rounded-xl bg-slate-900 border border-slate-700 p-4 shadow-xl">
+      <div className="rounded-xl bg-slate-900 border border-slate-600 p-4 shadow-xl">
         <div className="text-slate-400 text-[9px] font-mono mb-2.5 flex items-center gap-1.5">
-          <span className="text-red-400">▲</span> ESCALATION SMS · 10:00:47 AM
+          <span className="text-red-400">▲</span> ESCALATION ALERT · 10:00:47 AM
         </div>
         <p className="text-white text-xs leading-relaxed">
           🚨 <span className="text-red-400 font-semibold">MISSED CHECK-IN</span><br /><br />
@@ -88,7 +88,7 @@ function EscalationMockup() {
           <span className="text-amber-400 text-[10px] underline">dutyproof.com/ack/k9x3r...</span>
         </p>
       </div>
-      <div className="rounded-xl bg-amber-950/50 border border-amber-600/50 p-4 shadow-xl">
+      <div className="rounded-xl bg-amber-950 border border-amber-600 p-4 shadow-xl">
         <div className="text-amber-400 text-[9px] font-mono mb-2 flex items-center gap-1.5">
           <span className="text-amber-300">✓</span> ACKNOWLEDGED · 10:03:12 AM
         </div>
@@ -116,7 +116,7 @@ function OfflineMockup() {
           </div>
         </div>
         {/* Offline banner */}
-        <div className="px-4 py-2 bg-amber-950/50 border-b border-amber-800/30 flex items-center justify-center gap-2">
+        <div className="px-4 py-2 bg-amber-950 border-b border-amber-800 flex items-center justify-center gap-2">
           <span className="w-2 h-2 rounded-full bg-red-500" />
           <span className="text-amber-400 text-[10px] font-semibold">Offline — check-in will be queued</span>
         </div>
@@ -128,9 +128,9 @@ function OfflineMockup() {
         </div>
       </div>
       {/* Queued confirmation */}
-      <div className="rounded-2xl bg-amber-950/30 border border-amber-700/40 p-4 shadow-xl">
+      <div className="rounded-2xl bg-amber-950 border border-amber-700 p-4 shadow-xl">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-amber-900/50 border-2 border-amber-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-amber-900 border-2 border-amber-500 flex items-center justify-center">
             <span className="text-amber-400 text-sm font-bold">✓</span>
           </div>
           <div>
@@ -138,7 +138,7 @@ function OfflineMockup() {
             <div className="text-amber-300 text-[10px]">Saved to device · will sync automatically</div>
           </div>
         </div>
-        <div className="bg-amber-900/30 rounded-lg px-3 py-2 mt-2">
+        <div className="bg-amber-900 rounded-lg px-3 py-2 mt-2">
           <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Recorded at (device)</div>
           <div className="text-white text-sm font-bold">9:30:08 AM</div>
         </div>
@@ -214,16 +214,16 @@ const TAB_CONTENT = [
   {
     eyebrow: 'Zero-friction check-ins',
     eyebrowColor: 'text-blue-600',
-    headline: 'Workers check in\nfrom a text message.',
+    headline: 'Workers check in\nwith one tap.',
     body: [
-      'DutyProof sends a secure, one-time SMS link at every interval — 15 or 30 minutes, your choice. Your fire watch taps one button. No app, no login, no training required.',
+      'DutyProof generates a secure, one-time check-in link at every interval — 15 or 30 minutes, your choice. Your fire watch taps one button. No app, no login, no training required. Links can be delivered via optional SMS or shared directly.',
       'If no one taps it in time, it automatically counts as missed. No manual oversight needed.',
     ],
     bullets: [
-      'One-tap check-in from any cell phone',
+      'One-tap check-in from any smartphone',
       'Links expire at the next interval',
       'GPS captured automatically on check-in',
-      'Confirmation SMS sent back to the worker',
+      'Confirmation logged to immutable audit trail',
     ],
     bulletColor: 'bg-blue-100 text-blue-700',
     mockup: <SMSMockup />,
@@ -233,12 +233,12 @@ const TAB_CONTENT = [
     eyebrowColor: 'text-red-600',
     headline: 'Missed check-in?\nSupervisor acknowledges.',
     body: [
-      'When a check-in window closes without a response, DutyProof marks it missed and fires an SMS to your supervisor in under 60 seconds — with a tap-to-acknowledge link.',
+      'When a check-in window closes without a response, DutyProof marks it missed and alerts your supervisor in under 60 seconds — with a tap-to-acknowledge link. Alerts can be delivered via dashboard notification or optional SMS.',
       'The supervisor taps the link to confirm they saw the alert and are responding. Their acknowledgment is GPS-logged and timestamped. OSHA inspectors see not just that a gap was detected, but that management responded.',
     ],
     bullets: [
       'Escalation fires in < 60 seconds',
-      'Supervisor acknowledges via SMS link with GPS',
+      'Supervisor acknowledges via secure link with GPS',
       'Full response chain logged in the compliance report',
       'Next check-in cycle continues automatically',
     ],
@@ -267,7 +267,7 @@ const TAB_CONTENT = [
     eyebrowColor: 'text-blue-600',
     headline: 'One click.\nOSHA-ready PDF report.',
     body: [
-      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, SMS delivery receipts, supervisor acknowledgments — formatted for OSHA inspections, fire marshal audits, and insurance claims.',
+      'End any watch and download a complete compliance report immediately. Every check-in timestamped to the second, GPS coordinates, delivery confirmations, supervisor acknowledgments — formatted for OSHA inspections, fire marshal audits, and insurance claims.',
       'Includes a GPS coverage map showing exactly where your worker was, and a separate map for supervisor acknowledgments. This is the document you hand the fire marshal when they walk onto your job site.',
     ],
     bullets: [

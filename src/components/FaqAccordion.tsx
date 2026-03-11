@@ -5,7 +5,7 @@ import { useState } from 'react'
 const FAQS: { q: string; a: string; bold: string }[] = [
   {
     q: 'How much does DutyProof cost?',
-    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Annual option available at $2,399/year (annual rate locked for 12 months).',
+    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.',
     bold: '$199 per month, flat rate',
   },
   {
@@ -29,9 +29,9 @@ const FAQS: { q: string; a: string; bold: string }[] = [
     bold: 'One subscription covers all active watches',
   },
   {
-    q: 'What phone does the fire watch worker need?',
-    a: 'Any phone that can receive a text message — no app to download, no login required. DutyProof sends a secure SMS link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and carrier delivery receipt. GPS coordinates are captured automatically on smartphones. On basic phones without GPS, the check-in still records with full timestamp and SMS confirmation.',
-    bold: 'Any phone that can receive a text message',
+    q: 'What does the fire watch worker need?',
+    a: 'Any smartphone with a web browser — no app to download, no login required. DutyProof generates a secure check-in link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates. Links can be delivered via optional SMS, shared manually by a supervisor, or accessed from the dashboard.',
+    bold: 'Any smartphone with a web browser',
   },
   {
     q: 'What if the job site has no cell service?',
@@ -40,13 +40,13 @@ const FAQS: { q: string; a: string; bold: string }[] = [
   },
   {
     q: 'What if my worker doesn\'t check in on time?',
-    a: 'DutyProof automatically marks the check-in as missed and fires an SMS alert to your supervisor within 60 seconds — with a tap-to-acknowledge link. The supervisor taps the link to confirm they saw the alert, and their acknowledgment is GPS-logged and timestamped. The miss and the response are both permanently recorded in the audit trail. OSHA inspectors see not just that a gap was detected, but that management responded.',
-    bold: 'SMS alert to your supervisor within 60 seconds',
+    a: 'DutyProof automatically marks the check-in as missed and alerts your supervisor within 60 seconds — with a tap-to-acknowledge link. Alerts can be delivered via dashboard notification or optional SMS. The supervisor taps the link to confirm they saw the alert, and their acknowledgment is GPS-logged and timestamped. The miss and the response are both permanently recorded in the audit trail. OSHA inspectors see not just that a gap was detected, but that management responded.',
+    bold: 'alerts your supervisor within 60 seconds',
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts on the monthly plan. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Annual plans are billed once at $2,399/year. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
-    bold: 'No contracts on the monthly plan',
+    a: 'No contracts. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
+    bold: 'No contracts',
   },
 ]
 
