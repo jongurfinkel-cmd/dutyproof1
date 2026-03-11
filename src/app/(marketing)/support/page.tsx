@@ -7,8 +7,8 @@ import PageHero from '@/components/PageHero'
 
 const TOPICS = [
   {
-    q: 'A worker isn\'t receiving their check-in SMS.',
-    a: 'First confirm the phone number is correct on the watch detail page. SMS delivery can be delayed by carrier filtering on some numbers — particularly VOIP lines or numbers with spam-block services enabled. If the number is correct and delivery is failing, reach out through the form above and we\'ll investigate the carrier logs.',
+    q: 'A worker isn\'t receiving their check-in link.',
+    a: 'Check-in links can be delivered via QR code, copied link, or optional SMS. If you\'re using SMS delivery, first confirm the phone number is correct on the watch detail page. SMS delivery can be delayed by carrier filtering on some numbers — particularly VOIP lines or numbers with spam-block services enabled. If the number is correct and delivery is failing, reach out through the form above and we\'ll investigate the carrier logs.',
   },
   {
     q: 'How do I add or remove a job site?',
@@ -30,7 +30,7 @@ const TOPICS = [
 
 const TOPIC_OPTIONS = [
   'Setup / getting started',
-  'SMS delivery issue',
+  'Check-in link delivery issue',
   'Billing / subscription',
   'PDF reports',
   'Technical issue',

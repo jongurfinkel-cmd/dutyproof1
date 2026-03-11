@@ -20,8 +20,8 @@ const protections = [
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>,
-    heading: 'SMS delivery receipts are logged',
-    body: 'Every outbound check-in SMS includes a carrier delivery receipt that is stored alongside the check-in record. If an inspector asks whether a message was actually sent and delivered, the receipt is there.',
+    heading: 'Delivery receipts are logged',
+    body: 'When optional SMS delivery is used, every outbound message includes a carrier delivery receipt stored alongside the check-in record. If an inspector asks whether a message was actually sent and delivered, the receipt is there.',
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -31,7 +31,7 @@ const protections = [
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
     heading: 'Role-based access control',
-    body: 'Admin accounts control job site setup, worker assignment, and report access. Supervisor accounts can monitor active watches and receive escalations. Fire watch workers interact only via SMS — they never log into the platform.',
+    body: 'Admin accounts control job site setup, worker assignment, and report access. Supervisor accounts can monitor active watches and receive escalations. Fire watch workers interact only via their check-in link — they never log into the platform.',
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
@@ -43,7 +43,7 @@ const protections = [
 const retention = [
   { label: 'Watch logs & check-in records', value: 'Life of account + 12 months after cancellation' },
   { label: 'PDF compliance reports', value: 'Generated on demand, available for life of account + 12 months' },
-  { label: 'SMS delivery receipts', value: 'Retained with each check-in record' },
+  { label: 'SMS delivery receipts (when SMS enabled)', value: 'Retained with each check-in record' },
   { label: 'Missed check-in & escalation events', value: 'Life of account + 12 months after cancellation' },
   { label: 'Account & billing data', value: 'Retained per Stripe and legal requirements' },
 ]
@@ -51,7 +51,7 @@ const retention = [
 const infra = [
   { label: 'Database & auth', value: 'Supabase (PostgreSQL on AWS)' },
   { label: 'Application hosting', value: 'Vercel (edge network, global CDN)' },
-  { label: 'SMS delivery', value: 'Twilio' },
+  { label: 'SMS delivery (optional)', value: 'Twilio' },
   { label: 'Payment processing', value: 'Stripe' },
   { label: 'Uptime monitoring', value: 'Continuous' },
 ]
@@ -116,10 +116,10 @@ export default function SecurityPage() {
               {[
                 'Job site name and timezone',
                 'Watch start and end timestamps (server-side)',
-                'Assigned worker name and phone number',
+                'Assigned worker name and phone number (if SMS enabled)',
                 'Check-in interval (15 or 30 minutes)',
                 'Every check-in timestamp and GPS coordinates',
-                'SMS delivery receipt for each check-in',
+                'SMS delivery receipt for each check-in (when SMS enabled)',
                 'Missed check-in events and escalation timestamps',
                 'Watch end reason and supervisor name',
               ].map((item) => (
@@ -132,8 +132,8 @@ export default function SecurityPage() {
           </div>
 
           <p className="text-slate-400 text-xs text-center mt-4">
-            We do not store social security numbers, government-issued ID numbers, or any sensitive personal information beyond what is needed to send check-in SMS messages.
-            Worker phone numbers are used only for SMS check-in delivery.
+            We do not store social security numbers, government-issued ID numbers, or any sensitive personal information beyond what is needed to deliver check-in links.
+            Worker phone numbers, when provided for optional SMS delivery, are used only for check-in link delivery.
           </p>
         </div>
       </section>

@@ -227,7 +227,7 @@ export default function IndustriesPage() {
           </h2>
           <p className="text-slate-400 text-lg leading-relaxed mb-10">
             Set up your first fire watch in under two minutes.
-            SMS check-ins. Automatic escalation. One-click PDF report.
+            Automated check-in links. Automatic escalation. One-click PDF report.
           </p>
           <Link
             href="/signup"
