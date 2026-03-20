@@ -197,7 +197,7 @@ export default function CheckInMap({ checkIns, watch }: CheckInMapProps) {
   if (geoCheckIns.length === 0 && ackPoints.length === 0 && !hasWatchLocation) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
           Check-In Locations

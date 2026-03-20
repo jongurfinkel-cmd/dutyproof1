@@ -309,9 +309,9 @@ export default function WatchDetailPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1400px] space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <Link href="/dashboard" className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-600 text-sm transition-colors group">
             <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -493,8 +493,12 @@ export default function WatchDetailPage() {
         </div>
       )}
 
-      {/* Watch Info */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
+      {/* Two-column layout on desktop */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+      {/* LEFT COLUMN — Watch Details + Check-In Link */}
+      <div className="xl:col-span-7 space-y-5">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
         <h3
           className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5"
         >
@@ -687,7 +691,7 @@ export default function WatchDetailPage() {
 
       {/* Handoff panel */}
       {showHandoff && watch.status === 'active' && (
-        <div className="bg-white rounded-2xl border border-blue-200 p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-blue-200 p-5 sm:p-6 shadow-sm">
           <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">Reassign Watcher</h3>
           <p className="text-sm text-slate-600 mb-4">
             Hand off this watch to a new fire watcher. The current watcher&apos;s link will be deactivated and a new check-in will be created immediately for the replacement.
@@ -782,8 +786,13 @@ export default function WatchDetailPage() {
         </div>
       )}
 
+      </div>{/* END LEFT COLUMN */}
+
+      {/* RIGHT COLUMN — Compliance + Checklist */}
+      <div className="xl:col-span-5 space-y-5">
+
       {/* Compliance Score */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {/* Arc ring tile */}
         <div className={`rounded-2xl border p-6 text-center shadow-sm flex flex-col items-center justify-center ${pct === 100 ? 'bg-gradient-to-b from-green-50 to-green-50/30 border-green-200' : pct >= 80 ? 'bg-gradient-to-b from-amber-50 to-amber-50/30 border-amber-200' : 'bg-gradient-to-b from-red-50 to-red-50/30 border-red-200'}`}>
           <div className="relative w-20 h-20">
@@ -921,13 +930,20 @@ export default function WatchDetailPage() {
         </div>
       )}
 
-      {/* Check-In Locations Map */}
-      <CheckInMapDynamic checkIns={checkIns} watch={watch} />
+      </div>{/* END RIGHT COLUMN */}
 
-      {/* Timeline */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
-        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Timeline</h3>
-        <CheckInTimeline checkIns={checkIns} alerts={alerts} />
+      </div>{/* END TWO-COLUMN GRID */}
+
+      {/* FULL-WIDTH SECTIONS — Map + Timeline side by side on desktop */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        {/* Check-In Locations Map */}
+        <CheckInMapDynamic checkIns={checkIns} watch={watch} />
+
+        {/* Timeline */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Timeline</h3>
+          <CheckInTimeline checkIns={checkIns} alerts={alerts} />
+        </div>
       </div>
     </div>
   )
