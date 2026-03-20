@@ -149,8 +149,59 @@ export async function POST(req: NextRequest) {
           .eq('id', watch.id)
         if (missErr) console.error('Failed to decrement consecutive misses:', missErr)
       }
+    } else if (checkIn.status === 'missed' && !isOfflineSync) {
+      // LATE CHECK-IN: Cron marked it missed but the worker is still on the page.
+      // Allow within a 5-minute grace period after token expiry.
+      const GRACE_PERIOD_MIN = 5
+      const expiryMs = new Date(checkIn.token_expires_at).getTime()
+      const serverMs = new Date(serverTime).getTime()
+
+      if (serverMs > expiryMs + GRACE_PERIOD_MIN * 60 * 1000) {
+        return NextResponse.json({ error: 'This check-in window has expired' }, { status: 410 })
+      }
+
+      const { error: lateError } = await admin.rpc('complete_late_checkin', {
+        p_checkin_id: checkIn.id,
+        p_completed_at: completedAt,
+        p_server_received_at: serverTime,
+        p_latitude: latitude ?? null,
+        p_longitude: longitude ?? null,
+        p_gps_accuracy: gps_accuracy ?? null,
+        p_notes: notes?.trim() || null,
+        p_grace_period_min: GRACE_PERIOD_MIN,
+      })
+
+      if (lateError) {
+        if (lateError.code === 'P0001') {
+          return NextResponse.json({ error: 'This check-in window has expired' }, { status: 410 })
+        }
+        console.error('complete_late_checkin RPC error:', lateError)
+        return NextResponse.json({ error: 'Failed to record check-in' }, { status: 500 })
+      }
+
+      wasReconciled = true // Cron already created the next check-in
+
+      // Log that this was a late recovery
+      const facility = watch.facilities
+      const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+      const { error: lateAlertErr } = await admin.from('alerts').insert({
+        watch_id: watch.id,
+        check_in_id: checkIn.id,
+        alert_type: 'sms_sent',
+        message: `Late check-in recovered: ${checkIn.assigned_name} checked in at ${completedAt} for ${displayName}. Originally marked missed by cron — worker was still on page.`,
+      })
+      if (lateAlertErr) console.error('Failed to log late check-in alert:', lateAlertErr)
+
+      // Decrement consecutive misses (this wasn't actually missed)
+      const currentMisses = watch.consecutive_misses ?? 0
+      if (currentMisses > 0) {
+        const { error: missErr } = await admin
+          .from('watches')
+          .update({ consecutive_misses: Math.max(0, currentMisses - 1) })
+          .eq('id', watch.id)
+        if (missErr) console.error('Failed to decrement consecutive misses:', missErr)
+      }
     } else {
-      // Status is 'missed' but not offline sync — can't do anything
       return NextResponse.json({ error: 'This check-in window has expired' }, { status: 410 })
     }
 

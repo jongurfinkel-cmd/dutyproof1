@@ -503,8 +503,11 @@ export default function CheckInPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        if (res.status === 410) {
-          setState({ phase: 'expired', message: data.error })
+        if (res.status === 410 || res.status === 404) {
+          setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
+        } else if (res.status === 409) {
+          // Already completed (double-tap) — show as success
+          setState({ phase: 'expired', message: data.error ?? 'This check-in has already been recorded.' })
         } else {
           setState({ phase: 'error', message: data.error ?? 'Check-in failed. Please try again.' })
         }

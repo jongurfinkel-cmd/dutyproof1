@@ -12,6 +12,8 @@ interface ChecklistItem {
   sort_order: number
 }
 
+type GpsStatus = 'unchecked' | 'checking' | 'granted' | 'denied' | 'unavailable'
+
 type ChecklistState =
   | { phase: 'loading' }
   | { phase: 'invalid'; message: string }
@@ -49,6 +51,7 @@ export default function ChecklistPage() {
   const [completions, setCompletions] = useState<Record<string, ItemCompletion>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>('unchecked')
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const submittingRef = useRef(false)
 
@@ -122,6 +125,25 @@ export default function ChecklistPage() {
     }
   }
 
+  async function checkGpsPermission(): Promise<GpsStatus> {
+    if (!navigator.geolocation) {
+      setGpsStatus('unavailable')
+      return 'unavailable'
+    }
+    setGpsStatus('checking')
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        () => { setGpsStatus('granted'); resolve('granted') },
+        (err) => {
+          const status = err.code === err.PERMISSION_DENIED ? 'denied' : 'granted'
+          setGpsStatus(status)
+          resolve(status)
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      )
+    })
+  }
+
   async function handleSubmit() {
     if (state.phase !== 'ready' || submittingRef.current) return
 
@@ -133,6 +155,13 @@ export default function ChecklistPage() {
       setSubmitAttempted(true)
       return
     }
+
+    // Check GPS permission before submitting
+    if (gpsStatus !== 'granted' && gpsStatus !== 'unavailable') {
+      const result = await checkGpsPermission()
+      if (result === 'denied') return // Show the GPS denied banner, don't submit
+    }
+
     setSubmitAttempted(false)
     submittingRef.current = true
 
@@ -446,6 +475,47 @@ export default function ChecklistPage() {
             )
           })}
         </div>
+
+        {/* GPS permission status */}
+        {gpsStatus === 'checking' && (
+          <div className="mb-3 flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3">
+            <span className="w-4 h-4 border-2 border-slate-600 border-t-blue-400 rounded-full animate-spin flex-shrink-0" />
+            <p className="text-slate-300 text-xs">Checking location services...</p>
+          </div>
+        )}
+        {gpsStatus === 'granted' && (
+          <div className="mb-3 flex items-center gap-3 bg-green-950/40 border border-green-800/50 rounded-xl px-4 py-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+            <p className="text-green-400 text-xs font-semibold">Location services enabled</p>
+          </div>
+        )}
+        {gpsStatus === 'denied' && (
+          <div className="mb-3 bg-red-950/40 border border-red-800/50 rounded-xl px-4 py-3">
+            <div className="flex items-start gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+              <div>
+                <p className="text-red-300 text-xs font-semibold mb-1">Location services blocked</p>
+                <p className="text-red-400/80 text-[11px] leading-relaxed">
+                  GPS is required for check-in compliance. Open your browser settings and allow location access for this site, then tap Submit again.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => checkGpsPermission()}
+              className="mt-3 w-full py-2.5 bg-red-900/60 hover:bg-red-900/80 border border-red-700/50 text-red-300 text-xs font-semibold rounded-lg transition-all"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+        {gpsStatus === 'unavailable' && (
+          <div className="mb-3 flex items-start gap-3 bg-amber-950/40 border border-amber-800/50 rounded-xl px-4 py-3">
+            <span className="text-amber-400 font-bold flex-shrink-0">!</span>
+            <p className="text-amber-300 text-[11px] leading-relaxed">
+              GPS is not available on this device. Check-ins will be logged without location data.
+            </p>
+          </div>
+        )}
 
         {/* Inline error banners */}
         {photoError && (
