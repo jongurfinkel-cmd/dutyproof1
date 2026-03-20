@@ -120,12 +120,14 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
     if (bounds.isValid()) {
       const totalMarkers = sortedGeo.length + ackPoints.length
       if (totalMarkers <= 1) {
-        // Single point: use a sensible zoom so the surrounding area is visible
         map.setView(bounds.getCenter(), 15)
       } else {
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 })
       }
     }
+
+    // Fix tiles not rendering in dynamically sized containers
+    setTimeout(() => map.invalidateSize(), 100)
 
     return () => {
       map.remove()
