@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendCheckInSMS } from '@/lib/twilio'
+import { sendCheckInSMS } from '@/lib/sms'
 import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {

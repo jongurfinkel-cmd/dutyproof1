@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -13,7 +13,7 @@ interface ChecklistItem {
 }
 
 // Derived from NFPA 51B (2021) §4.4, §6.2–6.5 · OSHA 29 CFR §1910.252(a)(2) · NFPA 1 Ch. 40
-const PRESET_ITEMS: ChecklistItem[] = [
+const HOT_WORK_PRESET_ITEMS: ChecklistItem[] = [
   // Hot work permit — NFPA 51B §4.4.1–4.4.4
   { label: 'Hot work permit issued, signed by permit issuer, and posted at work site', shortLabel: 'Hot work permit posted', requires_photo: true },
   // Area clearance — NFPA 51B §6.2.1 · OSHA §1910.252(a)(2)(i)(a)
@@ -34,6 +34,20 @@ const PRESET_ITEMS: ChecklistItem[] = [
   { label: 'Fire watcher confirmed: no other duties during this watch', shortLabel: 'Sole duty confirmed', requires_photo: false },
   // Post-work watch — NFPA 51B §6.5.1 · OSHA §1910.252(a)(2)(iii)(c)
   { label: 'Fire watcher briefed: 30-minute post-hot-work watch required after all work stops', shortLabel: '30-min post-watch briefed', requires_photo: false },
+]
+
+// Keep backward-compatible alias
+const PRESET_ITEMS = HOT_WORK_PRESET_ITEMS
+
+const IMPAIRMENT_PRESET_ITEMS: ChecklistItem[] = [
+  { label: 'Impaired fire protection system/device identified and documented', shortLabel: 'Impaired system identified', requires_photo: true },
+  { label: 'Impairment tag attached to system control valve or panel', shortLabel: 'Impairment tag confirmed', requires_photo: true },
+  { label: 'Zone/area of coverage for impaired system understood and documented', shortLabel: 'Coverage zone documented', requires_photo: false },
+  { label: 'Compensatory measures in place (portable extinguishers, additional personnel)', shortLabel: 'Compensatory measures in place', requires_photo: false },
+  { label: 'AHJ and/or internal fire safety office notified of impairment', shortLabel: 'AHJ/internal notification confirmed', requires_photo: false },
+  { label: 'Building occupants in affected area notified of impaired protection', shortLabel: 'Occupants notified', requires_photo: false },
+  { label: 'Fire watch patrol route established covering all affected areas', shortLabel: 'Patrol route established', requires_photo: false },
+  { label: 'Emergency contact numbers posted and accessible', shortLabel: 'Emergency contacts posted', requires_photo: false },
 ]
 
 function toLocalDatetimeValue(date: Date): string {
@@ -66,8 +80,13 @@ export default function CreateWatchForm() {
     escalation_delay_min: '0',
     start_time: toLocalDatetimeValue(new Date()),
     planned_end_time: '',
+    watch_type: 'hot_work' as 'hot_work' | 'impairment',
+    permit_number: '',
+    post_work_duration_min: '30',
+    secondary_escalation_phone: '',
   })
   const [customInterval, setCustomInterval] = useState('20')
+  const [customPostWork, setCustomPostWork] = useState('45')
   const [escalationEnabled, setEscalationEnabled] = useState(false)
   const [checklistEnabled, setChecklistEnabled] = useState(false)
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([])
@@ -75,6 +94,9 @@ export default function CreateWatchForm() {
   const [newItemPhoto, setNewItemPhoto] = useState(false)
   const [smsEnabled, setSmsEnabled] = useState(false)
   const [smsConsent, setSmsConsent] = useState(false)
+  const [permitPhotoFile, setPermitPhotoFile] = useState<File | null>(null)
+  const [permitPhotoPreview, setPermitPhotoPreview] = useState<string | null>(null)
+  const permitFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -86,6 +108,13 @@ export default function CreateWatchForm() {
       }
     })
   }, [])
+
+  // Clean up object URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (permitPhotoPreview) URL.revokeObjectURL(permitPhotoPreview)
+    }
+  }, [permitPhotoPreview])
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -100,7 +129,7 @@ export default function CreateWatchForm() {
     return raw.trim()
   }
 
-  function handlePhoneBlur(field: 'assigned_phone' | 'escalation_phone') {
+  function handlePhoneBlur(field: 'assigned_phone' | 'escalation_phone' | 'secondary_escalation_phone') {
     const value = form[field]
     if (value.trim()) {
       const normalized = normalizePhone(value)
@@ -114,9 +143,19 @@ export default function CreateWatchForm() {
 
   function toggleEscalation() {
     setEscalationEnabled((prev) => {
-      if (prev) setForm((f) => ({ ...f, escalation_phone: '', escalation_delay_min: '0' }))
+      if (prev) setForm((f) => ({ ...f, escalation_phone: '', escalation_delay_min: '0', secondary_escalation_phone: '' }))
       return !prev
     })
+  }
+
+  function getActivePresets(): ChecklistItem[] {
+    return form.watch_type === 'impairment' ? IMPAIRMENT_PRESET_ITEMS : PRESET_ITEMS
+  }
+
+  function handleWatchTypeChange(newType: 'hot_work' | 'impairment') {
+    if (newType === form.watch_type) return
+    setForm((prev) => ({ ...prev, watch_type: newType }))
+    setChecklistItems([])
   }
 
   function addPreset(preset: ChecklistItem) {
@@ -134,6 +173,13 @@ export default function CreateWatchForm() {
 
   function removeItem(index: number) {
     setChecklistItems((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function handlePermitPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setPermitPhotoFile(file)
+    if (permitPhotoPreview) URL.revokeObjectURL(permitPhotoPreview)
+    setPermitPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -161,6 +207,10 @@ export default function CreateWatchForm() {
         toast.error('Please enter a valid supervisor phone number')
         return
       }
+      if (form.secondary_escalation_phone.trim() && !form.secondary_escalation_phone.match(/^\+?[\d\s\-().]{10,}$/)) {
+        toast.error('Please enter a valid backup supervisor phone number')
+        return
+      }
     }
     const isCustom = form.check_interval_min === 'custom'
     if (isCustom) {
@@ -170,24 +220,52 @@ export default function CreateWatchForm() {
         return
       }
     }
+    const isCustomPostWork = form.post_work_duration_min === 'custom'
+    if (isCustomPostWork) {
+      const val = parseInt(customPostWork)
+      if (!customPostWork || isNaN(val) || val < 5 || val > 480) {
+        toast.error('Custom post-work duration must be between 5 and 480 minutes')
+        return
+      }
+    }
     if (form.planned_end_time && form.planned_end_time <= form.start_time) {
       toast.error('Expected end time must be after start time')
       return
     }
 
     const resolvedInterval = isCustom ? parseInt(customInterval) : parseInt(form.check_interval_min)
+    const resolvedPostWork = isCustomPostWork ? parseInt(customPostWork) : parseInt(form.post_work_duration_min)
 
     setLoading(true)
     try {
+      // Upload permit photo if selected
+      let permit_photo_url: string | null = null
+      if (permitPhotoFile) {
+        const photoFormData = new FormData()
+        photoFormData.append('file', permitPhotoFile)
+        const uploadRes = await fetch('/api/watches/upload-permit', {
+          method: 'POST',
+          body: photoFormData,
+        })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok) throw new Error(uploadData.error || 'Failed to upload permit photo')
+        permit_photo_url = uploadData.photo_url
+      }
+
       const res = await fetch('/api/watches/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          watch_type: form.watch_type,
+          permit_number: form.permit_number || null,
+          permit_photo_url,
+          post_work_duration_min: resolvedPostWork,
           assigned_phone: smsEnabled ? form.assigned_phone : null,
           sms_enabled: smsEnabled,
           check_interval_min: resolvedInterval,
           escalation_phone: escalationEnabled ? form.escalation_phone : null,
+          secondary_escalation_phone: escalationEnabled && form.secondary_escalation_phone.trim() ? form.secondary_escalation_phone : null,
           escalation_delay_min: escalationEnabled ? parseInt(form.escalation_delay_min) : 0,
           start_time: new Date(form.start_time).toISOString(),
           planned_end_time: form.planned_end_time ? new Date(form.planned_end_time).toISOString() : null,
@@ -213,9 +291,43 @@ export default function CreateWatchForm() {
 
   const inputClass = 'w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm'
   const checklistBlocking = checklistEnabled && checklistItems.length === 0
+  const activePresets = getActivePresets()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+
+      {/* ── Watch Type ── */}
+      <div>
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+          Watch Type <span className="text-red-400">*</span>
+        </label>
+        <div className="flex gap-2">
+          {[
+            { value: 'hot_work' as const, label: 'Hot Work', hint: 'NFPA 51B' },
+            { value: 'impairment' as const, label: 'Impairment', hint: 'NFPA 25' },
+          ].map((opt) => (
+            <label
+              key={opt.value}
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 border-2 rounded-xl cursor-pointer transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
+                form.watch_type === opt.value
+                  ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <input
+                type="radio"
+                className="sr-only"
+                name="watch_type"
+                value={opt.value}
+                checked={form.watch_type === opt.value}
+                onChange={() => handleWatchTypeChange(opt.value)}
+              />
+              <span className="font-bold text-sm">{opt.label}</span>
+              {opt.hint && <span className="text-[10px] text-slate-500">{opt.hint}</span>}
+            </label>
+          ))}
+        </div>
+      </div>
 
       {/* ── Where / What ── */}
       <div>
@@ -268,6 +380,65 @@ export default function CreateWatchForm() {
           placeholder="e.g. Post-weld watch — pipe cutting Bay 3"
           className={inputClass}
         />
+      </div>
+
+      {/* ── Permit Fields ── */}
+      <Divider label="Permit" />
+
+      <div>
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+          Permit Number <span className="text-slate-300 normal-case">(optional)</span>
+        </label>
+        <input
+          type="text"
+          value={form.permit_number}
+          onChange={(e) => set('permit_number', e.target.value)}
+          maxLength={100}
+          placeholder="e.g. HWP-2026-0042"
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+          Permit Photo <span className="text-slate-300 normal-case">(optional)</span>
+        </label>
+        <input
+          ref={permitFileRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePermitPhotoSelect}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => permitFileRef.current?.click()}
+          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition-colors font-medium"
+        >
+          {permitPhotoFile ? 'Change Photo' : 'Upload Photo'}
+        </button>
+        {permitPhotoPreview && (
+          <div className="mt-3 relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={permitPhotoPreview}
+              alt="Permit photo preview"
+              className="w-32 h-32 object-cover rounded-xl border border-slate-200"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setPermitPhotoFile(null)
+                if (permitPhotoPreview) URL.revokeObjectURL(permitPhotoPreview)
+                setPermitPhotoPreview(null)
+                if (permitFileRef.current) permitFileRef.current.value = ''
+              }}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center hover:bg-red-400 transition-colors"
+            >
+              x
+            </button>
+          </div>
+        )}
       </div>
 
       <Divider label="Worker" />
@@ -425,6 +596,54 @@ export default function CreateWatchForm() {
         <p className="text-xs text-slate-500 mt-1.5">For your audit trail and reports. Watch continues until manually ended.</p>
       </div>
 
+      {/* ── Post-Work Duration ── */}
+      <div>
+        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+          Post-Work Watch Duration
+        </label>
+        <div className="flex gap-2">
+          {[
+            { value: '30', label: '30 min', hint: 'NFPA default' },
+            { value: '60', label: '60 min', hint: '' },
+            { value: 'custom', label: 'Custom', hint: '' },
+          ].map((opt) => (
+            <label
+              key={opt.value}
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 border-2 rounded-xl cursor-pointer transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
+                form.post_work_duration_min === opt.value
+                  ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <input
+                type="radio"
+                className="sr-only"
+                name="post_work_duration_min"
+                value={opt.value}
+                checked={form.post_work_duration_min === opt.value}
+                onChange={() => set('post_work_duration_min', opt.value)}
+              />
+              <span className="font-bold text-sm">{opt.label}</span>
+              {opt.hint && <span className="text-[10px] text-slate-500">{opt.hint}</span>}
+            </label>
+          ))}
+        </div>
+        {form.post_work_duration_min === 'custom' && (
+          <div className="mt-2 flex items-center gap-3">
+            <input
+              type="number"
+              value={customPostWork}
+              onChange={(e) => setCustomPostWork(e.target.value)}
+              min="5"
+              max="480"
+              placeholder="45"
+              className={`${inputClass} w-28`}
+            />
+            <span className="text-sm text-slate-500">minutes after work stops</span>
+          </div>
+        )}
+      </div>
+
       {/* ── Supervisor Escalation ── */}
       <div className="border border-slate-200 rounded-xl overflow-hidden">
         <button
@@ -461,6 +680,23 @@ export default function CreateWatchForm() {
                 className={inputClass}
               />
               <p className="text-xs text-slate-500 mt-1.5">Include country code. Alert SMS goes here.</p>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Backup Supervisor Phone <span className="text-slate-300 normal-case">(optional)</span>
+              </label>
+              <input
+                type="tel"
+                value={form.secondary_escalation_phone}
+                onChange={(e) => set('secondary_escalation_phone', e.target.value)}
+                onBlur={() => handlePhoneBlur('secondary_escalation_phone')}
+                autoComplete="tel"
+                placeholder="+1 (212) 000-0000"
+                className={inputClass}
+              />
+              <p className="text-xs text-slate-500 mt-1.5">
+                If the primary supervisor doesn&apos;t acknowledge within 3 minutes, this contact gets notified.
+              </p>
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
@@ -526,21 +762,21 @@ export default function CreateWatchForm() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quick Add</p>
-                {PRESET_ITEMS.some((p) => !checklistItems.some((i) => i.label === p.label)) && (
+                {activePresets.some((p) => !checklistItems.some((i) => i.label === p.label)) && (
                   <button
                     type="button"
                     onClick={() => {
-                      const toAdd = PRESET_ITEMS.filter((p) => !checklistItems.some((i) => i.label === p.label))
+                      const toAdd = activePresets.filter((p) => !checklistItems.some((i) => i.label === p.label))
                       setChecklistItems((prev) => [...prev, ...toAdd])
                     }}
                     className="text-[10px] font-bold text-blue-600 hover:text-blue-500 transition-colors"
                   >
-                    + Add all ({PRESET_ITEMS.filter((p) => !checklistItems.some((i) => i.label === p.label)).length})
+                    + Add all ({activePresets.filter((p) => !checklistItems.some((i) => i.label === p.label)).length})
                   </button>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {PRESET_ITEMS.map((preset) => {
+                {activePresets.map((preset) => {
                   const added = checklistItems.some((i) => i.label === preset.label)
                   return (
                     <button

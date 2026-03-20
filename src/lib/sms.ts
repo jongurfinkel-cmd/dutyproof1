@@ -1,37 +1,47 @@
-import twilio from 'twilio'
 import { format } from 'date-fns'
 
+// Sinch SMS API via REST (no SDK dependency needed)
+
 function getCredentials() {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID
-  const authToken = process.env.TWILIO_AUTH_TOKEN
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER
-  if (!accountSid || !authToken || !fromNumber) {
-    throw new Error('Missing Twilio credentials: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER must be set')
+  const servicePlanId = process.env.SINCH_SERVICE_PLAN_ID
+  const apiToken = process.env.SINCH_API_TOKEN
+  const fromNumber = process.env.SINCH_PHONE_NUMBER
+  if (!servicePlanId || !apiToken || !fromNumber) {
+    throw new Error('Missing Sinch credentials: SINCH_SERVICE_PLAN_ID, SINCH_API_TOKEN, and SINCH_PHONE_NUMBER must be set')
   }
-  return { accountSid, authToken, fromNumber }
-}
-
-let _client: ReturnType<typeof twilio> | null = null
-
-function getClient() {
-  if (!_client) {
-    const { accountSid, authToken } = getCredentials()
-    _client = twilio(accountSid, authToken)
-  }
-  return _client
+  return { servicePlanId, apiToken, fromNumber }
 }
 
 async function sendSMS(to: string, body: string): Promise<string | null> {
   try {
-    const { fromNumber } = getCredentials()
-    const message = await getClient().messages.create({
-      from: fromNumber,
-      to,
-      body,
+    const { servicePlanId, apiToken, fromNumber } = getCredentials()
+    const region = process.env.SINCH_REGION || 'us'
+    const url = `https://${region}.sms.api.sinch.com/xms/v1/${servicePlanId}/batches`
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromNumber,
+        to: [to],
+        body,
+        type: 'mt_text',
+      }),
     })
-    return message.sid
+
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('Sinch SMS error:', res.status, err)
+      return null
+    }
+
+    const data = await res.json()
+    return data.id ?? null // batch ID used for tracking
   } catch (err) {
-    console.error('Twilio SMS error:', err)
+    console.error('Sinch SMS error:', err)
     return null
   }
 }
@@ -102,14 +112,4 @@ export async function sendChecklistSMS(
     to,
     `DutyProof: ${assignedName}, before your fire watch begins at ${facilityName}, please complete the safety checklist: ${checklistUrl}`
   )
-}
-
-export function validateTwilioSignature(
-  signature: string,
-  url: string,
-  params: Record<string, string>
-): boolean {
-  const token = process.env.TWILIO_AUTH_TOKEN
-  if (!token) return false
-  return twilio.validateRequest(token, signature, url, params)
 }

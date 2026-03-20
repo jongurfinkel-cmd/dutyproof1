@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
-import { sendWatchSummarySMS } from '@/lib/twilio'
-import { formatDuration, intervalToDuration } from 'date-fns'
+import { sendWatchSummarySMS } from '@/lib/sms'
+import { addMinutes, formatDuration, intervalToDuration } from 'date-fns'
 
 export async function POST(req: NextRequest) {
   const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'watch-end' })
@@ -45,16 +45,93 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Watch is not active' }, { status: 400 })
     }
 
+    // Handle "stop work" action (sets work_stopped_at without ending the watch)
+    if (parsed.action === 'stop_work') {
+      if (watch.work_stopped_at) {
+        return NextResponse.json({ error: 'Work already stopped', work_stopped_at: watch.work_stopped_at }, { status: 400 })
+      }
+      const { error: stopError } = await admin
+        .from('watches')
+        .update({ work_stopped_at: new Date().toISOString() })
+        .eq('id', watchId)
+      if (stopError) {
+        return NextResponse.json({ error: 'Failed to stop work' }, { status: 500 })
+      }
+      return NextResponse.json({ success: true, work_stopped_at: new Date().toISOString() })
+    }
+
+    // Validate closeout fields
+    if (parsed.closeout_notes && (typeof parsed.closeout_notes !== 'string' || parsed.closeout_notes.length > 2000)) {
+      return NextResponse.json({ error: 'closeout_notes must be a string of 2000 characters or fewer' }, { status: 400 })
+    }
+    if (parsed.closeout_photo_urls && (!Array.isArray(parsed.closeout_photo_urls) || !parsed.closeout_photo_urls.every((u: unknown) => typeof u === 'string'))) {
+      return NextResponse.json({ error: 'closeout_photo_urls must be an array of strings' }, { status: 400 })
+    }
+
+    // Post-work enforcement: if work_stopped_at is set, check if enough time has passed
+    if (watch.post_work_duration_min > 0 && !parsed.force) {
+      if (!watch.work_stopped_at) {
+        // Work hasn't been stopped yet - need to stop work first
+        return NextResponse.json({
+          error: 'post_work_required',
+          message: 'Hot work must be stopped before ending the watch. Use the "Stop Work" action first, then wait for the post-work monitoring period to complete.',
+          post_work_duration_min: watch.post_work_duration_min,
+        }, { status: 409 })
+      }
+
+      const workStoppedAt = new Date(watch.work_stopped_at)
+      const postWorkEnd = addMinutes(workStoppedAt, watch.post_work_duration_min)
+      const now = new Date()
+
+      if (now < postWorkEnd) {
+        const remainingMs = postWorkEnd.getTime() - now.getTime()
+        const remainingMin = Math.ceil(remainingMs / 60000)
+        return NextResponse.json({
+          error: 'post_work_incomplete',
+          message: `Post-work monitoring period not complete. ${remainingMin} minute(s) remaining.`,
+          remaining_minutes: remainingMin,
+          post_work_ends_at: postWorkEnd.toISOString(),
+        }, { status: 409 })
+      }
+    }
+
+    // Impairment watch closeout validation
+    if (watch.watch_type === 'impairment' && !parsed.force) {
+      if (!parsed.system_restored) {
+        return NextResponse.json({
+          error: 'restoration_required',
+          message: 'Impairment watches require confirmation that the system has been restored to service.',
+        }, { status: 409 })
+      }
+      if (!parsed.restoration_verified_by || typeof parsed.restoration_verified_by !== 'string' || !parsed.restoration_verified_by.trim()) {
+        return NextResponse.json({
+          error: 'verifier_required',
+          message: 'Name of the person who verified system restoration is required.',
+        }, { status: 409 })
+      }
+    }
+
     const endedAt = new Date().toISOString()
+
+    // Build update data with closeout evidence
+    const updateData: Record<string, unknown> = {
+      status: 'completed',
+      ended_at: endedAt,
+      ended_by: user.id,
+      closeout_notes: parsed.closeout_notes || null,
+      closeout_photo_urls: parsed.closeout_photo_urls || null,
+    }
+
+    if (watch.watch_type === 'impairment' && parsed.system_restored) {
+      updateData.system_restored = true
+      updateData.restoration_verified_by = parsed.restoration_verified_by?.trim() || null
+      updateData.restoration_verified_at = endedAt
+    }
 
     // Close the watch
     const { error: updateError } = await admin
       .from('watches')
-      .update({
-        status: 'completed',
-        ended_at: endedAt,
-        ended_by: user.id,
-      })
+      .update(updateData)
       .eq('id', watchId)
 
     if (updateError) {
@@ -92,18 +169,20 @@ export async function POST(req: NextRequest) {
 
     const reportUrl = `${appUrl}/watches/${watchId}`
 
-    // Always notify the assigned worker
-    const workerSmsSid = await sendWatchSummarySMS(
-      watch.assigned_phone,
-      watch.facilities.name,
-      durationStr,
-      total,
-      completed,
-      missed,
-      reportUrl
-    )
-    if (!workerSmsSid) {
-      console.error('Failed to send summary SMS to worker:', watch.assigned_phone)
+    // Notify the assigned worker (only if SMS is configured)
+    if (watch.assigned_phone) {
+      const workerSmsSid = await sendWatchSummarySMS(
+        watch.assigned_phone,
+        watch.facilities.name,
+        durationStr,
+        total,
+        completed,
+        missed,
+        reportUrl
+      )
+      if (!workerSmsSid) {
+        console.error('Failed to send summary SMS to worker:', watch.assigned_phone)
+      }
     }
 
     // Also notify the supervisor/escalation contact if one was set and is different

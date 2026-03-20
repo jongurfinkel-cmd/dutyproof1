@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS, sendChecklistSMS } from '@/lib/twilio'
+import { sendCheckInSMS, sendChecklistSMS } from '@/lib/sms'
 import { addMinutes } from 'date-fns'
 
 export async function POST(req: NextRequest) {
@@ -48,6 +48,11 @@ export async function POST(req: NextRequest) {
       start_time,
       planned_end_time,
       checklist_items,
+      watch_type,
+      permit_number,
+      permit_photo_url,
+      post_work_duration_min,
+      secondary_escalation_phone,
     } = body
 
     if (!facility_id || !check_interval_min || !assigned_name || !start_time) {
@@ -78,6 +83,28 @@ export async function POST(req: NextRequest) {
     }
     if (escalation_phone && !e164Regex.test(escalation_phone)) {
       return NextResponse.json({ error: 'escalation_phone must be E.164 format' }, { status: 400 })
+    }
+    if (secondary_escalation_phone && !e164Regex.test(secondary_escalation_phone)) {
+      return NextResponse.json({ error: 'secondary_escalation_phone must be E.164 format' }, { status: 400 })
+    }
+
+    // Validate watch_type if provided
+    if (watch_type !== undefined && watch_type !== 'hot_work' && watch_type !== 'impairment') {
+      return NextResponse.json({ error: 'watch_type must be "hot_work" or "impairment"' }, { status: 400 })
+    }
+
+    // Validate permit_number length
+    if (permit_number !== undefined && permit_number !== null) {
+      if (typeof permit_number !== 'string' || permit_number.length > 100) {
+        return NextResponse.json({ error: 'permit_number must be 1–100 characters' }, { status: 400 })
+      }
+    }
+
+    // Validate post_work_duration_min if provided
+    if (post_work_duration_min !== undefined && post_work_duration_min !== null) {
+      if (!Number.isInteger(post_work_duration_min) || post_work_duration_min < 0 || post_work_duration_min > 480) {
+        return NextResponse.json({ error: 'post_work_duration_min must be an integer 0–480' }, { status: 400 })
+      }
     }
 
     // Validate location and reason length
@@ -167,6 +194,11 @@ export async function POST(req: NextRequest) {
         status: 'active',
         owner_id: user.id,
         checklist_token,
+        watch_type: watch_type || 'hot_work',
+        permit_number: permit_number || null,
+        permit_photo_url: permit_photo_url || null,
+        post_work_duration_min: post_work_duration_min ?? 30,
+        secondary_escalation_phone: secondary_escalation_phone || null,
       })
       .select()
       .single()

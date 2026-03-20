@@ -24,12 +24,17 @@ export interface Watch {
   created_at: string
   facility_id: string
   status: 'active' | 'completed'
+  watch_type: 'hot_work' | 'impairment'
   check_interval_min: number
   start_time: string
   assigned_name: string
   assigned_phone: string
   reason: string | null
   location: string | null
+  permit_number: string | null
+  permit_photo_url: string | null
+  post_work_duration_min: number
+  work_stopped_at: string | null
   ended_by: string | null
   ended_at: string | null
   owner_id: string
@@ -37,7 +42,15 @@ export interface Watch {
   checklist_completed_at: string | null
   escalation_phone: string | null
   escalation_delay_min: number
+  secondary_escalation_phone: string | null
   planned_end_time: string | null
+  compliance_status: 'clean' | 'gap_detected'
+  consecutive_misses: number
+  closeout_notes: string | null
+  closeout_photo_urls: string[] | null
+  system_restored: boolean
+  restoration_verified_by: string | null
+  restoration_verified_at: string | null
 }
 
 export interface WatchChecklistItem {

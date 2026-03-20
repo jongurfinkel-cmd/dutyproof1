@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS } from '@/lib/twilio'
+import { sendCheckInSMS } from '@/lib/sms'
 import { addMinutes } from 'date-fns'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -82,6 +82,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to record check-in' }, { status: 500 })
     }
 
+    // Reset consecutive misses on successful check-in
+    const { error: resetErr } = await admin
+      .from('watches')
+      .update({ consecutive_misses: 0 })
+      .eq('id', checkIn.watch_id)
+    if (resetErr) console.error('Failed to reset consecutive misses:', resetErr)
+
     const watch = checkIn.watches
     if (!watch || !watch.facilities) {
       console.error('Check-in missing watch/facility join data:', checkIn.id)
@@ -144,6 +151,9 @@ export async function POST(req: NextRequest) {
       success: true,
       serverTime,
       nextCheckIn: nextScheduledTime.toISOString(),
+      nextToken: nextCheckInError ? undefined : nextToken,
+      facilityName: displayName,
+      assignedName: checkIn.assigned_name,
     })
   } catch (err) {
     console.error('Check-in error:', err)

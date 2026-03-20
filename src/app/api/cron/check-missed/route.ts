@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS } from '@/lib/twilio'
+import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS } from '@/lib/sms'
 import { addMinutes, formatDuration, intervalToDuration } from 'date-fns'
 
 export async function GET(req: NextRequest) {
@@ -119,6 +119,18 @@ export async function GET(req: NextRequest) {
         }
 
         missedCount++
+
+        // Increment consecutive misses and flag compliance gap if 2+ consecutive
+        const newConsecutive = (watch.consecutive_misses ?? 0) + 1
+        const updateData: Record<string, unknown> = { consecutive_misses: newConsecutive }
+        if (newConsecutive >= 2) {
+          updateData.compliance_status = 'gap_detected'
+        }
+        const { error: missCountErr } = await admin
+          .from('watches')
+          .update(updateData)
+          .eq('id', watch.id)
+        if (missCountErr) pushError(`Failed to update miss count for watch ${watch.id}: ${missCountErr.message}`)
 
         // Send immediate alert to supervisor if escalation_phone is set and delay is 0
         if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
@@ -253,6 +265,65 @@ export async function GET(req: NextRequest) {
         if (escPassAlertErr) pushError(`Failed to log escalation pass alert for ${ci.id}: ${escPassAlertErr.message}`)
       } catch (innerErr) {
         pushError(`Escalation error for check-in ${ci.id}: ${String(innerErr)}`)
+      }
+    }
+
+    // ── Secondary escalation pass ────────────────────────────────────────
+    // If primary supervisor hasn't acknowledged within 3 minutes,
+    // alert the secondary/backup contact.
+    const { data: pendingSecondary } = await admin
+      .from('check_ins')
+      .select('*, watches(*, facilities(*))')
+      .eq('status', 'missed')
+      .not('escalation_sent_at', 'is', null)
+      .is('ack_at', null)
+
+    for (const ci of pendingSecondary ?? []) {
+      const watch = ci.watches
+      if (!watch || watch.status !== 'active' || !watch.secondary_escalation_phone) continue
+
+      // Check if 3 minutes have passed since primary escalation
+      const escalationTime = new Date(ci.escalation_sent_at!)
+      const secondaryThreshold = new Date(escalationTime.getTime() + 3 * 60 * 1000)
+      if (new Date() < secondaryThreshold) continue
+
+      // Avoid sending secondary escalation more than once
+      // We'll check if we already sent an alert to the secondary phone for this check-in
+      const { data: existingAlert } = await admin
+        .from('alerts')
+        .select('id')
+        .eq('check_in_id', ci.id)
+        .eq('recipient_phone', watch.secondary_escalation_phone)
+        .limit(1)
+
+      if (existingAlert && existingAlert.length > 0) continue
+
+      try {
+        const facility = watch.facilities
+        const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+
+        const secondarySid = await sendAlertSMS(
+          watch.secondary_escalation_phone,
+          ci.assigned_name,
+          displayName,
+          new Date(ci.scheduled_time),
+          // Reuse the existing ack URL since ack_token is already set
+          `${appUrl}/ack/${ci.ack_token}`
+        )
+
+        const { error: secAlertErr } = await admin.from('alerts').insert({
+          watch_id: watch.id,
+          check_in_id: ci.id,
+          alert_type: 'missed_checkin',
+          recipient_phone: watch.secondary_escalation_phone,
+          recipient_name: 'Backup Supervisor',
+          message: `Secondary escalation: ${ci.assigned_name} missed check-in at ${ci.scheduled_time} — primary supervisor unresponsive`,
+          delivery_status: secondarySid ? 'sent' : 'failed',
+          twilio_sid: secondarySid,
+        })
+        if (secAlertErr) pushError(`Failed to log secondary escalation for ${ci.id}: ${secAlertErr.message}`)
+      } catch (innerErr) {
+        pushError(`Secondary escalation error for ${ci.id}: ${String(innerErr)}`)
       }
     }
 

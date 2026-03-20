@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -26,6 +26,21 @@ export default function WatchDetailPage() {
   const [simulating, setSimulating] = useState(false)
   const [resendingSms, setResendingSms] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [stoppingWork, setStoppingWork] = useState(false)
+  const [postWorkRemaining, setPostWorkRemaining] = useState<number | null>(null)
+  const [showHandoff, setShowHandoff] = useState(false)
+  const [handoffName, setHandoffName] = useState('')
+  const [handoffPhone, setHandoffPhone] = useState('')
+  const [handoffReason, setHandoffReason] = useState('')
+  const [handoffSms, setHandoffSms] = useState(false)
+  const [handoffLoading, setHandoffLoading] = useState(false)
+
+  // Closeout form state
+  const [closeoutNotes, setCloseoutNotes] = useState('')
+  const [systemRestored, setSystemRestored] = useState(false)
+  const [restorationVerifiedBy, setRestorationVerifiedBy] = useState('')
+
+  const postWorkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadData = useCallback(async () => {
     const supabase = createClient()
@@ -68,14 +83,78 @@ export default function WatchDetailPage() {
     return () => { if (interval) clearInterval(interval) }
   }, [loadData])
 
-  async function handleEndWatch() {
-    setEnding(true)
-    setConfirmingEnd(false)
+  // Post-work countdown timer
+  useEffect(() => {
+    if (postWorkIntervalRef.current) {
+      clearInterval(postWorkIntervalRef.current)
+      postWorkIntervalRef.current = null
+    }
+
+    if (!watch || watch.status !== 'active' || !watch.work_stopped_at) {
+      setPostWorkRemaining(null)
+      return
+    }
+
+    const calcRemaining = () => {
+      const postWorkEnd = new Date(watch.work_stopped_at!).getTime() + watch.post_work_duration_min * 60 * 1000
+      const remaining = Math.max(0, Math.ceil((postWorkEnd - Date.now()) / 1000))
+      setPostWorkRemaining(remaining)
+      return remaining
+    }
+
+    const remaining = calcRemaining()
+    if (remaining > 0) {
+      postWorkIntervalRef.current = setInterval(() => {
+        const r = calcRemaining()
+        if (r <= 0 && postWorkIntervalRef.current) {
+          clearInterval(postWorkIntervalRef.current)
+          postWorkIntervalRef.current = null
+        }
+      }, 1000)
+    }
+
+    return () => {
+      if (postWorkIntervalRef.current) {
+        clearInterval(postWorkIntervalRef.current)
+        postWorkIntervalRef.current = null
+      }
+    }
+  }, [watch])
+
+  async function handleStopWork() {
+    setStoppingWork(true)
     try {
       const res = await fetch('/api/watches/end', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ watchId: id }),
+        body: JSON.stringify({ watchId: id, action: 'stop_work' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to stop work')
+      toast.success('Work stopped. Post-work monitoring started.')
+      loadData()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error stopping work')
+    } finally {
+      setStoppingWork(false)
+    }
+  }
+
+  async function handleEndWatch() {
+    setEnding(true)
+    setConfirmingEnd(false)
+    try {
+      const body: Record<string, unknown> = { watchId: id }
+      if (closeoutNotes.trim()) body.closeout_notes = closeoutNotes.trim()
+      body.closeout_photo_urls = []
+      if (watch?.watch_type === 'impairment') {
+        body.system_restored = systemRestored
+        if (restorationVerifiedBy.trim()) body.restoration_verified_by = restorationVerifiedBy.trim()
+      }
+      const res = await fetch('/api/watches/end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to end watch')
@@ -125,6 +204,54 @@ export default function WatchDetailPage() {
     }
   }
 
+  function normalizePhone(raw: string): string {
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length === 10) return `+1${digits}`
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
+    if (raw.trim().startsWith('+')) return `+${digits}`
+    return raw.trim()
+  }
+
+  async function handleHandoff() {
+    if (!handoffName.trim()) {
+      toast.error('New watcher name is required')
+      return
+    }
+    if (handoffSms && handoffPhone && !/^\+?[\d\s\-().]{10,}$/.test(handoffPhone)) {
+      toast.error('Please enter a valid phone number')
+      return
+    }
+    setHandoffLoading(true)
+    try {
+      // Normalize phone
+      const normalizedPhone = handoffPhone.trim() ? normalizePhone(handoffPhone) : null
+      const res = await fetch('/api/watches/handoff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          watchId: id,
+          new_assigned_name: handoffName.trim(),
+          new_assigned_phone: normalizedPhone,
+          reason: handoffReason.trim() || null,
+          sms_enabled: handoffSms,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to reassign')
+      toast.success(`Watch reassigned to ${handoffName.trim()}`)
+      setShowHandoff(false)
+      setHandoffName('')
+      setHandoffPhone('')
+      setHandoffReason('')
+      setHandoffSms(false)
+      loadData()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Handoff failed')
+    } finally {
+      setHandoffLoading(false)
+    }
+  }
+
   async function handleDownloadReport() {
     setDownloading(true)
     const toastId = toast.loading('Generating compliance report…')
@@ -170,6 +297,17 @@ export default function WatchDetailPage() {
   const arcR = 28
   const arcCircumference = 2 * Math.PI * arcR
 
+  // Post-work timer calculations
+  const isWorkStopped = !!watch.work_stopped_at
+  const postWorkComplete = postWorkRemaining !== null && postWorkRemaining <= 0
+
+  const formatCountdown = () => {
+    if (postWorkRemaining === null) return ''
+    const mins = Math.floor(postWorkRemaining / 60)
+    const secs = postWorkRemaining % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
       {/* Header */}
@@ -196,6 +334,11 @@ export default function WatchDetailPage() {
             ) : (
               <span className="text-slate-500 font-medium">Completed Watch</span>
             )}
+            {watch.compliance_status === 'gap_detected' && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full ml-2">
+                Compliance Gap Detected
+              </span>
+            )}
             {' · '}Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
           </p>
         </div>
@@ -218,35 +361,136 @@ export default function WatchDetailPage() {
             </button>
           )}
           {watch.status === 'active' && (
-            confirmingEnd ? (
-              <>
-                <button
-                  onClick={handleEndWatch}
-                  disabled={ending}
-                  className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
-                >
-                  {ending ? 'Ending…' : 'Confirm End'}
-                </button>
-                <button
-                  onClick={() => setConfirmingEnd(false)}
-                  disabled={ending}
-                  className="px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl transition-all shadow-sm"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setConfirmingEnd(true)}
-                disabled={ending}
-                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
-              >
-                End Watch
-              </button>
-            )
+            <button
+              onClick={() => setShowHandoff(true)}
+              className="px-4 py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+            >
+              Reassign Watcher
+            </button>
+          )}
+          {/* Closeout flow buttons */}
+          {watch.status === 'active' && !isWorkStopped && (
+            <button
+              onClick={handleStopWork}
+              disabled={stoppingWork}
+              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+            >
+              {stoppingWork ? 'Stopping…' : 'Stop Work'}
+            </button>
+          )}
+          {watch.status === 'active' && isWorkStopped && !postWorkComplete && (
+            <button
+              disabled
+              className="px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 text-sm font-bold rounded-xl cursor-not-allowed"
+            >
+              End Watch
+            </button>
+          )}
+          {watch.status === 'active' && isWorkStopped && postWorkComplete && !confirmingEnd && (
+            <button
+              onClick={() => setConfirmingEnd(true)}
+              disabled={ending}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+            >
+              End Watch
+            </button>
           )}
         </div>
       </div>
+
+      {/* Post-work monitoring banner */}
+      {watch.status === 'active' && isWorkStopped && (
+        <div className={`rounded-2xl border p-4 mb-5 shadow-sm ${postWorkComplete ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!postWorkComplete && (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              )}
+              {postWorkComplete && (
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              )}
+              <div>
+                <div className="text-sm font-bold text-slate-800">
+                  {postWorkComplete
+                    ? 'Post-work monitoring complete'
+                    : 'Post-work monitoring in progress'}
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  Work stopped at {format(new Date(watch.work_stopped_at!), 'h:mm a')}
+                  {' · '}{watch.post_work_duration_min} min monitoring period
+                </div>
+              </div>
+            </div>
+            {!postWorkComplete && postWorkRemaining !== null && (
+              <div className="text-right">
+                <div className="text-lg font-bold text-amber-700 font-mono">{formatCountdown()}</div>
+                <div className="text-[10px] text-amber-600 uppercase tracking-wider font-semibold">remaining</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Closeout form panel */}
+      {watch.status === 'active' && confirmingEnd && (
+        <div className="bg-white rounded-2xl border border-red-200 p-6 mb-5 shadow-sm">
+          <h3 className="text-xs font-bold text-red-600 uppercase tracking-widest mb-4">End Watch Closeout</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Closeout Notes (optional)</label>
+              <textarea
+                value={closeoutNotes}
+                onChange={(e) => setCloseoutNotes(e.target.value)}
+                rows={3}
+                placeholder="Any final observations, notes, or remarks..."
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
+              />
+            </div>
+            {watch.watch_type === 'impairment' && (
+              <>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="system-restored"
+                    checked={systemRestored}
+                    onChange={(e) => setSystemRestored(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="system-restored" className="text-sm font-semibold text-slate-700">
+                    System restored to service
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Verified by (name)</label>
+                  <input
+                    type="text"
+                    value={restorationVerifiedBy}
+                    onChange={(e) => setRestorationVerifiedBy(e.target.value)}
+                    placeholder="Name of person who verified restoration"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleEndWatch}
+                disabled={ending}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+              >
+                {ending ? 'Ending…' : 'Confirm End Watch'}
+              </button>
+              <button
+                onClick={() => setConfirmingEnd(false)}
+                disabled={ending}
+                className="px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl transition-all shadow-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Watch Info */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
@@ -256,6 +500,12 @@ export default function WatchDetailPage() {
           Watch Details
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-3 text-sm">
+          <div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Watch Type</div>
+            <div className="font-semibold text-slate-800">
+              {watch.watch_type === 'impairment' ? 'Impairment Watch' : 'Hot Work Fire Watch'}
+            </div>
+          </div>
           {watch.location && (
             <div>
               <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Location</div>
@@ -296,6 +546,30 @@ export default function WatchDetailPage() {
               <div className="font-semibold text-slate-800">{format(new Date(nextPending.scheduled_time), 'h:mm a')}</div>
             </div>
           )}
+          {watch.permit_number && (
+            <div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Permit #</div>
+              <div className="font-semibold text-slate-800">{watch.permit_number}</div>
+            </div>
+          )}
+          {watch.permit_photo_url && (
+            <div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Permit Photo</div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={watch.permit_photo_url}
+                alt="Permit photo"
+                className="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity mt-0.5"
+                onClick={() => window.open(watch.permit_photo_url!, '_blank')}
+              />
+            </div>
+          )}
+          {watch.post_work_duration_min > 0 && (
+            <div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Post-Work Monitor</div>
+              <div className="font-semibold text-slate-800">{watch.post_work_duration_min} min</div>
+            </div>
+          )}
           {watch.escalation_phone && (
             <div>
               <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Supervisor</div>
@@ -303,6 +577,12 @@ export default function WatchDetailPage() {
               {watch.escalation_delay_min > 0 && (
                 <div className="text-[10px] text-slate-500 mt-0.5">Alert after {watch.escalation_delay_min} min</div>
               )}
+            </div>
+          )}
+          {watch.secondary_escalation_phone && (
+            <div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Backup Supervisor</div>
+              <div className="font-semibold text-slate-800">{watch.secondary_escalation_phone}</div>
             </div>
           )}
           {watch.reason && (
@@ -366,6 +646,103 @@ export default function WatchDetailPage() {
           )
         })()}
       </div>
+
+      {/* Handoff panel */}
+      {showHandoff && watch.status === 'active' && (
+        <div className="bg-white rounded-2xl border border-blue-200 p-6 mb-5 shadow-sm">
+          <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">Reassign Watcher</h3>
+          <p className="text-sm text-slate-600 mb-4">
+            Hand off this watch to a new fire watcher. The current watcher&apos;s link will be deactivated and a new check-in will be created immediately for the replacement.
+          </p>
+
+          <div className="space-y-4">
+            {/* Current watcher info */}
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Current Watcher</p>
+              <p className="text-sm font-semibold text-slate-800">{watch.assigned_name}</p>
+            </div>
+
+            {/* New watcher name */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                New Watcher Name <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={handoffName}
+                onChange={(e) => setHandoffName(e.target.value)}
+                placeholder="Full name of the replacement watcher"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+              />
+            </div>
+
+            {/* SMS toggle for new watcher */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Send SMS to new watcher</p>
+                <p className="text-xs text-slate-500">Send the check-in link via text message</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHandoffSms(!handoffSms)}
+                role="switch"
+                aria-checked={handoffSms}
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${handoffSms ? 'bg-blue-600' : 'bg-slate-200'}`}
+              >
+                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${handoffSms ? 'left-5' : 'left-0.5'}`} />
+              </button>
+            </div>
+
+            {/* New watcher phone (only if SMS enabled) */}
+            {handoffSms && (
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  New Watcher Phone
+                </label>
+                <input
+                  type="tel"
+                  value={handoffPhone}
+                  onChange={(e) => setHandoffPhone(e.target.value)}
+                  placeholder="+1 (212) 000-0000"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+                />
+              </div>
+            )}
+
+            {/* Reason */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Reason <span className="text-slate-300 normal-case">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={handoffReason}
+                onChange={(e) => setHandoffReason(e.target.value)}
+                placeholder="e.g. Shift change, lunch break, personnel swap"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => { setShowHandoff(false); setHandoffName(''); setHandoffPhone(''); setHandoffReason(''); setHandoffSms(false) }}
+                disabled={handoffLoading}
+                className="px-5 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl text-sm transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleHandoff}
+                disabled={handoffLoading || !handoffName.trim()}
+                className="flex-1 py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200"
+              >
+                {handoffLoading ? 'Reassigning...' : 'Confirm Handoff'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Compliance Score */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
