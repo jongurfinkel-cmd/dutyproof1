@@ -318,7 +318,7 @@ export default function WatchDetailPage() {
             Back to Dashboard
           </Link>
           <h2
-            className="text-xl sm:text-3xl text-slate-900 mt-3"
+            className="text-xl sm:text-2xl lg:text-3xl text-slate-900 mt-2"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
             {watch.facilities.name}
@@ -347,7 +347,7 @@ export default function WatchDetailPage() {
           <button
             onClick={handleDownloadReport}
             disabled={downloading}
-            className="px-4 py-2.5 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="px-3.5 py-2 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-xs font-semibold rounded-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {downloading ? 'Generating…' : 'Download Report'}
           </button>
@@ -356,7 +356,7 @@ export default function WatchDetailPage() {
               onClick={handleSimulateCheckin}
               disabled={simulating}
               title="Simulate a check-in without sending SMS — for testing only"
-              className="px-4 py-2.5 border border-amber-200 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+              className="px-3.5 py-2 border border-amber-200 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 text-xs font-semibold rounded-lg transition-all shadow-sm"
             >
               {simulating ? 'Simulating…' : '⚡ Simulate Check-in'}
             </button>
@@ -364,7 +364,7 @@ export default function WatchDetailPage() {
           {watch.status === 'active' && (
             <button
               onClick={() => setShowHandoff(true)}
-              className="px-4 py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+              className="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-all shadow-sm"
             >
               Reassign Watcher
             </button>
@@ -374,7 +374,7 @@ export default function WatchDetailPage() {
             <button
               onClick={handleStopWork}
               disabled={stoppingWork}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
             >
               {stoppingWork ? 'Stopping…' : 'Stop Work'}
             </button>
@@ -382,7 +382,7 @@ export default function WatchDetailPage() {
           {watch.status === 'active' && isWorkStopped && !postWorkComplete && (
             <button
               disabled
-              className="px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 text-sm font-bold rounded-xl cursor-not-allowed"
+              className="px-3.5 py-2 bg-slate-100 border border-slate-200 text-slate-400 text-xs font-bold rounded-lg cursor-not-allowed"
             >
               End Watch
             </button>
@@ -391,7 +391,7 @@ export default function WatchDetailPage() {
             <button
               onClick={() => setConfirmingEnd(true)}
               disabled={ending}
-              className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+              className="px-3.5 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
             >
               End Watch
             </button>
@@ -504,7 +504,7 @@ export default function WatchDetailPage() {
         >
           Watch Details
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-5 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-4 text-sm">
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Watch Type</div>
             <div>
@@ -639,49 +639,44 @@ export default function WatchDetailPage() {
         {nextPending && watch.status === 'active' && (() => {
           const checkinUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`
           return (
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Link Delivery</h3>
-              <div className="flex flex-col sm:flex-row gap-6">
-                {/* QR Code */}
-                <div className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white">
-                  <QRCodeSVG value={checkinUrl} size={160} level="M" includeMargin={false} />
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Scan to check in</span>
-                </div>
-                {/* Actions */}
-                <div className="flex-1 flex flex-col gap-3 justify-center">
-                  {/* Copy Link — primary action */}
-                  <button
-                    onClick={() => {
-                      try {
-                        navigator.clipboard.writeText(checkinUrl).then(() => {
-                          setCopiedLink(true)
-                          setTimeout(() => setCopiedLink(false), 2000)
-                        }).catch(() => toast.error('Unable to copy to clipboard'))
-                      } catch {
-                        toast.error('Unable to copy to clipboard')
-                      }
-                    }}
-                    className="w-full py-3.5 px-5 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    {copiedLink ? 'Copied to Clipboard ✓' : 'Copy Check-In Link'}
-                  </button>
-                  {/* Link preview */}
-                  <div className="text-xs text-slate-400 font-mono truncate px-1">{checkinUrl}</div>
-                  {/* Send by SMS — secondary/optional */}
-                  {watch.assigned_phone && (
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Check-In Link Delivery</h3>
+              <div className="flex flex-col gap-4">
+                {/* QR + Copy row */}
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white">
+                    <QRCodeSVG value={checkinUrl} size={96} level="M" includeMargin={false} />
+                    <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">Scan</span>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-2.5 justify-center">
                     <button
-                      onClick={handleResendSms}
-                      disabled={resendingSms}
-                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 hover:text-slate-800 text-sm font-semibold transition-all hover:shadow-sm flex items-center justify-center gap-2"
+                      onClick={() => {
+                        try {
+                          navigator.clipboard.writeText(checkinUrl).then(() => {
+                            setCopiedLink(true)
+                            setTimeout(() => setCopiedLink(false), 2000)
+                          }).catch(() => toast.error('Unable to copy to clipboard'))
+                        } catch {
+                          toast.error('Unable to copy to clipboard')
+                        }
+                      }}
+                      className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-sm transition-all hover:shadow-md flex items-center justify-center gap-2"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                      {resendingSms ? 'Sending…' : 'Send Link via SMS (optional)'}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      {copiedLink ? 'Copied ✓' : 'Copy Check-In Link'}
                     </button>
-                  )}
-                  <p className="text-[10px] text-slate-400 leading-relaxed px-1">
-                    Share this link with the fire watcher via QR code, copy &amp; paste, or optional SMS. No app download required.
-                  </p>
+                    <div className="text-[10px] text-slate-300 font-mono truncate">{checkinUrl}</div>
+                    {watch.assigned_phone && (
+                      <button
+                        onClick={handleResendSms}
+                        disabled={resendingSms}
+                        className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-blue-200 bg-white hover:bg-blue-50/50 disabled:opacity-50 text-slate-500 hover:text-blue-600 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        {resendingSms ? 'Sending…' : 'Send via SMS'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -791,48 +786,50 @@ export default function WatchDetailPage() {
       {/* RIGHT COLUMN — Compliance + Checklist */}
       <div className="xl:col-span-5 space-y-5">
 
-      {/* Compliance Score */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Arc ring tile */}
-        <div className={`rounded-2xl border p-6 text-center shadow-sm flex flex-col items-center justify-center ${pct === 100 ? 'bg-gradient-to-b from-green-50 to-green-50/30 border-green-200' : pct >= 80 ? 'bg-gradient-to-b from-amber-50 to-amber-50/30 border-amber-200' : 'bg-gradient-to-b from-red-50 to-red-50/30 border-red-200'}`}>
-          <div className="relative w-20 h-20">
-            <svg viewBox="0 0 88 88" width="80" height="80" className="-rotate-90" role="img" aria-label={`${pct}% compliance rate`}>
-              <circle cx="44" cy="44" r="36" fill="none" stroke="#e2e8f0" strokeWidth="7" />
+      {/* Compliance Score — compact card */}
+      <div className={`rounded-2xl border p-5 shadow-sm ${pct === 100 ? 'bg-gradient-to-br from-green-50/80 to-white border-green-200' : pct >= 80 ? 'bg-gradient-to-br from-amber-50/80 to-white border-amber-200' : 'bg-gradient-to-br from-red-50/80 to-white border-red-200'}`}>
+        <div className="flex items-center gap-5">
+          {/* Arc ring */}
+          <div className="relative w-16 h-16 flex-shrink-0">
+            <svg viewBox="0 0 88 88" width="64" height="64" className="-rotate-90" role="img" aria-label={`${pct}% compliance rate`}>
+              <circle cx="44" cy="44" r="36" fill="none" stroke="#e2e8f0" strokeWidth="8" />
               <circle
                 cx="44" cy="44" r="36" fill="none"
                 stroke={pct === 100 ? '#16a34a' : pct >= 80 ? '#d97706' : '#dc2626'}
-                strokeWidth="7"
+                strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={`${(pct / 100) * arcCircumference} ${arcCircumference}`}
-                style={{ filter: `drop-shadow(0 0 4px ${pct === 100 ? 'rgba(22,163,74,0.3)' : pct >= 80 ? 'rgba(217,119,6,0.3)' : 'rgba(220,38,38,0.3)'})` }}
+                style={{ filter: `drop-shadow(0 0 3px ${pct === 100 ? 'rgba(22,163,74,0.25)' : pct >= 80 ? 'rgba(217,119,6,0.25)' : 'rgba(220,38,38,0.25)'})` }}
               />
             </svg>
             <span
-              className={`absolute inset-0 flex items-center justify-center text-lg font-bold ${pct === 100 ? 'text-green-600' : pct >= 80 ? 'text-amber-600' : 'text-red-600'}`}
+              className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${pct === 100 ? 'text-green-600' : pct >= 80 ? 'text-amber-600' : 'text-red-600'}`}
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {pct}%
             </span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-2 uppercase tracking-widest font-semibold">Compliance</div>
-        </div>
-        {[
-          { label: 'Completed', value: completed.length, color: 'text-green-600', bg: 'bg-white border-green-200', icon: 'M5 13l4 4L19 7' },
-          { label: 'Missed', value: missed.length, color: missed.length > 0 ? 'text-red-600' : 'text-slate-900', bg: missed.length > 0 ? 'bg-white border-red-200' : 'bg-white border-slate-200', icon: 'M6 18L18 6M6 6l12 12' },
-          { label: 'Missed Alerts', value: alerts.filter(a => a.alert_type === 'missed_checkin').length, color: 'text-slate-900', bg: 'bg-white border-slate-200', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
-        ].map((s) => (
-          <div key={s.label} className={`rounded-2xl border ${s.bg} p-6 text-center shadow-sm hover:shadow-md transition-shadow`}>
-            <div className={`text-3xl font-bold ${s.color}`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
-            <div className="text-[10px] text-slate-400 mt-1.5 uppercase tracking-widest font-semibold">{s.label}</div>
+          {/* Stats row */}
+          <div className="flex-1 grid grid-cols-3 gap-3">
+            {[
+              { label: 'Completed', value: completed.length, color: 'text-green-600' },
+              { label: 'Missed', value: missed.length, color: missed.length > 0 ? 'text-red-600' : 'text-slate-800' },
+              { label: 'Alerts', value: alerts.filter(a => a.alert_type === 'missed_checkin').length, color: 'text-slate-800' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <div className={`text-2xl font-bold ${s.color}`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
+                <div className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold mt-0.5">{s.label}</div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Safety Checklist Panel */}
       {checklistItems.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Pre-Watch Safety Checklist</h3>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Safety Checklist</h3>
             {watch.checklist_completed_at ? (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -850,31 +847,29 @@ export default function WatchDetailPage() {
           {!watch.checklist_completed_at && watch.checklist_token && (() => {
             const checklistUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checklist/${watch.checklist_token}`
             return (
-              <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
-                <p className="text-sm font-semibold text-amber-800 mb-3">Send this link to the watcher to complete the safety checklist before the watch begins:</p>
-                <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border border-amber-200 bg-white">
-                    <QRCodeSVG value={checklistUrl} size={100} level="M" includeMargin={false} />
-                    <span className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider">Scan to open</span>
+              <div className="mb-4 p-3.5 rounded-xl border border-amber-200 bg-amber-50/80">
+                <div className="flex gap-3 items-start">
+                  <div className="flex-shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-lg border border-amber-200 bg-white">
+                    <QRCodeSVG value={checklistUrl} size={64} level="M" includeMargin={false} />
                   </div>
-                  <div className="flex-1 flex flex-col gap-2 justify-center min-w-0">
+                  <div className="flex-1 min-w-0 flex flex-col gap-2 justify-center">
+                    <p className="text-xs font-semibold text-amber-700">Send to watcher before watch begins</p>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(checklistUrl).then(() => {
                           toast.success('Checklist link copied')
                         }).catch(() => toast.error('Unable to copy'))
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+                      className="w-full py-2 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      Copy Checklist Link
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copy Link
                     </button>
-                    <div className="text-xs text-amber-500 font-mono truncate px-1">{checklistUrl}</div>
                     <a
                       href={checklistUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-2 px-4 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-sm font-semibold transition-all text-center"
+                      className="w-full py-1.5 px-3 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-xs font-semibold transition-all text-center"
                     >
                       Open Checklist
                     </a>
