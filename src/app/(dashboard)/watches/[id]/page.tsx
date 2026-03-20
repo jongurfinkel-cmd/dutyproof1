@@ -797,6 +797,45 @@ export default function WatchDetailPage() {
               </span>
             )}
           </div>
+
+          {/* Checklist link + QR when not yet completed */}
+          {!watch.checklist_completed_at && watch.checklist_token && (() => {
+            const checklistUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checklist/${watch.checklist_token}`
+            return (
+              <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
+                <p className="text-sm font-semibold text-amber-800 mb-3">Send this link to the watcher to complete the safety checklist before the watch begins:</p>
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border border-amber-200 bg-white">
+                    <QRCodeSVG value={checklistUrl} size={100} level="M" includeMargin={false} />
+                    <span className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider">Scan to open</span>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2 justify-center min-w-0">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(checklistUrl).then(() => {
+                          toast.success('Checklist link copied')
+                        }).catch(() => toast.error('Unable to copy'))
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copy Checklist Link
+                    </button>
+                    <div className="text-xs text-amber-500 font-mono truncate px-1">{checklistUrl}</div>
+                    <a
+                      href={checklistUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-4 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-sm font-semibold transition-all text-center"
+                    >
+                      Open Checklist
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           <div className="space-y-2">
             {checklistItems.map((item) => {
               const completion = checklistCompletions.find((c) => c.item_id === item.id)
