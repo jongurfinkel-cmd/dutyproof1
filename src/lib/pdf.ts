@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Font,
 } from '@react-pdf/renderer'
-import { format } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 import type { WatchWithFacility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
 
 const styles = StyleSheet.create({
@@ -147,10 +147,10 @@ interface ReportData {
   adminEmail: string
 }
 
-function formatTs(ts: string | null): string {
+function formatTs(ts: string | null, tz: string): string {
   if (!ts) return '—'
   try {
-    return format(new Date(ts), 'MMM d, yyyy h:mm:ss a')
+    return formatInTimeZone(new Date(ts), tz, 'MMM d, yyyy h:mm:ss a')
   } catch {
     return ts
   }
@@ -191,6 +191,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
   const total = completed.length + missed.length
   const pct = total > 0 ? Math.round((completed.length / total) * 100) : 100
   const reportId = watch.id.slice(0, 8).toUpperCase()
+  const tz = watch.facilities.timezone || 'America/New_York'
 
   return React.createElement(
     Document,
@@ -207,7 +208,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
         React.createElement(
           Text,
           { style: styles.headerMeta },
-          `Report ID: ${reportId}  |  Generated: ${format(new Date(), 'MMM d, yyyy h:mm a')}  |  Immutable records — tamper-evident`
+          `Report ID: ${reportId}  |  Generated: ${formatInTimeZone(new Date(), tz, 'MMM d, yyyy h:mm a')}  |  Immutable records — tamper-evident`
         )
       ),
       // Facility Info
@@ -262,13 +263,13 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           View,
           { style: styles.row },
           React.createElement(Text, { style: styles.label }, 'Watch Started:'),
-          React.createElement(Text, { style: styles.value }, formatTs(watch.start_time))
+          React.createElement(Text, { style: styles.value }, formatTs(watch.start_time, tz))
         ),
         React.createElement(
           View,
           { style: styles.row },
           React.createElement(Text, { style: styles.label }, 'Watch Ended:'),
-          React.createElement(Text, { style: styles.value }, watch.ended_at ? formatTs(watch.ended_at) : 'Still Active')
+          React.createElement(Text, { style: styles.value }, watch.ended_at ? formatTs(watch.ended_at, tz) : 'Still Active')
         ),
         React.createElement(
           View,
@@ -421,13 +422,13 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
                 React.createElement(
                   Text,
                   { style: styles.timelineTime },
-                  `${formatTs(ci.scheduled_time)}  —  ${ci.status.toUpperCase()}`
+                  `${formatTs(ci.scheduled_time, tz)}  —  ${ci.status.toUpperCase()}`
                 ),
                 ci.status === 'completed' && ci.completed_at &&
                   React.createElement(
                     Text,
                     { style: styles.timelineDetail },
-                    `Device time: ${formatTs(ci.completed_at)}  |  Server received: ${formatTs(ci.server_received_at)}` +
+                    `Device time: ${formatTs(ci.completed_at, tz)}  |  Server received: ${formatTs(ci.server_received_at, tz)}` +
                     (ci.latitude ? `  |  GPS: ${ci.latitude.toFixed(5)}, ${ci.longitude?.toFixed(5)} (±${ci.gps_accuracy?.toFixed(0)}m)` : '  |  GPS: Not captured')
                   ),
                 ci.status === 'missed' &&
@@ -443,7 +444,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
                       ? React.createElement(
                           Text,
                           { style: [styles.timelineDetail, { color: '#d97706' }] },
-                          `Supervisor acknowledged: ${formatTs(ci.ack_at)}` +
+                          `Supervisor acknowledged: ${formatTs(ci.ack_at, tz)}` +
                           (ci.ack_latitude
                             ? `  |  GPS: ${ci.ack_latitude.toFixed(5)}, ${ci.ack_longitude?.toFixed(5)} (±${ci.ack_gps_accuracy?.toFixed(0)}m)`
                             : '')
@@ -470,7 +471,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
             View,
             { style: styles.row },
             React.createElement(Text, { style: styles.label }, 'Status:'),
-            React.createElement(Text, { style: styles.value }, watch.checklist_completed_at ? `Completed ${formatTs(watch.checklist_completed_at)}` : 'Not completed')
+            React.createElement(Text, { style: styles.value }, watch.checklist_completed_at ? `Completed ${formatTs(watch.checklist_completed_at, tz)}` : 'Not completed')
           ),
           ...checklistItems.map((item) => {
             const completion = checklistCompletions.find((c) => c.item_id === item.id)
@@ -486,7 +487,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
                 React.createElement(Text, { style: styles.timelineTime }, item.label),
                 completion
                   ? React.createElement(Text, { style: styles.timelineDetail },
-                      `Completed: ${formatTs(completion.completed_at)}` +
+                      `Completed: ${formatTs(completion.completed_at, tz)}` +
                       (item.requires_photo ? (completion.photo_url ? '  |  Photo: Attached' : '  |  Photo: Missing') : '')
                     )
                   : React.createElement(Text, { style: [styles.timelineDetail, { color: '#dc2626' }] }, 'Not completed')
@@ -507,7 +508,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
         React.createElement(
           Text,
           { style: styles.footerText },
-          'Immutable records. Timestamps server-verified. Generated by DutyProof.'
+          `Immutable records. All times in ${tz}. Generated by DutyProof.`
         )
       )
     )
