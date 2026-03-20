@@ -1,5 +1,5 @@
 const DB_NAME = 'dutyproof-offline'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const STORE_NAME = 'checkin-queue'
 
 export interface QueuedCheckIn {
@@ -9,6 +9,7 @@ export interface QueuedCheckIn {
   latitude: number | null
   longitude: number | null
   gps_accuracy: number | null
+  notes: string | null
   queued_at: string
   synced: boolean
   sync_failed: boolean
@@ -56,6 +57,16 @@ export async function getUnsynced(): Promise<QueuedCheckIn[]> {
   })
 }
 
+export async function getAllItems(): Promise<QueuedCheckIn[]> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly')
+    const req = tx.objectStore(STORE_NAME).getAll()
+    req.onsuccess = () => resolve(req.result as QueuedCheckIn[])
+    req.onerror = () => reject(req.error)
+  })
+}
+
 export async function markSynced(id: number): Promise<void> {
   const db = await openDB()
   return new Promise((resolve, reject) => {
@@ -97,10 +108,35 @@ export async function getPendingCount(): Promise<number> {
   return items.length
 }
 
+/** Delete synced/failed entries older than N hours */
+export async function cleanupOldEntries(hours = 24): Promise<number> {
+  const db = await openDB()
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    const req = store.getAll()
+    let deleted = 0
+    req.onsuccess = () => {
+      const old = (req.result as QueuedCheckIn[]).filter(
+        (r) => (r.synced || r.sync_failed) && r.queued_at < cutoff
+      )
+      for (const item of old) {
+        store.delete(item.id!)
+        deleted++
+      }
+      tx.oncomplete = () => resolve(deleted)
+    }
+    req.onerror = () => reject(req.error)
+  })
+}
+
 /** Attempt to sync all queued check-ins to the server */
-export async function syncPendingCheckins(): Promise<number> {
+export async function syncPendingCheckins(): Promise<{ synced: number; reconciled: number; failed: number }> {
   const pending = await getUnsynced()
   let synced = 0
+  let reconciled = 0
+  let failed = 0
 
   for (const item of pending) {
     try {
@@ -113,14 +149,22 @@ export async function syncPendingCheckins(): Promise<number> {
           latitude: item.latitude,
           longitude: item.longitude,
           gps_accuracy: item.gps_accuracy,
+          notes: item.notes ?? null,
+          completed_offline: true,
         }),
       })
       if (res.ok) {
+        const data = await res.json()
         await markSynced(item.id!)
-        synced++
+        if (data.reconciled) {
+          reconciled++
+        } else {
+          synced++
+        }
       } else if (res.status === 410 || res.status === 404 || res.status === 409) {
-        // Token expired or already used or invalid — mark as failed, don't retry
+        // Token expired or already used — mark as failed, don't retry
         await markFailed(item.id!)
+        failed++
       }
       // Other errors (500, etc.) — leave unsynced for next attempt
     } catch {
@@ -128,5 +172,8 @@ export async function syncPendingCheckins(): Promise<number> {
     }
   }
 
-  return synced
+  // Cleanup old entries after sync
+  try { await cleanupOldEntries(24) } catch {}
+
+  return { synced, reconciled, failed }
 }

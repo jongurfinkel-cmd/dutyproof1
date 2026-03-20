@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'dutyproof-v1'
+const CACHE_NAME = 'dutyproof-v2'
 const STATIC_ASSETS = [
   '/logo.svg',
   '/icon.svg',
@@ -26,13 +26,13 @@ self.addEventListener('activate', (event) => {
 
 // ─── IndexedDB helpers (inline — SW can't import ES modules) ───
 const DB_NAME = 'dutyproof-offline'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const STORE_NAME = 'checkin-queue'
 
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION)
-    req.onupgradeneeded = () => {
+    req.onupgradeneeded = (event) => {
       const db = req.result
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true })
@@ -89,6 +89,25 @@ function markRecord(id, field) {
   )
 }
 
+function deleteOlderThan(hours) {
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
+  return openDB().then((db) =>
+    new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      const store = tx.objectStore(STORE_NAME)
+      const req = store.getAll()
+      req.onsuccess = () => {
+        const old = req.result.filter((r) => (r.synced || r.sync_failed) && r.queued_at < cutoff)
+        for (const item of old) {
+          store.delete(item.id)
+        }
+        tx.oncomplete = () => resolve(old.length)
+      }
+      req.onerror = () => reject(req.error)
+    })
+  )
+}
+
 // ─── Fetch: intercept failed check-in POSTs ───
 self.addEventListener('fetch', (event) => {
   const { request } = event
@@ -125,13 +144,14 @@ async function handleCheckinPost(request) {
     const response = await fetch(request)
     return response
   } catch {
-    // Network failure — queue offline
+    // Network failure — queue offline with ALL fields including notes
     await addToQueue({
       token: body.token,
       device_time: body.device_time,
       latitude: body.latitude ?? null,
       longitude: body.longitude ?? null,
       gps_accuracy: body.gps_accuracy ?? null,
+      notes: body.notes ?? null,
     })
 
     // Register for background sync
@@ -141,6 +161,12 @@ async function handleCheckinPost(request) {
       } catch {
         // Background Sync not supported (Safari) — client handles fallback
       }
+    }
+
+    // Notify all clients about the queued check-in
+    const clients = await self.clients.matchAll({ type: 'window' })
+    for (const client of clients) {
+      client.postMessage({ type: 'checkin-queued', token: body.token })
     }
 
     // Return synthetic offline response
@@ -168,6 +194,7 @@ self.addEventListener('sync', (event) => {
 
 async function syncAllPending() {
   const pending = await getUnsynced()
+  let syncedCount = 0
 
   for (const item of pending) {
     try {
@@ -180,15 +207,37 @@ async function syncAllPending() {
           latitude: item.latitude,
           longitude: item.longitude,
           gps_accuracy: item.gps_accuracy,
+          notes: item.notes ?? null,
+          completed_offline: true,
         }),
       })
       if (res.ok) {
         await markRecord(item.id, 'synced')
+        syncedCount++
       } else if (res.status === 410 || res.status === 404 || res.status === 409) {
         await markRecord(item.id, 'sync_failed')
       }
+      // Other errors (500, etc.) — leave unsynced for next sync
     } catch {
       // Still offline — will retry on next sync
     }
   }
+
+  // Notify clients about sync results
+  if (syncedCount > 0) {
+    const clients = await self.clients.matchAll({ type: 'window' })
+    for (const client of clients) {
+      client.postMessage({ type: 'checkins-synced', count: syncedCount })
+    }
+  }
+
+  // Cleanup old entries (synced or failed older than 24 hours)
+  try {
+    await deleteOlderThan(24)
+  } catch {}
 }
+
+// ─── Periodic cleanup on activate ───
+self.addEventListener('activate', () => {
+  deleteOlderThan(24).catch(() => {})
+})

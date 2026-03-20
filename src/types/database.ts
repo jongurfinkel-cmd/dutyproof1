@@ -100,6 +100,7 @@ export interface CheckIn {
   ack_longitude: number | null
   ack_gps_accuracy: number | null
   notes: string | null
+  completed_offline: boolean
 }
 
 export interface Alert {

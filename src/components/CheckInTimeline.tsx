@@ -74,6 +74,12 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
 
                 {ci.status === 'completed' && (
                   <div className="space-y-1 text-xs text-slate-500 mt-2.5">
+                    {ci.completed_offline && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold mb-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 9v4" /></svg>
+                        Completed offline — synced later
+                      </span>
+                    )}
                     <div className="flex items-center gap-1.5">
                       <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       Completed: {formatTs(ci.completed_at)}

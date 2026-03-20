@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import BrandLogo from '@/components/BrandLogo'
 import { format } from 'date-fns'
-import { queueCheckin, syncPendingCheckins } from '@/lib/offline-queue'
+import { queueCheckin, syncPendingCheckins, cleanupOldEntries, getPendingCount } from '@/lib/offline-queue'
 
 type CheckInState =
   | { phase: 'loading' }
@@ -179,9 +179,56 @@ export default function CheckInPage() {
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
+  const [online, setOnline] = useState(true)
+  const [syncToast, setSyncToast] = useState<string | null>(null)
+  const [pendingCount, setPendingCount] = useState(0)
 
   // Keep screen awake during the entire watch
   useWakeLock()
+
+  // Global connectivity monitor + auto-sync
+  useEffect(() => {
+    setOnline(navigator.onLine)
+
+    const goOnline = async () => {
+      setOnline(true)
+      try {
+        const result = await syncPendingCheckins()
+        if (result.synced > 0 || result.reconciled > 0) {
+          const parts: string[] = []
+          if (result.synced > 0) parts.push(`${result.synced} synced`)
+          if (result.reconciled > 0) parts.push(`${result.reconciled} reconciled`)
+          setSyncToast(parts.join(', '))
+          setTimeout(() => setSyncToast(null), 5000)
+        }
+        setPendingCount(await getPendingCount())
+      } catch {}
+    }
+    const goOffline = () => setOnline(false)
+
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+
+    // Listen for service worker messages
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'checkins-synced') {
+        setSyncToast(`${event.data.count} check-in(s) synced from background`)
+        setTimeout(() => setSyncToast(null), 5000)
+        getPendingCount().then(setPendingCount).catch(() => {})
+      }
+    }
+    navigator.serviceWorker?.addEventListener('message', handleSWMessage)
+
+    // Initial pending count + cleanup
+    getPendingCount().then(setPendingCount).catch(() => {})
+    cleanupOldEntries(24).catch(() => {})
+
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+      navigator.serviceWorker?.removeEventListener('message', handleSWMessage)
+    }
+  }, [])
 
   // Capture user location on mount for geofence display
   useEffect(() => {
@@ -503,6 +550,7 @@ export default function CheckInPage() {
           latitude: location?.latitude ?? null,
           longitude: location?.longitude ?? null,
           gps_accuracy: location?.accuracy ?? null,
+          notes: trimmedNotes,
         })
         setState({ phase: 'queued', deviceTime, gpsCapture: location !== null })
       } catch {
@@ -777,6 +825,9 @@ export default function CheckInPage() {
         lastCheckInTime={state.lastCheckInTime}
         watchMeta={watchMetaRef.current}
         userLocation={userLocation}
+        online={online}
+        syncToast={syncToast}
+        pendingCount={pendingCount}
       />
     )
   }
@@ -879,6 +930,9 @@ function WatchingView({
   lastCheckInTime,
   watchMeta,
   userLocation,
+  online,
+  syncToast,
+  pendingCount,
 }: {
   facilityName: string
   assignedName: string
@@ -886,6 +940,9 @@ function WatchingView({
   lastCheckInTime: string
   watchMeta: WatchMeta | null
   userLocation: { latitude: number; longitude: number } | null
+  online: boolean
+  syncToast: string | null
+  pendingCount: number
 }) {
   const [secondsLeft, setSecondsLeft] = useState(() => {
     return Math.max(0, Math.floor((new Date(nextCheckInTime).getTime() - Date.now()) / 1000))
@@ -961,10 +1018,36 @@ function WatchingView({
             </div>
           </div>
 
+          {/* Connectivity + sync status */}
+          {!online && (
+            <div className="mx-6 mt-0 mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-950 border border-red-800">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-red-400 text-xs font-semibold">No connection — check-ins will be queued</span>
+            </div>
+          )}
+
+          {pendingCount > 0 && online && (
+            <div className="mx-6 mt-0 mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-950 border border-amber-800">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+              </span>
+              <span className="text-amber-400 text-xs font-semibold">Syncing {pendingCount} queued check-in(s)...</span>
+            </div>
+          )}
+
+          {syncToast && (
+            <div className="mx-6 mt-0 mb-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-green-950 border border-green-800">
+              <span className="text-green-400 text-xs font-semibold">{syncToast}</span>
+            </div>
+          )}
+
           {/* Footer info */}
           <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 space-y-2">
             <p className="text-slate-600 text-xs text-center">
-              Keep this page open. You will be alerted when it is time to check in.
+              {online
+                ? 'Keep this page open. You will be alerted when it is time to check in.'
+                : 'You are offline. Your check-in will be queued and synced when connection returns.'}
             </p>
             {watchMeta?.escalationPhone && (
               <CallSupervisorButton phone={watchMeta.escalationPhone} />
