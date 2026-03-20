@@ -27,6 +27,7 @@ export default function WatchDetailPage() {
   const [resendingSms, setResendingSms] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [stoppingWork, setStoppingWork] = useState(false)
+  const [confirmingStopWork, setConfirmingStopWork] = useState(false)
   const [postWorkRemaining, setPostWorkRemaining] = useState<number | null>(null)
   const [showHandoff, setShowHandoff] = useState(false)
   const [handoffName, setHandoffName] = useState('')
@@ -370,13 +371,12 @@ export default function WatchDetailPage() {
             </button>
           )}
           {/* Closeout flow buttons */}
-          {watch.status === 'active' && !isWorkStopped && (
+          {watch.status === 'active' && !isWorkStopped && !confirmingStopWork && (
             <button
-              onClick={handleStopWork}
-              disabled={stoppingWork}
-              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+              onClick={() => setConfirmingStopWork(true)}
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
             >
-              {stoppingWork ? 'Stopping…' : 'Stop Work'}
+              Stop Work
             </button>
           )}
           {watch.status === 'active' && isWorkStopped && !postWorkComplete && (
@@ -398,6 +398,37 @@ export default function WatchDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Stop Work confirmation banner */}
+      {watch.status === 'active' && confirmingStopWork && !isWorkStopped && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-amber-900">
+                Are you sure you want to stop work?
+              </div>
+              <div className="text-xs text-amber-700 mt-1">
+                This will start the {watch.post_work_duration_min}-minute post-work monitoring period. Check-ins will continue during this time. You cannot undo this action.
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setConfirmingStopWork(false)}
+                className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setConfirmingStopWork(false); handleStopWork() }}
+                disabled={stoppingWork}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+              >
+                {stoppingWork ? 'Stopping…' : 'Yes, Stop Work'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Post-work monitoring banner */}
       {watch.status === 'active' && isWorkStopped && (
