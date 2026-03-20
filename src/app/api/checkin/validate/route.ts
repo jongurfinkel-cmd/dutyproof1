@@ -48,13 +48,21 @@ export async function GET(req: NextRequest) {
   }
 
   const nextTime = addMinutes(new Date(checkIn.scheduled_time), checkIn.watches.check_interval_min)
+  const w = checkIn.watches
 
   return NextResponse.json({
-    facilityName: checkIn.watches.facilities.name,
+    facilityName: w.facilities.name,
+    location: w.location || null,
     assignedName: checkIn.assigned_name,
     scheduledTime: checkIn.scheduled_time,
     expiresAt: checkIn.token_expires_at,
     nextTime: nextTime.toISOString(),
-    interval: checkIn.watches.check_interval_min,
+    interval: w.check_interval_min,
+    // Geofence data
+    watchLatitude: w.watch_latitude ?? null,
+    watchLongitude: w.watch_longitude ?? null,
+    watchRadiusM: w.watch_radius_m ?? 100,
+    // Supervisor contact
+    escalationPhone: w.escalation_phone ?? null,
   })
 }

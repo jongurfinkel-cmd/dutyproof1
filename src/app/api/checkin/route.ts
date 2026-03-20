@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     try { body = await req.json() } catch {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
-    const { token, latitude, longitude, gps_accuracy, device_time } = body
+    const { token, latitude, longitude, gps_accuracy, device_time, notes } = body
 
     if (!token || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
@@ -29,6 +29,10 @@ export async function POST(req: NextRequest) {
     }
     if (gps_accuracy != null && (typeof gps_accuracy !== 'number' || gps_accuracy < 0)) {
       return NextResponse.json({ error: 'Invalid GPS accuracy' }, { status: 400 })
+    }
+    // Validate notes if provided
+    if (notes != null && (typeof notes !== 'string' || notes.length > 1000)) {
+      return NextResponse.json({ error: 'Notes must be 1–1000 characters' }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
       p_latitude: latitude ?? null,
       p_longitude: longitude ?? null,
       p_gps_accuracy: gps_accuracy ?? null,
+      p_notes: notes?.trim() || null,
     })
 
     if (completeError) {
@@ -154,6 +159,11 @@ export async function POST(req: NextRequest) {
       nextToken: nextCheckInError ? undefined : nextToken,
       facilityName: displayName,
       assignedName: checkIn.assigned_name,
+      // Geofence data for client
+      watchLatitude: watch.watch_latitude ?? null,
+      watchLongitude: watch.watch_longitude ?? null,
+      watchRadiusM: watch.watch_radius_m ?? 100,
+      escalationPhone: watch.escalation_phone ?? null,
     })
   } catch (err) {
     console.error('Check-in error:', err)

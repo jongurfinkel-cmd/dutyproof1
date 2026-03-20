@@ -98,6 +98,11 @@ export default function CheckInTimeline({ checkIns, alerts }: CheckInTimelinePro
                     ) : (
                       <div className="text-amber-500">GPS: Not captured</div>
                     )}
+                    {ci.notes && (
+                      <div className="mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                        <span className="font-semibold text-blue-600">Note:</span> {ci.notes}
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -99,6 +99,7 @@ export interface CheckIn {
   ack_latitude: number | null
   ack_longitude: number | null
   ack_gps_accuracy: number | null
+  notes: string | null
 }
 
 export interface Alert {

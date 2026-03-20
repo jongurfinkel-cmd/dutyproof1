@@ -11,7 +11,7 @@ type CheckInState =
   | { phase: 'expired'; message: string }
   | { phase: 'invalid'; message: string }
   | { phase: 'checklist_pending'; message: string }
-  | { phase: 'ready'; facilityName: string; assignedName: string; scheduledTime: string; nextTime: string }
+  | { phase: 'ready'; facilityName: string; location: string | null; assignedName: string; scheduledTime: string; nextTime: string; watchLatitude: number | null; watchLongitude: number | null; watchRadiusM: number; escalationPhone: string | null }
   | { phase: 'submitting' }
   | { phase: 'confirmed'; nextCheckIn: string; serverTime: string; gpsCapture: boolean; facilityName: string; assignedName: string; nextToken?: string }
   | { phase: 'queued'; deviceTime: string; gpsCapture: boolean }
@@ -20,6 +20,17 @@ type CheckInState =
   | { phase: 'grace'; facilityName: string; assignedName: string; scheduledTime: string; nextToken?: string }
   | { phase: 'missed_waiting'; facilityName: string; assignedName: string }
   | { phase: 'error'; message: string }
+
+// Persistent watch metadata
+interface WatchMeta {
+  facilityName: string
+  assignedName: string
+  location: string | null
+  watchLatitude: number | null
+  watchLongitude: number | null
+  watchRadiusM: number
+  escalationPhone: string | null
+}
 
 async function getLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | null> {
   return new Promise((resolve) => {
@@ -37,6 +48,17 @@ async function getLocation(): Promise<{ latitude: number; longitude: number; acc
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     )
   })
+}
+
+function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 function playChime() {
@@ -87,20 +109,98 @@ function formatCountdown(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+// ===== GEOFENCE STATUS BADGE =====
+function GeofenceBadge({ userLat, userLng, watchLat, watchLng, radius }: {
+  userLat: number | null; userLng: number | null;
+  watchLat: number | null; watchLng: number | null;
+  radius: number;
+}) {
+  if (watchLat == null || watchLng == null || userLat == null || userLng == null) return null
+  const dist = distanceMeters(watchLat, watchLng, userLat, userLng)
+  const inside = dist <= radius
+  return (
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${inside ? 'bg-green-900/50 border border-green-700 text-green-400' : 'bg-red-900/50 border border-red-700 text-red-400'}`}>
+      <span className={`w-2 h-2 rounded-full ${inside ? 'bg-green-500' : 'bg-red-500'}`} />
+      {inside ? 'Inside watch zone' : 'Outside watch zone'}
+      <span className="text-slate-500 font-normal">({Math.round(dist)}m)</span>
+    </div>
+  )
+}
+
+// ===== CALL SUPERVISOR BUTTON =====
+function CallSupervisorButton({ phone }: { phone: string | null }) {
+  if (!phone) return null
+  return (
+    <a
+      href={`tel:${phone}`}
+      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white text-xs font-semibold transition-all active:scale-[0.97]"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+      </svg>
+      Call Supervisor
+    </a>
+  )
+}
+
+// ===== WAKE LOCK HOOK =====
+function useWakeLock() {
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+
+  useEffect(() => {
+    async function acquire() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen')
+        }
+      } catch {}
+    }
+    acquire()
+
+    // Re-acquire on visibility change (iOS Safari releases on tab switch)
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') acquire()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      wakeLockRef.current?.release().catch(() => {})
+    }
+  }, [])
+}
+
 export default function CheckInPage() {
   const { token } = useParams<{ token: string }>()
   const [state, setState] = useState<CheckInState>({ phase: 'loading' })
   const submittingRef = useRef(false)
-  // Store facility info captured from the initial ready state
-  const watchInfoRef = useRef<{ facilityName: string; assignedName: string } | null>(null)
+  const watchMetaRef = useRef<WatchMeta | null>(null)
   const alarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [notes, setNotes] = useState('')
+  const [showNotes, setShowNotes] = useState(false)
 
-  // Capture facility info when entering ready state
+  // Keep screen awake during the entire watch
+  useWakeLock()
+
+  // Capture user location on mount for geofence display
+  useEffect(() => {
+    getLocation().then(loc => {
+      if (loc) setUserLocation({ latitude: loc.latitude, longitude: loc.longitude })
+    })
+  }, [])
+
+  // Capture watch meta when entering ready state
   useEffect(() => {
     if (state.phase === 'ready') {
-      watchInfoRef.current = {
+      watchMetaRef.current = {
         facilityName: state.facilityName,
         assignedName: state.assignedName,
+        location: state.location,
+        watchLatitude: state.watchLatitude,
+        watchLongitude: state.watchLongitude,
+        watchRadiusM: state.watchRadiusM,
+        escalationPhone: state.escalationPhone,
       }
     }
   }, [state])
@@ -136,9 +236,14 @@ export default function CheckInPage() {
         setState({
           phase: 'ready',
           facilityName: data.facilityName,
+          location: data.location ?? null,
           assignedName: data.assignedName,
           scheduledTime: data.scheduledTime,
           nextTime: data.nextTime,
+          watchLatitude: data.watchLatitude ?? null,
+          watchLongitude: data.watchLongitude ?? null,
+          watchRadiusM: data.watchRadiusM ?? 100,
+          escalationPhone: data.escalationPhone ?? null,
         })
       } catch {
         setState({ phase: 'error', message: 'Network error. Please try again.' })
@@ -151,7 +256,7 @@ export default function CheckInPage() {
   useEffect(() => {
     if (state.phase !== 'confirmed') return
     const timer = setTimeout(() => {
-      const info = watchInfoRef.current
+      const info = watchMetaRef.current
       if (!info) return
       if (state.nextToken && state.nextCheckIn) {
         setState({
@@ -163,7 +268,6 @@ export default function CheckInPage() {
           nextToken: state.nextToken,
         })
       }
-      // If no nextToken, stay on confirmed (legacy behavior)
     }, 2000)
     return () => clearTimeout(timer)
   }, [state])
@@ -240,6 +344,11 @@ export default function CheckInPage() {
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState !== 'visible') return
+      // Re-acquire GPS on return
+      getLocation().then(loc => {
+        if (loc) setUserLocation({ latitude: loc.latitude, longitude: loc.longitude })
+      })
+
       if (state.phase === 'watching') {
         const now = Date.now()
         const target = new Date(state.nextCheckInTime).getTime()
@@ -320,15 +429,17 @@ export default function CheckInPage() {
       facilityName = currentState.facilityName
       assignedName = currentState.assignedName
     }
-    if (watchInfoRef.current) {
-      facilityName = facilityName || watchInfoRef.current.facilityName
-      assignedName = assignedName || watchInfoRef.current.assignedName
+    if (watchMetaRef.current) {
+      facilityName = facilityName || watchMetaRef.current.facilityName
+      assignedName = assignedName || watchMetaRef.current.assignedName
     }
 
     setState({ phase: 'submitting' })
     const deviceTime = new Date().toISOString()
     const location = await getLocation()
+    if (location) setUserLocation({ latitude: location.latitude, longitude: location.longitude })
     const activeToken = overrideToken || token
+    const trimmedNotes = notes.trim() || null
 
     try {
       const res = await fetch('/api/checkin', {
@@ -340,6 +451,7 @@ export default function CheckInPage() {
           latitude: location?.latitude ?? null,
           longitude: location?.longitude ?? null,
           gps_accuracy: location?.accuracy ?? null,
+          notes: trimmedNotes,
         }),
       })
       const data = await res.json()
@@ -359,13 +471,19 @@ export default function CheckInPage() {
         return
       }
 
-      // Update watchInfoRef with API response data
-      if (data.facilityName) {
-        watchInfoRef.current = {
-          facilityName: data.facilityName || facilityName,
-          assignedName: data.assignedName || assignedName,
-        }
+      // Update watchMetaRef with API response data
+      if (data.facilityName && watchMetaRef.current) {
+        watchMetaRef.current.facilityName = data.facilityName || facilityName
+        watchMetaRef.current.assignedName = data.assignedName || assignedName
+        if (data.watchLatitude != null) watchMetaRef.current.watchLatitude = data.watchLatitude
+        if (data.watchLongitude != null) watchMetaRef.current.watchLongitude = data.watchLongitude
+        if (data.watchRadiusM != null) watchMetaRef.current.watchRadiusM = data.watchRadiusM
+        if (data.escalationPhone !== undefined) watchMetaRef.current.escalationPhone = data.escalationPhone
       }
+
+      // Clear notes after successful check-in
+      setNotes('')
+      setShowNotes(false)
 
       setState({
         phase: 'confirmed',
@@ -392,7 +510,7 @@ export default function CheckInPage() {
       }
     }
     submittingRef.current = false
-  }, [token, state])
+  }, [token, state, notes])
 
   // ===== RENDER =====
 
@@ -423,6 +541,11 @@ export default function CheckInPage() {
           <p className="text-slate-500 text-xs">
             This check-in window has closed. The missed check-in has been logged and your supervisor has been notified.
           </p>
+          {watchMetaRef.current?.escalationPhone && (
+            <div className="mt-4">
+              <CallSupervisorButton phone={watchMetaRef.current.escalationPhone} />
+            </div>
+          )}
         </div>
       </div>
     )
@@ -492,6 +615,11 @@ export default function CheckInPage() {
           >
             Try Again
           </button>
+          {watchMetaRef.current?.escalationPhone && (
+            <div className="mt-3">
+              <CallSupervisorButton phone={watchMetaRef.current.escalationPhone} />
+            </div>
+          )}
         </div>
       </div>
     )
@@ -525,6 +653,19 @@ export default function CheckInPage() {
               {format(new Date(state.serverTime), 'EEEE, MMM d')}
             </p>
           </div>
+
+          {/* Geofence status after check-in */}
+          {watchMetaRef.current?.watchLatitude != null && (
+            <div className="mb-4 flex justify-center">
+              <GeofenceBadge
+                userLat={userLocation?.latitude ?? null}
+                userLng={userLocation?.longitude ?? null}
+                watchLat={watchMetaRef.current.watchLatitude}
+                watchLng={watchMetaRef.current.watchLongitude}
+                radius={watchMetaRef.current.watchRadiusM}
+              />
+            </div>
+          )}
 
           {/* Next check-in */}
           <div className="bg-slate-900 rounded-xl px-6 py-4 mb-5 border border-slate-800">
@@ -621,7 +762,7 @@ export default function CheckInPage() {
           >
             Recording check-in...
           </h1>
-          <p className="text-slate-500 text-xs">Recording your check-in. Do not close.</p>
+          <p className="text-slate-500 text-xs">Capturing GPS and recording. Do not close.</p>
         </div>
       </div>
     )
@@ -634,6 +775,8 @@ export default function CheckInPage() {
         assignedName={state.assignedName}
         nextCheckInTime={state.nextCheckInTime}
         lastCheckInTime={state.lastCheckInTime}
+        watchMeta={watchMetaRef.current}
+        userLocation={userLocation}
       />
     )
   }
@@ -645,6 +788,12 @@ export default function CheckInPage() {
         assignedName={state.assignedName}
         scheduledTime={state.scheduledTime}
         onCheckIn={() => handleCheckIn(state.nextToken)}
+        watchMeta={watchMetaRef.current}
+        userLocation={userLocation}
+        notes={notes}
+        onNotesChange={setNotes}
+        showNotes={showNotes}
+        onToggleNotes={() => setShowNotes(v => !v)}
       />
     )
   }
@@ -656,6 +805,12 @@ export default function CheckInPage() {
         assignedName={state.assignedName}
         scheduledTime={state.scheduledTime}
         onCheckIn={() => handleCheckIn(state.nextToken)}
+        watchMeta={watchMetaRef.current}
+        userLocation={userLocation}
+        notes={notes}
+        onNotesChange={setNotes}
+        showNotes={showNotes}
+        onToggleNotes={() => setShowNotes(v => !v)}
       />
     )
   }
@@ -683,6 +838,11 @@ export default function CheckInPage() {
             </p>
             <p className="text-slate-500 text-xs mt-1">{state.assignedName}</p>
           </div>
+          {watchMetaRef.current?.escalationPhone && (
+            <div className="mt-4">
+              <CallSupervisorButton phone={watchMetaRef.current.escalationPhone} />
+            </div>
+          )}
           <p className="text-slate-500 text-xs mt-4">
             Your next check-in link will arrive shortly.
           </p>
@@ -700,6 +860,12 @@ export default function CheckInPage() {
       assignedName={assignedName}
       scheduledTime={scheduledTime}
       onCheckIn={() => handleCheckIn()}
+      watchMeta={watchMetaRef.current}
+      userLocation={userLocation}
+      notes={notes}
+      onNotesChange={setNotes}
+      showNotes={showNotes}
+      onToggleNotes={() => setShowNotes(v => !v)}
     />
   )
 }
@@ -711,11 +877,15 @@ function WatchingView({
   assignedName,
   nextCheckInTime,
   lastCheckInTime,
+  watchMeta,
+  userLocation,
 }: {
   facilityName: string
   assignedName: string
   nextCheckInTime: string
   lastCheckInTime: string
+  watchMeta: WatchMeta | null
+  userLocation: { latitude: number; longitude: number } | null
 }) {
   const [secondsLeft, setSecondsLeft] = useState(() => {
     return Math.max(0, Math.floor((new Date(nextCheckInTime).getTime() - Date.now()) / 1000))
@@ -756,6 +926,19 @@ function WatchingView({
             <p className="text-slate-400 text-sm">{assignedName}</p>
           </div>
 
+          {/* Geofence status */}
+          {watchMeta?.watchLatitude != null && (
+            <div className="px-6 pt-4">
+              <GeofenceBadge
+                userLat={userLocation?.latitude ?? null}
+                userLng={userLocation?.longitude ?? null}
+                watchLat={watchMeta.watchLatitude}
+                watchLng={watchMeta.watchLongitude}
+                radius={watchMeta.watchRadiusM}
+              />
+            </div>
+          )}
+
           {/* Countdown */}
           <div className="px-6 py-8 text-center">
             <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3">Next Check-In In</p>
@@ -779,13 +962,46 @@ function WatchingView({
           </div>
 
           {/* Footer info */}
-          <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50">
+          <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 space-y-2">
             <p className="text-slate-600 text-xs text-center">
               Keep this page open. You will be alerted when it is time to check in.
             </p>
+            {watchMeta?.escalationPhone && (
+              <CallSupervisorButton phone={watchMeta.escalationPhone} />
+            )}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ===== NOTES INPUT =====
+function NotesInput({ notes, onChange, show, onToggle }: {
+  notes: string; onChange: (v: string) => void; show: boolean; onToggle: () => void
+}) {
+  return (
+    <div className="w-full">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors mb-2"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        {show ? 'Hide notes' : 'Add a note (optional)'}
+      </button>
+      {show && (
+        <textarea
+          value={notes}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={1000}
+          rows={2}
+          placeholder="Site conditions, observations, concerns..."
+          className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+        />
+      )}
     </div>
   )
 }
@@ -797,11 +1013,23 @@ function DueView({
   assignedName,
   scheduledTime,
   onCheckIn,
+  watchMeta,
+  userLocation,
+  notes,
+  onNotesChange,
+  showNotes,
+  onToggleNotes,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
+  watchMeta: WatchMeta | null
+  userLocation: { latitude: number; longitude: number } | null
+  notes: string
+  onNotesChange: (v: string) => void
+  showNotes: boolean
+  onToggleNotes: () => void
 }) {
   const [tapped, setTapped] = useState(false)
   const [online, setOnline] = useState(true)
@@ -848,6 +1076,19 @@ function DueView({
             </p>
           </div>
 
+          {/* Geofence status */}
+          {watchMeta?.watchLatitude != null && (
+            <div className="px-6 pt-4">
+              <GeofenceBadge
+                userLat={userLocation?.latitude ?? null}
+                userLng={userLocation?.longitude ?? null}
+                watchLat={watchMeta.watchLatitude}
+                watchLng={watchMeta.watchLongitude}
+                radius={watchMeta.watchRadiusM}
+              />
+            </div>
+          )}
+
           {/* Connectivity indicator */}
           {!online && (
             <div className="px-6 py-3 bg-amber-950 border-t border-amber-800 flex items-center justify-center gap-2">
@@ -857,6 +1098,11 @@ function DueView({
               <span className="text-amber-400 text-xs font-semibold">Offline — check-in will be queued</span>
             </div>
           )}
+
+          {/* Notes input */}
+          <div className="px-6 pt-4">
+            <NotesInput notes={notes} onChange={onNotesChange} show={showNotes} onToggle={onToggleNotes} />
+          </div>
 
           {/* The big button */}
           <div className="p-6">
@@ -870,6 +1116,13 @@ function DueView({
             </button>
           </div>
         </div>
+
+        {/* Supervisor contact */}
+        {watchMeta?.escalationPhone && (
+          <div className="mb-4">
+            <CallSupervisorButton phone={watchMeta.escalationPhone} />
+          </div>
+        )}
 
         <p className="text-slate-600 text-xs text-center max-w-xs mx-auto leading-relaxed">
           Tap the button to record your check-in.
@@ -886,11 +1139,23 @@ function GraceView({
   assignedName,
   scheduledTime,
   onCheckIn,
+  watchMeta,
+  userLocation,
+  notes,
+  onNotesChange,
+  showNotes,
+  onToggleNotes,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
+  watchMeta: WatchMeta | null
+  userLocation: { latitude: number; longitude: number } | null
+  notes: string
+  onNotesChange: (v: string) => void
+  showNotes: boolean
+  onToggleNotes: () => void
 }) {
   const [tapped, setTapped] = useState(false)
   const [pulse, setPulse] = useState(false)
@@ -927,6 +1192,19 @@ function GraceView({
             </p>
           </div>
 
+          {/* Geofence status */}
+          {watchMeta?.watchLatitude != null && (
+            <div className="px-6 pt-4">
+              <GeofenceBadge
+                userLat={userLocation?.latitude ?? null}
+                userLng={userLocation?.longitude ?? null}
+                watchLat={watchMeta.watchLatitude}
+                watchLng={watchMeta.watchLongitude}
+                radius={watchMeta.watchRadiusM}
+              />
+            </div>
+          )}
+
           {/* Overdue message */}
           <div className="px-6 py-6 text-center">
             <p
@@ -936,6 +1214,11 @@ function GraceView({
               OVERDUE
             </p>
             <p className="text-red-400 text-sm">CHECK IN NOW</p>
+          </div>
+
+          {/* Notes input */}
+          <div className="px-6 pb-2">
+            <NotesInput notes={notes} onChange={onNotesChange} show={showNotes} onToggle={onToggleNotes} />
           </div>
 
           {/* The button */}
@@ -950,6 +1233,13 @@ function GraceView({
             </button>
           </div>
         </div>
+
+        {/* Supervisor contact */}
+        {watchMeta?.escalationPhone && (
+          <div className="mb-4">
+            <CallSupervisorButton phone={watchMeta.escalationPhone} />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -962,11 +1252,23 @@ function CheckInReady({
   assignedName,
   scheduledTime,
   onCheckIn,
+  watchMeta,
+  userLocation,
+  notes,
+  onNotesChange,
+  showNotes,
+  onToggleNotes,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
+  watchMeta: WatchMeta | null
+  userLocation: { latitude: number; longitude: number } | null
+  notes: string
+  onNotesChange: (v: string) => void
+  showNotes: boolean
+  onToggleNotes: () => void
 }) {
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(true)
@@ -981,7 +1283,6 @@ function CheckInReady({
     setOnline(navigator.onLine)
     const goOnline = () => {
       setOnline(true)
-      // Safari fallback: sync queued check-ins when back online
       syncPendingCheckins().catch(() => {})
     }
     const goOffline = () => setOnline(false)
@@ -1029,6 +1330,19 @@ function CheckInReady({
             </div>
           </div>
 
+          {/* Geofence status */}
+          {watchMeta?.watchLatitude != null && (
+            <div className="px-6 pt-4">
+              <GeofenceBadge
+                userLat={userLocation?.latitude ?? null}
+                userLng={userLocation?.longitude ?? null}
+                watchLat={watchMeta.watchLatitude}
+                watchLng={watchMeta.watchLongitude}
+                radius={watchMeta.watchRadiusM}
+              />
+            </div>
+          )}
+
           {/* Connectivity indicator */}
           {!online && (
             <div className="px-6 py-3 bg-amber-950 border-t border-amber-800 flex items-center justify-center gap-2">
@@ -1038,6 +1352,11 @@ function CheckInReady({
               <span className="text-amber-400 text-xs font-semibold">Offline — check-in will be queued</span>
             </div>
           )}
+
+          {/* Notes input */}
+          <div className="px-6 pt-4">
+            <NotesInput notes={notes} onChange={onNotesChange} show={showNotes} onToggle={onToggleNotes} />
+          </div>
 
           {/* The big button */}
           <div className="p-6">
@@ -1052,8 +1371,15 @@ function CheckInReady({
           </div>
         </div>
 
+        {/* Supervisor contact */}
+        {watchMeta?.escalationPhone && (
+          <div className="mb-4">
+            <CallSupervisorButton phone={watchMeta.escalationPhone} />
+          </div>
+        )}
+
         <p className="text-slate-600 text-xs text-center max-w-xs mx-auto leading-relaxed">
-          Tap the button to record your check-in. GPS is captured if your browser allows it — if not, your check-in still records without location.
+          Tap the button to record your check-in. GPS is captured automatically.
           Your next check-in link will be available when the next window opens.
         </p>
       </div>

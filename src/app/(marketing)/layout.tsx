@@ -48,7 +48,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   }, [menuOpen, trapFocus])
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-white">
       {/* Skip to content */}
       <a
         href="#main-content"
@@ -183,7 +183,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         )}
       </header>
 
-      <main id="main-content" className="flex-1 relative z-0">{children}</main>
+      <main id="main-content" className="relative z-0">{children}</main>
 
       {/* ── Footer ── */}
       <footer className="border-t border-slate-800 bg-slate-950">
