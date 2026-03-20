@@ -35,6 +35,8 @@ export default function WatchDetailPage() {
   const [handoffReason, setHandoffReason] = useState('')
   const [handoffSms, setHandoffSms] = useState(false)
   const [handoffLoading, setHandoffLoading] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   // Closeout form state
   const [closeoutNotes, setCloseoutNotes] = useState('')
@@ -165,6 +167,26 @@ export default function WatchDetailPage() {
       toast.error(err instanceof Error ? err.message : 'Error ending watch')
     } finally {
       setEnding(false)
+    }
+  }
+
+  async function handleDeleteWatch() {
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/watches/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ watch_id: id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to delete watch')
+      toast.success('Watch deleted.')
+      router.push('/dashboard')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error deleting watch')
+      setConfirmingDelete(false)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -396,8 +418,48 @@ export default function WatchDetailPage() {
               End Watch
             </button>
           )}
+          {/* Delete — only if no completed check-ins and checklist not done */}
+          {watch.status === 'active' && !watch.checklist_completed_at && checkIns.filter((c) => c.status === 'completed').length === 0 && !confirmingDelete && (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="px-3.5 py-2 border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-semibold rounded-lg transition-all"
+            >
+              Delete Watch
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Delete confirmation */}
+      {confirmingDelete && (
+        <div className="rounded-2xl border border-red-300 bg-red-50 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-red-900">
+                Delete this watch?
+              </div>
+              <div className="text-xs text-red-700 mt-1">
+                This will permanently remove the watch, all pending check-ins, and any alerts. This cannot be undone.
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteWatch}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete Watch'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stop Work confirmation banner */}
       {watch.status === 'active' && confirmingStopWork && !isWorkStopped && (
