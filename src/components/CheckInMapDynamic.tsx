@@ -15,6 +15,12 @@ const CheckInMap = dynamic(() => import('./CheckInMap'), {
   ),
 })
 
-export default function CheckInMapDynamic({ checkIns }: { checkIns: CheckIn[] }) {
-  return <CheckInMap checkIns={checkIns} />
+interface WatchLocation {
+  watch_latitude: number | null
+  watch_longitude: number | null
+  watch_radius_m: number
+}
+
+export default function CheckInMapDynamic({ checkIns, watch }: { checkIns: CheckIn[]; watch?: WatchLocation }) {
+  return <CheckInMap checkIns={checkIns} watch={watch} />
 }

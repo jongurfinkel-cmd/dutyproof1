@@ -51,6 +51,9 @@ export interface Watch {
   system_restored: boolean
   restoration_verified_by: string | null
   restoration_verified_at: string | null
+  watch_latitude: number | null
+  watch_longitude: number | null
+  watch_radius_m: number
 }
 
 export interface WatchChecklistItem {

@@ -100,3 +100,9 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_watches_watch_type ON public.watches(watch_type);
 CREATE INDEX IF NOT EXISTS idx_watches_compliance_status ON public.watches(compliance_status);
+
+-- ── Watch geofence location ─────────────────────────────────────
+ALTER TABLE public.watches
+  ADD COLUMN IF NOT EXISTS watch_latitude double precision,
+  ADD COLUMN IF NOT EXISTS watch_longitude double precision,
+  ADD COLUMN IF NOT EXISTS watch_radius_m int DEFAULT 100;

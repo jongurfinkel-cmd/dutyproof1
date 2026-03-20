@@ -294,7 +294,7 @@ export default function WatchDetailPage() {
   const total = completed.length + missed.length
   const pct = total > 0 ? Math.round((completed.length / total) * 100) : 100
   const nextPending = checkIns.find((c) => c.status === 'pending')
-  const arcR = 28
+  const arcR = 36
   const arcCircumference = 2 * Math.PI * arcR
 
   // Post-work timer calculations
@@ -309,44 +309,45 @@ export default function WatchDetailPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <Link href="/dashboard" className="text-slate-500 hover:text-slate-600 text-sm transition-colors">
-            ← Back to Dashboard
+          <Link href="/dashboard" className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-600 text-sm transition-colors group">
+            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back to Dashboard
           </Link>
           <h2
-            className="text-xl sm:text-3xl text-slate-900 mt-2"
+            className="text-xl sm:text-3xl text-slate-900 mt-3"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
             {watch.facilities.name}
             {watch.location && (
-              <span className="text-slate-500 font-semibold"> — {watch.location}</span>
+              <span className="text-slate-400 font-semibold"> — {watch.location}</span>
             )}
           </h2>
-          <p className="text-slate-500 text-sm mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             {watch.status === 'active' ? (
-              <span className="inline-flex items-center gap-1.5 text-green-600 font-semibold">
+              <span className="inline-flex items-center gap-1.5 text-green-600 font-semibold text-sm bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 Active Watch
               </span>
             ) : (
-              <span className="text-slate-500 font-medium">Completed Watch</span>
+              <span className="inline-flex items-center gap-1.5 text-slate-500 font-medium text-sm bg-slate-50 border border-slate-200 px-3 py-1 rounded-full">Completed Watch</span>
             )}
             {watch.compliance_status === 'gap_detected' && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full ml-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
                 Compliance Gap Detected
               </span>
             )}
-            {' · '}Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
-          </p>
+            <span className="text-slate-400 text-sm">Started {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}</span>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end">
           <button
             onClick={handleDownloadReport}
             disabled={downloading}
-            className="px-4 py-2.5 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="px-4 py-2.5 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {downloading ? 'Generating…' : 'Download Report'}
           </button>
@@ -400,7 +401,7 @@ export default function WatchDetailPage() {
 
       {/* Post-work monitoring banner */}
       {watch.status === 'active' && isWorkStopped && (
-        <div className={`rounded-2xl border p-4 mb-5 shadow-sm ${postWorkComplete ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+        <div className={`rounded-2xl border p-5 shadow-sm ${postWorkComplete ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {!postWorkComplete && (
@@ -410,7 +411,7 @@ export default function WatchDetailPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
               )}
               <div>
-                <div className="text-sm font-bold text-slate-800">
+                <div className="text-sm font-bold text-slate-900">
                   {postWorkComplete
                     ? 'Post-work monitoring complete'
                     : 'Post-work monitoring in progress'}
@@ -433,7 +434,7 @@ export default function WatchDetailPage() {
 
       {/* Closeout form panel */}
       {watch.status === 'active' && confirmingEnd && (
-        <div className="bg-white rounded-2xl border border-red-200 p-6 mb-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
           <h3 className="text-xs font-bold text-red-600 uppercase tracking-widest mb-4">End Watch Closeout</h3>
           <div className="space-y-4">
             <div>
@@ -493,102 +494,139 @@ export default function WatchDetailPage() {
       )}
 
       {/* Watch Info */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
         <h3
-          className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4"
+          className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5"
         >
           Watch Details
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-5 text-sm">
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Watch Type</div>
-            <div className="font-semibold text-slate-800">
-              {watch.watch_type === 'impairment' ? 'Impairment Watch' : 'Hot Work Fire Watch'}
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Watch Type</div>
+            <div>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                watch.watch_type === 'impairment'
+                  ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                  : 'bg-orange-100 text-orange-700 border border-orange-200'
+              }`}>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d={watch.watch_type === 'impairment' ? 'M12 9v2m0 4h.01M12 3l9.5 16.5H2.5L12 3z' : 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'} /></svg>
+                {watch.watch_type === 'impairment' ? 'Impairment Watch' : 'Hot Work Fire Watch'}
+              </span>
             </div>
           </div>
           {watch.location && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Location</div>
-              <div className="font-semibold text-slate-800">{watch.location}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Location
+              </div>
+              <div className="font-semibold text-slate-900">{watch.location}</div>
             </div>
           )}
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Fire Watcher</div>
-            <div className="font-semibold text-slate-800">{watch.assigned_name}</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              Fire Watcher
+            </div>
+            <div className="font-semibold text-slate-900 text-[15px]">{watch.assigned_name}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Phone</div>
-            <div className="font-semibold text-slate-800">{watch.assigned_phone}</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+              Phone
+            </div>
+            <div className="font-semibold text-slate-900">{watch.assigned_phone}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Interval</div>
-            <div className="font-semibold text-slate-800">Every {watch.check_interval_min} min</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Interval
+            </div>
+            <div className="font-semibold text-slate-900 text-[15px]">Every {watch.check_interval_min} min</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Started</div>
-            <div className="font-semibold text-slate-800">{format(new Date(watch.start_time), 'MMM d, h:mm a')}</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              Started
+            </div>
+            <div className="font-semibold text-slate-900">{format(new Date(watch.start_time), 'MMM d, h:mm a')}</div>
           </div>
           {watch.ended_at && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Ended</div>
-              <div className="font-semibold text-slate-800">{format(new Date(watch.ended_at), 'MMM d, h:mm a')}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Ended</div>
+              <div className="font-semibold text-slate-900">{format(new Date(watch.ended_at), 'MMM d, h:mm a')}</div>
             </div>
           )}
           {watch.planned_end_time && !watch.ended_at && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Expected End</div>
-              <div className="font-semibold text-slate-800">{format(new Date(watch.planned_end_time), 'MMM d, h:mm a')}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Expected End</div>
+              <div className="font-semibold text-slate-900">{format(new Date(watch.planned_end_time), 'MMM d, h:mm a')}</div>
             </div>
           )}
           {nextPending && watch.status === 'active' && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Next Check-in</div>
-              <div className="font-semibold text-slate-800">{format(new Date(nextPending.scheduled_time), 'h:mm a')}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                Next Check-in
+              </div>
+              <div className="font-bold text-green-600 text-[15px]">{format(new Date(nextPending.scheduled_time), 'h:mm a')}</div>
             </div>
           )}
           {watch.permit_number && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Permit #</div>
-              <div className="font-semibold text-slate-800">{watch.permit_number}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Permit #</div>
+              <div className="font-semibold text-slate-900">{watch.permit_number}</div>
             </div>
           )}
           {watch.permit_photo_url && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Permit Photo</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Permit Photo</div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={watch.permit_photo_url}
                 alt="Permit photo"
-                className="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity mt-0.5"
+                className="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80 hover:shadow-md transition-all mt-0.5"
                 onClick={() => window.open(watch.permit_photo_url!, '_blank')}
               />
             </div>
           )}
           {watch.post_work_duration_min > 0 && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Post-Work Monitor</div>
-              <div className="font-semibold text-slate-800">{watch.post_work_duration_min} min</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Post-Work Monitor</div>
+              <div className="font-semibold text-slate-900">{watch.post_work_duration_min} min</div>
             </div>
           )}
           {watch.escalation_phone && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Supervisor</div>
-              <div className="font-semibold text-slate-800">{watch.escalation_phone}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                Supervisor
+              </div>
+              <div className="font-semibold text-slate-900">{watch.escalation_phone}</div>
               {watch.escalation_delay_min > 0 && (
-                <div className="text-[10px] text-slate-500 mt-0.5">Alert after {watch.escalation_delay_min} min</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Alert after {watch.escalation_delay_min} min</div>
               )}
             </div>
           )}
           {watch.secondary_escalation_phone && (
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Backup Supervisor</div>
-              <div className="font-semibold text-slate-800">{watch.secondary_escalation_phone}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Backup Supervisor</div>
+              <div className="font-semibold text-slate-900">{watch.secondary_escalation_phone}</div>
+            </div>
+          )}
+          {watch.watch_latitude != null && watch.watch_longitude != null && (
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Watch Location</div>
+              <div className="font-semibold text-slate-900">
+                {watch.watch_latitude.toFixed(5)}, {watch.watch_longitude.toFixed(5)}
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Radius: {watch.watch_radius_m}m</div>
             </div>
           )}
           {watch.reason && (
             <div className="col-span-2 md:col-span-3">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Reason</div>
-              <div className="font-semibold text-slate-800">{watch.reason}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Reason</div>
+              <div className="font-semibold text-slate-900">{watch.reason}</div>
             </div>
           )}
         </div>
@@ -597,13 +635,13 @@ export default function WatchDetailPage() {
         {nextPending && watch.status === 'active' && (() => {
           const checkinUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`
           return (
-            <div className="mt-5 pt-5 border-t border-slate-100">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Check-In Link Delivery</h3>
-              <div className="flex flex-col sm:flex-row gap-5">
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Link Delivery</h3>
+              <div className="flex flex-col sm:flex-row gap-6">
                 {/* QR Code */}
-                <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
-                  <QRCodeSVG value={checkinUrl} size={140} level="M" includeMargin={false} />
-                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Scan to check in</span>
+                <div className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+                  <QRCodeSVG value={checkinUrl} size={160} level="M" includeMargin={false} />
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Scan to check in</span>
                 </div>
                 {/* Actions */}
                 <div className="flex-1 flex flex-col gap-3 justify-center">
@@ -619,7 +657,7 @@ export default function WatchDetailPage() {
                         toast.error('Unable to copy to clipboard')
                       }
                     }}
-                    className="w-full py-3 px-4 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 px-5 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     {copiedLink ? 'Copied to Clipboard ✓' : 'Copy Check-In Link'}
@@ -631,7 +669,7 @@ export default function WatchDetailPage() {
                     <button
                       onClick={handleResendSms}
                       disabled={resendingSms}
-                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 hover:text-slate-800 text-sm font-semibold transition-all hover:shadow-sm flex items-center justify-center gap-2"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                       {resendingSms ? 'Sending…' : 'Send Link via SMS (optional)'}
@@ -649,7 +687,7 @@ export default function WatchDetailPage() {
 
       {/* Handoff panel */}
       {showHandoff && watch.status === 'active' && (
-        <div className="bg-white rounded-2xl border border-blue-200 p-6 mb-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-blue-200 p-6 shadow-sm">
           <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">Reassign Watcher</h3>
           <p className="text-sm text-slate-600 mb-4">
             Hand off this watch to a new fire watcher. The current watcher&apos;s link will be deactivated and a new check-in will be created immediately for the replacement.
@@ -745,46 +783,47 @@ export default function WatchDetailPage() {
       )}
 
       {/* Compliance Score */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Arc ring tile */}
-        <div className={`rounded-2xl border p-5 text-center shadow-sm flex flex-col items-center justify-center ${pct === 100 ? 'bg-green-50 border-green-100' : pct >= 80 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'}`}>
-          <div className="relative w-16 h-16">
-            <svg viewBox="0 0 72 72" width="64" height="64" className="-rotate-90" role="img" aria-label={`${pct}% compliance rate`}>
-              <circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+        <div className={`rounded-2xl border p-6 text-center shadow-sm flex flex-col items-center justify-center ${pct === 100 ? 'bg-gradient-to-b from-green-50 to-green-50/30 border-green-200' : pct >= 80 ? 'bg-gradient-to-b from-amber-50 to-amber-50/30 border-amber-200' : 'bg-gradient-to-b from-red-50 to-red-50/30 border-red-200'}`}>
+          <div className="relative w-20 h-20">
+            <svg viewBox="0 0 88 88" width="80" height="80" className="-rotate-90" role="img" aria-label={`${pct}% compliance rate`}>
+              <circle cx="44" cy="44" r="36" fill="none" stroke="#e2e8f0" strokeWidth="7" />
               <circle
-                cx="36" cy="36" r="28" fill="none"
-                stroke={pct === 100 ? '#22c55e' : pct >= 80 ? '#f59e0b' : '#ef4444'}
-                strokeWidth="8"
+                cx="44" cy="44" r="36" fill="none"
+                stroke={pct === 100 ? '#16a34a' : pct >= 80 ? '#d97706' : '#dc2626'}
+                strokeWidth="7"
                 strokeLinecap="round"
                 strokeDasharray={`${(pct / 100) * arcCircumference} ${arcCircumference}`}
+                style={{ filter: `drop-shadow(0 0 4px ${pct === 100 ? 'rgba(22,163,74,0.3)' : pct >= 80 ? 'rgba(217,119,6,0.3)' : 'rgba(220,38,38,0.3)'})` }}
               />
             </svg>
             <span
-              className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${pct === 100 ? 'text-green-600' : pct >= 80 ? 'text-amber-600' : 'text-red-600'}`}
+              className={`absolute inset-0 flex items-center justify-center text-lg font-bold ${pct === 100 ? 'text-green-600' : pct >= 80 ? 'text-amber-600' : 'text-red-600'}`}
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {pct}%
             </span>
           </div>
-          <div className="text-[10px] text-slate-500 mt-2 uppercase tracking-widest font-semibold">Compliance</div>
+          <div className="text-[10px] text-slate-400 mt-2 uppercase tracking-widest font-semibold">Compliance</div>
         </div>
         {[
-          { label: 'Completed', value: completed.length, color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
-          { label: 'Missed', value: missed.length, color: missed.length > 0 ? 'text-red-600' : 'text-slate-800', bg: missed.length > 0 ? 'bg-red-50 border-red-100' : 'bg-white border-slate-200' },
-          { label: 'Missed Alerts', value: alerts.filter(a => a.alert_type === 'missed_checkin').length, color: 'text-slate-800', bg: 'bg-white border-slate-200' },
+          { label: 'Completed', value: completed.length, color: 'text-green-600', bg: 'bg-white border-green-200', icon: 'M5 13l4 4L19 7' },
+          { label: 'Missed', value: missed.length, color: missed.length > 0 ? 'text-red-600' : 'text-slate-900', bg: missed.length > 0 ? 'bg-white border-red-200' : 'bg-white border-slate-200', icon: 'M6 18L18 6M6 6l12 12' },
+          { label: 'Missed Alerts', value: alerts.filter(a => a.alert_type === 'missed_checkin').length, color: 'text-slate-900', bg: 'bg-white border-slate-200', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
         ].map((s) => (
-          <div key={s.label} className={`rounded-2xl border ${s.bg} p-5 text-center shadow-sm`}>
-            <div className={`text-2xl font-bold ${s.color}`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
-            <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-semibold">{s.label}</div>
+          <div key={s.label} className={`rounded-2xl border ${s.bg} p-6 text-center shadow-sm hover:shadow-md transition-shadow`}>
+            <div className={`text-3xl font-bold ${s.color}`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
+            <div className="text-[10px] text-slate-400 mt-1.5 uppercase tracking-widest font-semibold">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Safety Checklist Panel */}
       {checklistItems.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Pre-Watch Safety Checklist</h3>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Pre-Watch Safety Checklist</h3>
             {watch.checklist_completed_at ? (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -883,11 +922,11 @@ export default function WatchDetailPage() {
       )}
 
       {/* Check-In Locations Map */}
-      <CheckInMapDynamic checkIns={checkIns} />
+      <CheckInMapDynamic checkIns={checkIns} watch={watch} />
 
       {/* Timeline */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-5">Check-In Timeline</h3>
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-sm">
+        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5">Check-In Timeline</h3>
         <CheckInTimeline checkIns={checkIns} alerts={alerts} />
       </div>
     </div>

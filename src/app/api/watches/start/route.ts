@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
       permit_photo_url,
       post_work_duration_min,
       secondary_escalation_phone,
+      watch_latitude,
+      watch_longitude,
+      watch_radius_m,
     } = body
 
     if (!facility_id || !check_interval_min || !assigned_name || !start_time) {
@@ -104,6 +107,23 @@ export async function POST(req: NextRequest) {
     if (post_work_duration_min !== undefined && post_work_duration_min !== null) {
       if (!Number.isInteger(post_work_duration_min) || post_work_duration_min < 0 || post_work_duration_min > 480) {
         return NextResponse.json({ error: 'post_work_duration_min must be an integer 0–480' }, { status: 400 })
+      }
+    }
+
+    // Validate geofence fields
+    if (watch_latitude !== undefined && watch_latitude !== null) {
+      if (typeof watch_latitude !== 'number' || watch_latitude < -90 || watch_latitude > 90) {
+        return NextResponse.json({ error: 'watch_latitude must be between -90 and 90' }, { status: 400 })
+      }
+    }
+    if (watch_longitude !== undefined && watch_longitude !== null) {
+      if (typeof watch_longitude !== 'number' || watch_longitude < -180 || watch_longitude > 180) {
+        return NextResponse.json({ error: 'watch_longitude must be between -180 and 180' }, { status: 400 })
+      }
+    }
+    if (watch_radius_m !== undefined && watch_radius_m !== null) {
+      if (!Number.isInteger(watch_radius_m) || watch_radius_m < 10 || watch_radius_m > 5000) {
+        return NextResponse.json({ error: 'watch_radius_m must be an integer between 10 and 5000' }, { status: 400 })
       }
     }
 
@@ -199,6 +219,9 @@ export async function POST(req: NextRequest) {
         permit_photo_url: permit_photo_url || null,
         post_work_duration_min: post_work_duration_min ?? 30,
         secondary_escalation_phone: secondary_escalation_phone || null,
+        watch_latitude: watch_latitude ?? null,
+        watch_longitude: watch_longitude ?? null,
+        ...(watch_radius_m !== undefined && watch_radius_m !== null ? { watch_radius_m } : {}),
       })
       .select()
       .single()

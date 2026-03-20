@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { Facility } from '@/types/database'
+import LocationPickerDynamic from '@/components/LocationPickerDynamic'
 
 interface ChecklistItem {
   label: string
@@ -97,6 +98,11 @@ export default function CreateWatchForm() {
   const [permitPhotoFile, setPermitPhotoFile] = useState<File | null>(null)
   const [permitPhotoPreview, setPermitPhotoPreview] = useState<string | null>(null)
   const permitFileRef = useRef<HTMLInputElement>(null)
+  const [geofenceEnabled, setGeofenceEnabled] = useState(false)
+  const [watchLatitude, setWatchLatitude] = useState<number | null>(null)
+  const [watchLongitude, setWatchLongitude] = useState<number | null>(null)
+  const [watchRadiusM, setWatchRadiusM] = useState(100)
+  const [customRadius, setCustomRadius] = useState('300')
 
   useEffect(() => {
     const supabase = createClient()
@@ -270,6 +276,9 @@ export default function CreateWatchForm() {
           start_time: new Date(form.start_time).toISOString(),
           planned_end_time: form.planned_end_time ? new Date(form.planned_end_time).toISOString() : null,
           checklist_items: checklistEnabled ? checklistItems : [],
+          watch_latitude: geofenceEnabled ? watchLatitude : null,
+          watch_longitude: geofenceEnabled ? watchLongitude : null,
+          watch_radius_m: geofenceEnabled ? watchRadiusM : 100,
         }),
       })
       const data = await res.json()
@@ -367,6 +376,105 @@ export default function CreateWatchForm() {
           placeholder="e.g. Building D, Bay 2, Roof Level, West Dock"
           className={inputClass}
         />
+      </div>
+
+      {/* ── Watch Location Geofence ── */}
+      <div className="border border-slate-200 rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setGeofenceEnabled((prev) => {
+            if (prev) {
+              setWatchLatitude(null)
+              setWatchLongitude(null)
+              setWatchRadiusM(100)
+            }
+            return !prev
+          })}
+          role="switch"
+          aria-checked={geofenceEnabled}
+          className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
+        >
+          <div>
+            <p className="text-sm font-bold text-slate-800">Set Watch Location</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Drop a pin on the map to define a geofence for check-in location tracking
+            </p>
+          </div>
+          <div aria-hidden="true" className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${geofenceEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${geofenceEnabled ? 'left-5' : 'left-0.5'}`} />
+          </div>
+        </button>
+
+        {geofenceEnabled && (
+          <div className="border-t border-slate-200 px-5 py-4 bg-slate-50 space-y-4">
+            <LocationPickerDynamic
+              latitude={watchLatitude}
+              longitude={watchLongitude}
+              radius={watchRadiusM}
+              onChange={({ latitude, longitude }) => {
+                setWatchLatitude(latitude)
+                setWatchLongitude(longitude)
+              }}
+            />
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Geofence Radius
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { value: 50, label: '50m' },
+                  { value: 100, label: '100m' },
+                  { value: 200, label: '200m' },
+                  { value: 500, label: '500m' },
+                  { value: -1, label: 'Custom' },
+                ].map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`flex items-center justify-center py-2 px-4 border-2 rounded-xl cursor-pointer transition-all text-sm font-bold ${
+                      (opt.value === -1 ? ![50, 100, 200, 500].includes(watchRadiusM) : watchRadiusM === opt.value)
+                        ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
+                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      name="watch_radius"
+                      checked={opt.value === -1 ? ![50, 100, 200, 500].includes(watchRadiusM) : watchRadiusM === opt.value}
+                      onChange={() => {
+                        if (opt.value === -1) {
+                          setWatchRadiusM(parseInt(customRadius) || 300)
+                        } else {
+                          setWatchRadiusM(opt.value)
+                        }
+                      }}
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+              {![50, 100, 200, 500].includes(watchRadiusM) && (
+                <div className="mt-2 flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={customRadius}
+                    onChange={(e) => {
+                      setCustomRadius(e.target.value)
+                      const val = parseInt(e.target.value)
+                      if (val >= 10 && val <= 5000) setWatchRadiusM(val)
+                    }}
+                    min="10"
+                    max="5000"
+                    placeholder="300"
+                    className={`${inputClass} w-28`}
+                  />
+                  <span className="text-sm text-slate-500">meters</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div>

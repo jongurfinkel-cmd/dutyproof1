@@ -5,8 +5,15 @@ import type { CheckIn } from '@/types/database'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+interface WatchLocation {
+  watch_latitude: number | null
+  watch_longitude: number | null
+  watch_radius_m: number
+}
+
 interface CheckInMapProps {
   checkIns: CheckIn[]
+  watch?: WatchLocation
 }
 
 function createIcon(color: string) {
@@ -31,7 +38,18 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
-export default function CheckInMap({ checkIns }: CheckInMapProps) {
+function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+export default function CheckInMap({ checkIns, watch }: CheckInMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
 
@@ -46,8 +64,10 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
     [checkIns]
   )
 
+  const hasWatchLocation = !!(watch?.watch_latitude != null && watch?.watch_longitude != null)
+
   useEffect(() => {
-    if (!mapRef.current || geoCheckIns.length === 0) return
+    if (!mapRef.current || (geoCheckIns.length === 0 && ackPoints.length === 0 && !hasWatchLocation)) return
     if (mapInstance.current) {
       mapInstance.current.remove()
       mapInstance.current = null
@@ -66,6 +86,38 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
 
     const bounds = L.latLngBounds([])
 
+    // Draw watch geofence circle
+    if (hasWatchLocation && watch) {
+      const watchLatLng: L.LatLngExpression = [watch.watch_latitude!, watch.watch_longitude!]
+      bounds.extend(watchLatLng)
+
+      L.circle(watchLatLng, {
+        radius: watch.watch_radius_m,
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.08,
+        weight: 2,
+        opacity: 0.4,
+        dashArray: '6,4',
+      }).addTo(map)
+
+      // Add a small center marker for the watch location
+      const watchIcon = L.divIcon({
+        className: '',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);opacity:0.6;"></div>`,
+      })
+      L.marker(watchLatLng, { icon: watchIcon }).addTo(map)
+        .bindPopup(
+          `<div style="font-size:13px;line-height:1.4;">
+            <strong>Watch Location</strong>
+            <br/><span style="color:#64748b;">Radius: ${watch.watch_radius_m}m</span>
+          </div>`,
+          { closeButton: false }
+        )
+    }
+
     // Worker check-in markers
     const sortedGeo = [...geoCheckIns].sort(
       (a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime()
@@ -82,10 +134,16 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
       const marker = L.marker(latlng, { icon }).addTo(map)
 
       const accuracy = ci.gps_accuracy ? ` (±${ci.gps_accuracy.toFixed(0)}m)` : ''
+      let geofenceInfo = ''
+      if (hasWatchLocation && watch) {
+        const dist = distanceMeters(watch.watch_latitude!, watch.watch_longitude!, ci.latitude!, ci.longitude!)
+        const inside = dist <= watch.watch_radius_m
+        geofenceInfo = `<br/><span style="color:${inside ? '#16a34a' : '#dc2626'};font-weight:600;">${inside ? 'Inside' : 'Outside'} geofence</span> <span style="color:#64748b;">(${Math.round(dist)}m from center)</span>`
+      }
       marker.bindPopup(
         `<div style="font-size:13px;line-height:1.4;">
           <strong>${formatTime(ci.scheduled_time)}</strong> — <span style="color:${ci.status === 'completed' ? '#16a34a' : '#dc2626'};font-weight:600;">${ci.status}</span>
-          <br/><span style="color:#64748b;">${ci.latitude!.toFixed(5)}, ${ci.longitude!.toFixed(5)}${accuracy}</span>
+          <br/><span style="color:#64748b;">${ci.latitude!.toFixed(5)}, ${ci.longitude!.toFixed(5)}${accuracy}</span>${geofenceInfo}
         </div>`,
         { closeButton: false }
       )
@@ -133,9 +191,10 @@ export default function CheckInMap({ checkIns }: CheckInMapProps) {
       map.remove()
       mapInstance.current = null
     }
-  }, [geoCheckIns, ackPoints])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoCheckIns, ackPoints, hasWatchLocation, watch?.watch_latitude, watch?.watch_longitude, watch?.watch_radius_m])
 
-  if (geoCheckIns.length === 0 && ackPoints.length === 0) return null
+  if (geoCheckIns.length === 0 && ackPoints.length === 0 && !hasWatchLocation) return null
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5 shadow-sm">
