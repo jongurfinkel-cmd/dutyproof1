@@ -736,7 +736,7 @@ export default function CreateWatchForm() {
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                         added ? 'border-green-200 bg-green-50 text-green-700 cursor-default' : 'border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600'
                       }`}>
-                      {added ? '\u2713 ' : '+ '}{preset.shortLabel}{preset.requires_photo && <span className="ml-1 text-blue-500">\ud83d\udcf7</span>}
+                      {added ? '&#10003;' : '+ '}{preset.shortLabel}{preset.requires_photo && <span className="ml-1 text-blue-500">&#128247;</span>}
                     </button>
                   )
                 })}
@@ -752,9 +752,9 @@ export default function CreateWatchForm() {
                     <div key={i} className="flex items-start gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2.5">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-800">{item.label}</p>
-                        {item.requires_photo && <span className="text-[10px] text-blue-600 font-semibold">\ud83d\udcf7 Photo required</span>}
+                        {item.requires_photo && <span className="text-[10px] text-blue-600 font-semibold">&#128247; Photo required</span>}
                       </div>
-                      <button type="button" onClick={() => removeItem(i)} className="text-slate-300 hover:text-red-400 text-xl leading-none mt-0.5 flex-shrink-0">\u00d7</button>
+                      <button type="button" onClick={() => removeItem(i)} className="text-slate-300 hover:text-red-400 text-xl leading-none mt-0.5 flex-shrink-0">&times;</button>
                     </div>
                   ))}
                 </div>
