@@ -335,7 +335,7 @@ export default function BillingPage() {
                       Loading&hellip;
                     </span>
                   ) : (
-                    'Manage Billing &rarr;'
+                    {'Manage Billing \u2192'}
                   )}
                 </button>
                 <p className="text-center text-slate-400 text-xs">
@@ -630,7 +630,7 @@ export default function BillingPage() {
                     onClick={proceedToCancel}
                     className="w-full py-3 rounded-xl border-2 border-red-200 hover:border-red-300 hover:bg-red-50 text-red-500 font-semibold text-sm transition-all"
                   >
-                    Cancel in Stripe &rarr;
+                    {'Cancel in Stripe \u2192'}
                   </button>
                 </div>
               </div>
