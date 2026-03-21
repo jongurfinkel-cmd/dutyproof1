@@ -67,21 +67,6 @@ export default function FaqAccordion() {
 
   return (
     <div>
-      {/* Quick answers strip */}
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mb-8 pb-8 border-b border-slate-200">
-        {([
-          '$199/mo flat',
-          'No app for workers',
-          'Works offline',
-          'Cancel anytime',
-        ] as const).map((item) => (
-          <span key={item} className="inline-flex items-center gap-1.5 text-slate-500 text-sm font-medium">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
-            {item}
-          </span>
-        ))}
-      </div>
-
       <div className="divide-y divide-slate-200">
         {FAQS.map((faq, i) => (
           <div key={i}>

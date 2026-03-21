@@ -1,249 +1,245 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import RevealOnScroll from './RevealOnScroll'
 
-const HERO_QUOTES = [
+const QUOTES = [
   {
-    text: "Fire watch permit issued in and out same day. One per area, signed by the super. Mainly it's one guy with a fire extinguisher paying absolutely no attention to the person doing work.",
+    text: "One guy with a fire extinguisher paying absolutely no attention to the person doing work. That's fire watch on most of my jobs.",
     role: 'Project Manager',
     context: 'Commercial Construction',
-    tag: 'Accountability',
-    tagColor: 'text-red-400 bg-red-500/10 border-red-500/20',
   },
   {
-    text: "The process is solid on paper but it comes down to whoever is sitting there with the extinguisher. I've heard stories of fire watch falling asleep and the welder setting something on fire under himself. It's not a glamorous job — no one wants to just sit and watch. But it's necessary.",
-    role: 'Mechanical Pipefitter Foreman',
-    context: 'Industrial',
-    tag: 'Attention',
-    tagColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-  },
-  {
-    text: "What usually breaks it is production pressure. Someone wants to get moving, the watch gets treated like a formality, or the after-watch window gets shortened because 'it looks fine.' The better setups I've seen make it harder to fake — time stamps, photos, and someone actually checking that the watch stayed in place.",
-    role: 'Construction Manager',
-    context: 'General Contracting',
-    tag: 'Pressure',
-    tagColor: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  },
-  {
-    text: "Documentation says everything was fine. The field reality tells a completely different story. And the gap between those two things is where people get hurt. The ones who've actually fixed this did it by making verification something you can't fake — GPS-stamped photos with timestamps. Not a checkbox on a form.",
-    role: 'Compliance Manager',
-    context: 'Excavation & Utilities',
-    tag: 'Documentation',
-    tagColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  },
-]
-
-const MORE_QUOTES = [
-  {
-    text: "I always thought of it like overnight security. Zero authority to do anything — only there to CYA and make a phone call if something happens. And they're usually sleeping or completely useless in the event something actually does happen.",
-    role: 'Safety Manager',
-    context: 'Facilities',
-    tag: 'Authority',
-    tagColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  },
-  {
-    text: "One job in 18 years in the trades. Just one — where the foreman actually got checked on the spot for pulling the fire watch off. That's the reality on the street.",
-    role: 'Ironworker',
-    context: '18 Years in the Field',
-    tag: 'Enforcement',
-    tagColor: 'text-red-400 bg-red-500/10 border-red-500/20',
-  },
-  {
-    text: "Paper permit, usually pencil whipped and generic. Fire watch is often the same mechanic who needed the welding done — they stick around because they have to finish the job. It's a conflict of interest from the start.",
-    role: 'Mechanic',
-    context: 'Mechanical Contracting',
-    tag: 'Conflict',
-    tagColor: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  },
-  {
-    text: "Our fire watch was a joke. Safety standards were horrible and our foreman would push us to get the job done fast. We're supposed to stay an hour after hot work but they didn't want to pay us — so we'd leave right after welding.",
+    text: "We're supposed to stay an hour after hot work but they didn't want to pay us — so we'd leave right after welding.",
     role: 'Welder',
     context: 'Marine Fabrication',
-    tag: 'Shortcuts',
-    tagColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
   },
   {
-    text: "They'll grab whoever's available — usually a first-year apprentice who has no idea what to watch for or what to do if something happens. And the hot work permit is just paperwork. Check the boxes, get a signature, move on.",
-    role: 'Journeyman Ironworker',
-    context: 'Commercial',
-    tag: 'Training',
-    tagColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    text: "Documentation says everything was fine. The field reality tells a completely different story. That gap is where people get hurt.",
+    role: 'Compliance Manager',
+    context: 'Excavation & Utilities',
+  },
+  {
+    text: "The watch gets treated like a formality. The after-watch window gets shortened because 'it looks fine.' Then something catches three hours later.",
+    role: 'Construction Manager',
+    context: 'General Contracting',
+  },
+  {
+    text: "Fire watch is often the same mechanic who needed the welding done — they stick around because they have to finish the job. It's a conflict of interest from the start.",
+    role: 'Mechanic',
+    context: 'Mechanical Contracting',
   },
 ]
 
-function QuoteCard({ q }: { q: { text: string; role: string; context: string; tag?: string; tagColor?: string } }) {
-  return (
-    <div className="rounded-xl p-6 flex flex-col justify-between transition-all duration-200 cursor-default bg-white/[0.025] border border-white/[0.06] hover:bg-white/[0.05] hover:border-orange-500/20 hover:-translate-y-0.5">
-      <div>
-        <div className="flex items-center gap-2.5 mb-3">
-          <svg className="opacity-[0.12]" width="18" height="14" viewBox="0 0 20 16" fill="none" aria-hidden="true">
-            <path
-              d="M8.2 0L5 5.2C2.8 8.6 1.6 11.2 1.6 13.2C1.6 14.8 2.6 16 4.4 16C6 16 7.2 14.8 7.2 13.2C7.2 11.8 6.2 10.6 4.8 10.6L5 10C5.2 9 6 7.4 7.2 5.6L8.2 4V0ZM18.2 0L15 5.2C12.8 8.6 11.6 11.2 11.6 13.2C11.6 14.8 12.6 16 14.4 16C16 16 17.2 14.8 17.2 13.2C17.2 11.8 16.2 10.6 14.8 10.6L15 10C15.2 9 16 7.4 17.2 5.6L18.2 4V0Z"
-              fill="#f97316"
-            />
-          </svg>
-          {q.tag && (
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${q.tagColor ?? 'text-slate-400 bg-slate-500/10 border-slate-500/20'}`}>
-              {q.tag}
-            </span>
-          )}
-        </div>
-        <p className="text-[15px] leading-relaxed text-slate-300">
-          {q.text}
-        </p>
-      </div>
-      <div className="mt-5 pt-4 border-t border-white/[0.05] flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-500/10 to-amber-500/5">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
-        <div>
-          <div className="text-xs font-semibold text-slate-300">{q.role}</div>
-          <div className="text-[11px] text-slate-500">{q.context}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function SocialProof() {
-  const [expanded, setExpanded] = useState(false)
+  const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const advance = useCallback(() => {
+    setActive((a) => (a + 1) % QUOTES.length)
+  }, [])
+
+  // Auto-advance every 5s unless user has interacted
+  useEffect(() => {
+    if (paused) return
+    timerRef.current = setTimeout(advance, 5000)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [active, paused, advance])
+
+  function goTo(i: number) {
+    setActive(i)
+    setPaused(true)
+    // Resume auto-advance after 12s of inactivity
+    setTimeout(() => setPaused(false), 12000)
+  }
+
+  // Touch swipe support
+  const touchStart = useRef<number | null>(null)
+  function onTouchStart(e: React.TouchEvent) {
+    touchStart.current = e.touches[0].clientX
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStart.current === null) return
+    const diff = touchStart.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goTo((active + 1) % QUOTES.length)
+      else goTo((active - 1 + QUOTES.length) % QUOTES.length)
+    }
+    touchStart.current = null
+  }
 
   return (
-    <section id="from-the-field" className="relative py-24 bg-slate-950 overflow-hidden">
-      {/* Subtle glow */}
+    <section className="relative py-20 sm:py-28 bg-slate-950 overflow-hidden">
+      {/* Background texture */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-[15%] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.03) 0%, transparent 65%)' }}
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
       />
 
       <div className="relative max-w-5xl mx-auto px-6">
 
-        {/* Header */}
-        <RevealOnScroll className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-slate-400 text-[13px] font-medium mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            Straight from the field
+        {/* ── Header ── */}
+        <RevealOnScroll className="text-center mb-16">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-red-500/[0.08] border border-red-500/20 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-red-400 text-xs font-semibold tracking-wide">100+ tradespeople surveyed</span>
           </div>
           <h2
-            className="text-3xl sm:text-4xl lg:text-5xl text-white leading-tight mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl text-white leading-tight"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.035em' }}
           >
-            We went to the trades and<br />asked one question.
+            We asked the trades one question.
           </h2>
+          <p className="text-lg sm:text-xl text-slate-400 mt-4 max-w-lg mx-auto leading-relaxed">
+            &ldquo;How does fire watch actually work on your jobs?&rdquo;
+          </p>
           <p
-            className="text-xl sm:text-2xl text-slate-500 italic"
-            style={{ letterSpacing: '-0.015em' }}
+            className="text-red-500 text-base sm:text-lg font-bold mt-4"
+            style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}
           >
-            &ldquo;What does fire watch actually look like on your job sites?&rdquo;
+            A hundred conversations. Same answer. Every time.
           </p>
         </RevealOnScroll>
 
-        {/* Stats row */}
-        <RevealOnScroll delay={100} className="mb-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-xl bg-white/[0.04] overflow-hidden">
-            {([
-              { value: '100+', label: 'Field responses', accent: false },
-              { value: '6', label: 'Trades represented', accent: false },
-              { value: '#1', label: 'Answer: "Pencil-whipped"', accent: false },
-              { value: '0', label: 'Said documentation works as designed', accent: true },
-            ] as const).map((s, i) => (
-              <div key={i} className="bg-slate-950 text-center py-7 px-4">
-                <div
-                  className={`font-extrabold leading-none mb-2 ${
-                    s.accent ? 'text-2xl sm:text-3xl text-red-500' : 'text-3xl sm:text-4xl text-white'
-                  }`}
-                  style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}
-                >
-                  {s.value}
-                </div>
-                <div className="text-slate-400 text-xs font-medium">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </RevealOnScroll>
+        {/* ── Stacked Card Deck ── */}
+        <div
+          className="relative max-w-lg mx-auto mb-6"
+          style={{ height: 260 }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {QUOTES.map((q, i) => {
+            const offset = (i - active + QUOTES.length) % QUOTES.length
+            const isBehind = offset === QUOTES.length - 1
 
-        <p className="text-center text-slate-500 text-xs mb-12">
-          Collected from trade professionals across the field, 2025–2026.
-          These responses shaped every feature in DutyProof. We&apos;re onboarding founding partners now — <a href="/signup" className="text-slate-400 hover:text-white underline underline-offset-2 transition-colors">join them</a>.
-        </p>
+            let x = 0, y = 0, scale = 1, opacity = 1, z = 50, rotate = 0
 
-        {/* Hero quotes — first row */}
-        <RevealOnScroll delay={150}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-3.5">
-            {HERO_QUOTES.slice(0, 2).map((q, i) => (
-              <QuoteCard key={i} q={q} />
-            ))}
-          </div>
-        </RevealOnScroll>
+            if (isBehind) {
+              x = -40; y = 0; scale = 0.95; opacity = 0; z = 0; rotate = -3
+            } else if (offset === 0) {
+              x = 0; y = 0; scale = 1; opacity = 1; z = 40; rotate = 0
+            } else if (offset === 1) {
+              x = 20; y = 10; scale = 0.96; opacity = 0.6; z = 30; rotate = 1.8
+            } else if (offset === 2) {
+              x = 38; y = 18; scale = 0.92; opacity = 0.35; z = 20; rotate = 3.2
+            } else if (offset === 3) {
+              x = 52; y = 24; scale = 0.88; opacity = 0.15; z = 10; rotate = 4.5
+            } else {
+              x = 60; y = 28; scale = 0.85; opacity = 0; z = 0; rotate = 5
+            }
 
-        {/* Pull stat break */}
-        <RevealOnScroll delay={200}>
-          <div className="relative rounded-xl bg-gradient-to-r from-red-500/[0.05] to-orange-500/[0.03] border border-red-500/10 p-8 sm:p-10 mb-3.5">
-            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-xl" style={{ boxShadow: 'inset 0 0 60px rgba(239,68,68,0.06), 0 0 80px rgba(239,68,68,0.04)' }} />
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-7">
+            return (
               <div
-                className="text-4xl sm:text-4xl lg:text-5xl font-extrabold text-red-500 italic text-center sm:text-left"
-                style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}
+                key={i}
+                onClick={() => offset !== 0 && goTo(i)}
+                className={`absolute inset-x-0 top-0 transition-all duration-[600ms] ease-out ${
+                  offset === 0 ? '' : 'cursor-pointer'
+                }`}
+                style={{
+                  transform: `translateX(${x}px) translateY(${y}px) scale(${scale}) rotate(${rotate}deg)`,
+                  zIndex: z,
+                  opacity,
+                  transformOrigin: 'bottom left',
+                }}
               >
-                Every.<br className="sm:hidden" /> Single.<br className="sm:hidden" /> One.
+                <div className={`rounded-2xl p-7 sm:p-8 transition-all duration-[600ms] ${
+                  offset === 0
+                    ? 'bg-gradient-to-br from-slate-800/90 to-slate-900 border-2 border-orange-500/25 shadow-[0_8px_40px_-8px_rgba(249,115,22,0.15)]'
+                    : 'bg-slate-900/90 border-2 border-white/[0.06] hover:border-white/[0.12]'
+                }`}>
+                  {/* Quote mark */}
+                  <svg className={`mb-4 transition-opacity duration-500 ${offset === 0 ? 'opacity-20' : 'opacity-[0.06]'}`} width="28" height="20" viewBox="0 0 28 20" fill="none" aria-hidden="true">
+                    <path d="M10.2 0L6.2 6.5C3.5 10.7 2 14 2 16.5C2 18.5 3.2 20 5.5 20C7.5 20 9 18.5 9 16.5C9 14.7 7.7 13.3 6 13.3L6.2 12.5C6.5 11.2 7.5 9.2 9 7L10.2 5V0ZM24.2 0L20.2 6.5C17.5 10.7 16 14 16 16.5C16 18.5 17.2 20 19.5 20C21.5 20 23 18.5 23 16.5C23 14.7 21.7 13.3 20 13.3L20.2 12.5C20.5 11.2 21.5 9.2 23 7L24.2 5V0Z" fill={offset === 0 ? '#f97316' : '#ffffff'} />
+                  </svg>
+                  <p className={`text-[15px] sm:text-base leading-relaxed mb-6 transition-colors duration-500 ${
+                    offset === 0 ? 'text-slate-100' : 'text-slate-400'
+                  }`}>
+                    {q.text}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
+                      offset === 0
+                        ? 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
+                        : 'bg-white/[0.04] text-slate-600 border border-white/[0.06]'
+                    }`}>
+                      {q.role.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                    </div>
+                    <div>
+                      <div className={`text-sm font-semibold transition-colors duration-500 ${
+                        offset === 0 ? 'text-orange-400' : 'text-slate-500'
+                      }`}>{q.role}</div>
+                      <div className="text-xs text-slate-600">{q.context}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="hidden sm:block w-px h-12 bg-red-500/15 flex-shrink-0" />
-              <div className="max-w-md text-center sm:text-left">
-                <p className="text-white/90 text-[15px] font-semibold mb-1.5">100+ tradespeople. Same answer.</p>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  Paper permits. Pencil-whipped logs. A warm body with an extinguisher and no accountability.
-                  Not one person said fire watch documentation is working as designed.
-                </p>
-              </div>
-            </div>
-          </div>
-        </RevealOnScroll>
-
-        {/* Hero quotes — second row */}
-        <RevealOnScroll delay={250}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {HERO_QUOTES.slice(2).map((q, i) => (
-              <QuoteCard key={i + 2} q={q} />
-            ))}
-          </div>
-        </RevealOnScroll>
-
-        {/* Expand / collapse toggle */}
-        <div className="text-center mt-10">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="px-8 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-500 text-sm font-medium hover:border-white/[0.16] hover:text-slate-300 transition-all"
-          >
-            {expanded ? 'Show less' : `Read ${MORE_QUOTES.length} more responses`}
-          </button>
+            )
+          })}
         </div>
 
-        {/* Expanded quotes with staggered animation */}
-        {expanded && (
-          <>
-            <style>{`
-              @keyframes quoteReveal {
-                from { opacity: 0; transform: translateY(16px); }
-                to { opacity: 1; transform: translateY(0); }
-              }
-            `}</style>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-5">
-              {MORE_QUOTES.map((q, i) => (
-                <div
-                  key={`more-${i}`}
-                  style={{ animation: `quoteReveal 0.4s ease-out ${i * 80}ms backwards` }}
-                >
-                  <QuoteCard q={q} />
-                </div>
-              ))}
+        {/* ── Dots ── */}
+        <div className="flex items-center justify-center gap-2 mb-16">
+          {QUOTES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Quote ${i + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === active
+                  ? 'w-7 h-2 bg-orange-500'
+                  : 'w-2 h-2 bg-white/10 hover:bg-white/25'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* ── The Closer ── */}
+        <RevealOnScroll delay={100}>
+          {/* Divider line */}
+          <div className="flex items-center justify-center gap-4 mb-12">
+            <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-slate-700" />
+            <div className="w-2 h-2 rounded-full bg-blue-500/30 border border-blue-500/20" />
+            <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-slate-700" />
+          </div>
+
+          <div className="max-w-xl mx-auto text-center">
+            <h3
+              className="text-2xl sm:text-3xl text-white font-bold leading-snug mb-4"
+              style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.025em' }}
+            >
+              DutyProof fixes this.
+            </h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-sm text-slate-400 mb-8">
+              <span className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                GPS&#8209;verified check&#8209;ins
+              </span>
+              <span className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                Tamper&#8209;proof records
+              </span>
+              <span className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                60&#8209;second escalation
+              </span>
             </div>
-          </>
-        )}
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/40 transition-all hover:-translate-y-0.5 hover:shadow-blue-800/50"
+            >
+              Start Your First Watch →
+            </Link>
+            <p className="mt-4 text-slate-600 text-xs">
+              No app to install · No training · One link per watch
+            </p>
+          </div>
+        </RevealOnScroll>
       </div>
     </section>
   )

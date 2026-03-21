@@ -1,6 +1,14 @@
 import { MetadataRoute } from 'next'
+import { articles } from '@/lib/articles'
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const articleEntries: MetadataRoute.Sitemap = articles.map((a) => ({
+    url: `https://dutyproof.com/resources/${a.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.8,
+  }))
+
   return [
     {
       url: 'https://dutyproof.com',
@@ -14,6 +22,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.9,
     },
+    {
+      url: 'https://dutyproof.com/resources',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    ...articleEntries,
     {
       url: 'https://dutyproof.com/industries',
       lastModified: new Date(),

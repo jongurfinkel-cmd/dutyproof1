@@ -84,6 +84,12 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               Pricing
             </Link>
             <Link
+              href="/resources"
+              className="hidden md:block px-3.5 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-lg hover:bg-white/[0.05] transition-all"
+            >
+              Resources
+            </Link>
+            <Link
               href="/support"
               className="hidden md:block px-3.5 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-lg hover:bg-white/[0.05] transition-all"
             >
@@ -157,6 +163,13 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               Pricing
             </Link>
             <Link
+              href="/resources"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
+            >
+              Resources
+            </Link>
+            <Link
               href="/support"
               onClick={() => setMenuOpen(false)}
               className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all"
@@ -194,6 +207,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <span className="text-slate-600 text-sm hidden sm:inline">— Fire watch compliance, automated.</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-500">
+              <Link href="/resources" className="hover:text-slate-300 transition-colors">Resources</Link>
               <Link href="/support" className="hover:text-slate-300 transition-colors">Support</Link>
               <Link href="/login" className="hover:text-slate-300 transition-colors">Sign In</Link>
               <Link href="/signup" className="hover:text-slate-300 transition-colors">Get Started</Link>

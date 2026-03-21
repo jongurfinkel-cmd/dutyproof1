@@ -358,13 +358,32 @@ export default function InteractiveDemo() {
             className="text-3xl sm:text-4xl lg:text-[2.25rem] xl:text-[2.6rem] text-white leading-[1.12] tracking-tight mb-4"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
           >
-            Your fire watch logs won&apos;t survive{' '}
-            <span className="text-transparent bg-clip-text hero-shimmer" style={{ backgroundImage: 'linear-gradient(90deg, #ef4444, #f97316, #ef4444, #f97316, #ef4444)' }}>an OSHA audit.</span>
+            Paper logs can&apos;t prove your watcher was on site.{' '}
+            <span className="text-transparent bg-clip-text hero-shimmer" style={{ backgroundImage: 'linear-gradient(90deg, #ef4444, #f97316, #ef4444, #f97316, #ef4444)' }}>This can.</span>
           </h1>
 
-          <p className="text-slate-400 text-sm leading-relaxed lg:max-w-sm mb-5">
-            Your guy gets a secure check-in link. He taps it. You get proof he was there — with location, time, and a record nobody can change. If he misses one, you know in under 60 seconds.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400 lg:max-w-sm mb-5">
+            <span className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+              GPS&#8209;verified
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+              Time&#8209;stamped
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+              Tamper&#8209;proof
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+              Works offline
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+              No app to install
+            </span>
+          </div>
 
           {/* Phase stepper — vertical on desktop */}
           <div className="hidden lg:flex flex-col gap-0.5 mb-6">
@@ -409,20 +428,6 @@ export default function InteractiveDemo() {
             </p>
           </div>
 
-          {/* Social proof */}
-          <div className="hidden lg:flex items-center gap-3 mt-6 pt-5 border-t border-slate-800">
-            <div className="flex -space-x-2">
-              {['bg-orange-500', 'bg-blue-500', 'bg-green-500', 'bg-red-500'].map((bg, i) => (
-                <div key={i} className={`w-7 h-7 rounded-full ${bg} border-2 border-slate-950 flex items-center justify-center`}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="text-slate-300 text-xs font-semibold">Built for the trades</div>
-              <div className="text-slate-500 text-[10px]">Welders, pipefitters, mechanical contractors</div>
-            </div>
-          </div>
         </div>
 
         {/* ── Right column: demo ── */}

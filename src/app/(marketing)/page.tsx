@@ -47,16 +47,13 @@ export const metadata = {
 
 
 const includedFeatures = [
-  'Run as many watches as you need — no extra charge',
-  'One persistent check-in link per watch — worker opens it once, it handles the rest',
-  'Every check-in shows where your guy was standing',
-  'Works even when there\'s no cell service on site',
-  'If someone misses a check-in, your super knows in under 60 seconds',
-  'Supervisors tap to confirm they saw the alert — that gets logged too',
-  'Pre-watch safety checklist with photos before the torch lights',
-  'Records can\'t be edited or deleted — ever',
-  'One click to download a PDF you can hand to any inspector',
-  'Add as many admins and supers as you want',
+  'Unlimited job sites and active watches',
+  'GPS-verified check-ins with every round',
+  'Missed check-in alerts in under 60 seconds',
+  'Works offline — no cell service required',
+  'Tamper-proof records that can\'t be edited or deleted',
+  'One-click OSHA-ready PDF compliance reports',
+  'Hot work and impairment watches',
 ]
 
 const jsonLd = [
@@ -214,8 +211,8 @@ export default function LandingPage() {
           <RevealOnScroll className="mb-12">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               {([
-                { n: '4,630', l: 'structure fires per year caused by hot work', s: 'NFPA', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: false },
-                { n: '$355M', l: 'in property damage every year', s: 'NFPA', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: true },
+                { n: '3,396', l: 'structure fires per year caused by hot work', s: 'NFPA (2017–2021)', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: false },
+                { n: '$292M', l: 'in property damage every year', s: 'NFPA (2017–2021)', href: 'https://www.nfpa.org/education-and-research/research/nfpa-research/fire-statistical-reports/structure-fires-started-by-hot-work', highlight: true },
                 { n: '48 min', l: 'avg time before a post-weld fire ignites', s: 'NFPA 51B', href: 'https://www.nfpa.org/codes-and-standards/nfpa-51b-standard-development/51b', highlight: false },
               ] as const).map((stat) => (
                 <div key={stat.n} className={`text-center p-4 rounded-xl ${stat.highlight ? 'bg-red-50 border-2 border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
@@ -316,23 +313,82 @@ export default function LandingPage() {
       <SocialProof />
 
       {/* ════════════════════════════════════════
+          RESOURCES TEASER
+      ════════════════════════════════════════ */}
+      <section className="py-20 bg-white border-t border-slate-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <RevealOnScroll className="text-center mb-12">
+            <div className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-3">Don&apos;t take our word for it</div>
+            <h2
+              className="text-2xl sm:text-3xl text-slate-900 mb-3"
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            >
+              See what NFPA, FM&nbsp;Global, and OSHA say.
+            </h2>
+            <p className="text-slate-500 text-sm max-w-lg mx-auto">
+              Real data from the organizations that write the standards, investigate the fires, and pay the claims.
+            </p>
+          </RevealOnScroll>
+
+          <RevealOnScroll delay={100} className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            {([
+              { slug: 'nfpa-hot-work-structure-fires', tag: 'NFPA', tagColor: 'bg-red-100 text-red-700', stat: '3,396', statLabel: 'structure fires/year', title: 'Hot Work Structure Fires Per Year' },
+              { slug: 'fm-global-hot-work-losses', tag: 'FM Global', tagColor: 'bg-purple-100 text-purple-700', stat: '41x', statLabel: 'greater losses without a program', title: '41x Greater Losses Without a Hot Work Program' },
+              { slug: 'boston-hot-work-fire-2014', tag: 'Case Study', tagColor: 'bg-red-100 text-red-700', stat: '2', statLabel: 'firefighters killed', title: 'The Boston Fire That Changed a State' },
+            ] as const).map((card) => (
+              <Link
+                key={card.slug}
+                href={`/resources/${card.slug}`}
+                className="group flex flex-col rounded-2xl border-2 border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/30 p-6 transition-all duration-200 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
+              >
+                <span className={`self-start text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full mb-4 ${card.tagColor}`}>
+                  {card.tag}
+                </span>
+                <div className="mb-3">
+                  <div
+                    className="text-3xl text-slate-900 mb-0.5"
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+                  >
+                    {card.stat}
+                  </div>
+                  <div className="text-xs text-slate-400">{card.statLabel}</div>
+                </div>
+                <h3
+                  className="text-sm font-bold text-slate-700 group-hover:text-blue-700 transition-colors leading-snug mb-auto"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {card.title}
+                </h3>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-blue-600 text-xs font-semibold group-hover:gap-2.5 transition-all">
+                  Read article
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                </span>
+              </Link>
+            ))}
+          </RevealOnScroll>
+
+          <div className="text-center">
+            <Link
+              href="/resources"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 text-sm font-bold transition-all hover:-translate-y-0.5"
+            >
+              See all 12 resources
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
           PRICING + CALCULATOR
       ════════════════════════════════════════ */}
       <section id="pricing" className="py-24 bg-slate-50 border-t border-slate-100">
         <div className="max-w-5xl mx-auto px-6">
           <RevealOnScroll className="text-center mb-14">
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-slate-400 font-medium mb-10">
-              {(['No per-user fees', 'No setup costs', 'Cancel any time'] as const).map((item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
-                  {item}
-                </span>
-              ))}
-            </div>
             <h2 className="text-2xl sm:text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
-              Simple, honest pricing
+              One price. Every feature. Every site.
             </h2>
-            <p className="text-slate-500 text-lg">One price. Everything included. No surprises.</p>
+            <p className="text-slate-500 text-lg">No per-user fees. No setup costs. Cancel any time.</p>
           </RevealOnScroll>
 
           {/* Pricing card — single plan */}
@@ -388,18 +444,12 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Any missed rounds and how fast your super responded</li>
                     <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-slate-300 flex-shrink-0" />Print it or email it — takes one click</li>
                   </ul>
-                  <a
-                    href="/sample-report.pdf"
-                    download
-                    className="inline-flex items-center gap-1.5 mt-3 text-blue-600 hover:text-blue-700 text-xs font-semibold transition-colors"
-                  >
+                  <span className="inline-flex items-center gap-1.5 mt-3 text-blue-600 text-xs font-semibold">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    Download Sample Report (PDF)
-                  </a>
+                    Generated automatically after every watch
+                  </span>
                 </div>
               </div>
             </div>
@@ -464,24 +514,6 @@ export default function LandingPage() {
             <span>Time stamped</span>
             <span className="text-slate-600" aria-hidden="true">/</span>
             <span className="text-white font-semibold">Every round documented</span>
-          </div>
-
-          {/* Mission */}
-          <div className="max-w-lg mx-auto mb-10 rounded-xl bg-white/[0.03] border border-white/[0.07] p-6 text-left">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-4-4-6-4-10z" fill="#fb923c" />
-                  <path d="M12 8c0 2-2 3-2 5a2 2 0 0 0 4 0c0-2-2-3-2-5z" fill="#fbbf24" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  We talked to over 100 contractors about how fire watch actually works on the job.
-                  Not one said the paperwork side is handled. That&apos;s why we built this.
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Setup steps */}
