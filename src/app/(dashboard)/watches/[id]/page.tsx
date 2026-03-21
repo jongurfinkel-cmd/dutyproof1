@@ -37,6 +37,7 @@ export default function WatchDetailPage() {
   const [handoffLoading, setHandoffLoading] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [checklistExpanded, setChecklistExpanded] = useState(false)
 
   // Closeout form state
   const [closeoutNotes, setCloseoutNotes] = useState('')
@@ -141,6 +142,103 @@ export default function WatchDetailPage() {
     } finally {
       setStoppingWork(false)
     }
+  }
+
+  function handlePrintWatchSheet(url: string) {
+    if (!watch) return
+
+    // Grab the rendered QR SVG from the page so we don't depend on an external API
+    const qrSvgEl = document.querySelector('[data-print-qr] svg') as SVGElement | null
+    let qrHtml = ''
+    if (qrSvgEl) {
+      const clone = qrSvgEl.cloneNode(true) as SVGElement
+      clone.setAttribute('width', '200')
+      clone.setAttribute('height', '200')
+      qrHtml = clone.outerHTML
+    } else {
+      // Fallback: use an external QR API if the SVG isn't found on the page
+      qrHtml = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url) + '" alt="QR Code" width="200" height="200" />'
+    }
+
+    const printWin = window.open('', '_blank', 'width=800,height=900')
+    if (!printWin) { toast.error('Pop-up blocked. Allow pop-ups and try again.'); return }
+
+    const w = watch as unknown as Record<string, unknown>
+    const facilityName = watch.facilities.name
+    const loc = watch.location ? ' \u2014 ' + watch.location : ''
+    const watchType = watch.watch_type === 'hot_work' ? 'Hot Work Fire Watch' : watch.watch_type
+    const started = format(new Date(watch.created_at), 'MMM d, yyyy h:mm a')
+    const expectedEnd = w.expected_end ? format(new Date(w.expected_end as string), 'MMM d, yyyy h:mm a') : ''
+    const generated = format(new Date(), 'MMM d, yyyy h:mm a')
+
+    const fields = [
+      '<div class="field"><label>Fire Watch</label><p>' + watch.assigned_name + '</p></div>',
+      '<div class="field"><label>Watch Type</label><p>' + watchType + '</p></div>',
+      '<div class="field"><label>Check-In Interval</label><p>Every ' + watch.check_interval_min + ' min</p></div>',
+      '<div class="field"><label>Started</label><p>' + started + '</p></div>',
+    ]
+    if (expectedEnd) fields.push('<div class="field"><label>Expected End</label><p>' + expectedEnd + '</p></div>')
+    if (w.post_work_monitor_min) fields.push('<div class="field"><label>Post-Work Monitor</label><p>' + w.post_work_monitor_min + ' min</p></div>')
+    if (watch.reason) fields.push('<div class="field full"><label>Reason</label><p>' + watch.reason + '</p></div>')
+    if (w.supervisor_phone) fields.push('<div class="field"><label>Supervisor Phone</label><p>' + w.supervisor_phone + '</p></div>')
+
+    const html = [
+      '<!DOCTYPE html><html><head><title>Fire Watch Assignment</title>',
+      '<style>',
+      '* { margin:0; padding:0; box-sizing:border-box; }',
+      'body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; padding:40px; max-width:700px; margin:0 auto; color:#1e293b; }',
+      'h1 { font-size:22px; font-weight:800; margin-bottom:4px; }',
+      '.subtitle { color:#64748b; font-size:13px; margin-bottom:24px; }',
+      '.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; margin-bottom:24px; padding:20px; border:2px solid #e2e8f0; border-radius:12px; }',
+      '.field label { display:block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; margin-bottom:2px; }',
+      '.field p { font-size:14px; font-weight:600; }',
+      '.field.full { grid-column:1/-1; }',
+      '.qr-section { text-align:center; padding:24px; border:2px solid #e2e8f0; border-radius:12px; margin-bottom:24px; }',
+      '.qr-section h2 { font-size:14px; font-weight:700; margin-bottom:4px; }',
+      '.qr-section .desc { font-size:11px; color:#64748b; margin-bottom:16px; }',
+      '.qr-section svg, .qr-section img { display:block; margin:0 auto; }',
+      '.url { font-family:monospace; font-size:10px; color:#94a3b8; word-break:break-all; margin-top:12px; }',
+      '.instructions { padding:20px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:24px; }',
+      '.instructions h3 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; margin-bottom:8px; }',
+      '.instructions ol { padding-left:20px; font-size:13px; line-height:1.8; color:#475569; }',
+      '.sig-line { margin-top:40px; display:flex; gap:40px; }',
+      '.sig-line > div { flex:1; }',
+      '.sig-line .line { border-bottom:1px solid #cbd5e1; height:40px; }',
+      '.sig-line label { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em; font-weight:600; }',
+      '.footer { text-align:center; font-size:10px; color:#cbd5e1; margin-top:32px; padding-top:16px; border-top:1px solid #e2e8f0; }',
+      '@media print { body { padding:20px; } }',
+      '</style></head><body>',
+      '<h1>Fire Watch Assignment</h1>',
+      '<p class="subtitle">' + facilityName + loc + '</p>',
+      '<div class="grid">' + fields.join('') + '</div>',
+      '<div class="qr-section">',
+      '<h2>Check-In QR Code</h2>',
+      '<p class="desc">Scan with your phone camera to open the check-in page</p>',
+      qrHtml,
+      '<p class="url">' + url + '</p>',
+      '</div>',
+      '<div class="instructions">',
+      '<h3>Instructions for Fire Watch</h3>',
+      '<ol>',
+      '<li>Scan the QR code above or open the link on your phone</li>',
+      '<li>Keep the page open \u2014 you will be alerted when it is time to check in</li>',
+      '<li>When the timer goes off, tap <strong>CHECK IN NOW</strong> to confirm you are on-site</li>',
+      '<li>If you need help, tap <strong>Call Supervisor</strong> on the check-in page</li>',
+      '<li>Do not leave the watch zone until your watch is officially ended by your supervisor</li>',
+      '</ol></div>',
+      '<div class="sig-line"><div><div class="line"></div><label>Fire Watch Signature</label></div><div><div class="line"></div><label>Supervisor Signature</label></div></div>',
+      '<div class="sig-line" style="margin-top:20px"><div><div class="line"></div><label>Date</label></div><div><div class="line"></div><label>Time</label></div></div>',
+      '<p class="footer">Generated by DutyProof \u00b7 ' + generated + '</p>',
+      '<script>',
+      'var img=document.querySelector(".qr-section img");',
+      'if(img){if(img.complete){setTimeout(function(){window.print()},300)}else{img.onload=function(){setTimeout(function(){window.print()},300)};img.onerror=function(){window.print()}}}',
+      'else{setTimeout(function(){window.print()},300)}',
+      '<\/script>',
+      '</body></html>',
+    ].join('\n')
+
+    printWin.document.write(html)
+    printWin.document.close()
   }
 
   async function handleEndWatch() {
@@ -729,15 +827,18 @@ export default function WatchDetailPage() {
         </div>
 
         {/* Check-In Link Delivery — primary method */}
-        {nextPending && watch.status === 'active' && (() => {
-          const checkinUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${nextPending.token}`
+        {watch.status === 'active' && (() => {
+          // Use persistent session link when available, fall back to per-check-in token
+          const linkToken = watch.session_token || (nextPending ? nextPending.token : null)
+          if (!linkToken) return null
+          const checkinUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin/${linkToken}`
           return (
             <div className="mt-5 pt-5 border-t border-slate-100">
               <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Check-In Link Delivery</h3>
               <div className="flex flex-col gap-4">
                 {/* QR + Copy row */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white">
+                  <div className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/80 to-white" data-print-qr>
                     <QRCodeSVG value={checkinUrl} size={96} level="M" includeMargin={false} />
                     <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">Scan</span>
                   </div>
@@ -759,6 +860,13 @@ export default function WatchDetailPage() {
                       {copiedLink ? 'Copied ✓' : 'Copy Check-In Link'}
                     </button>
                     <div className="text-[10px] text-slate-300 font-mono truncate">{checkinUrl}</div>
+                    <button
+                      onClick={() => handlePrintWatchSheet(checkinUrl)}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-blue-200 bg-white hover:bg-blue-50/50 text-slate-500 hover:text-blue-600 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                      Print Watch Sheet
+                    </button>
                     {watch.assigned_phone && (
                       <button
                         onClick={handleResendSms}
@@ -919,37 +1027,89 @@ export default function WatchDetailPage() {
       </div>
 
       {/* Safety Checklist Panel */}
-      {checklistItems.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Safety Checklist</h3>
-            {watch.checklist_completed_at ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Completed {format(new Date(watch.checklist_completed_at), 'MMM d, h:mm a')}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                Pending
-              </span>
-            )}
-          </div>
+      {checklistItems.length > 0 && (() => {
+        const completedCount = checklistCompletions.length
+        const totalCount = checklistItems.length
+        const isComplete = !!watch.checklist_completed_at
+        const photoItems = checklistItems
+          .filter((item) => item.requires_photo)
+          .map((item) => ({
+            ...item,
+            completion: checklistCompletions.find((c) => c.item_id === item.id),
+          }))
+          .filter((item) => item.completion?.photo_url)
 
-          {/* Checklist link + QR when not yet completed */}
-          {!watch.checklist_completed_at && watch.checklist_token && (() => {
-            const checklistUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/checklist/${watch.checklist_token}`
-            return (
-              <div className="mb-4 p-3.5 rounded-xl border border-amber-200 bg-amber-50/80">
+        return (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Compact header — always visible */}
+            <button
+              onClick={() => setChecklistExpanded(!checklistExpanded)}
+              className="w-full flex items-center gap-3 p-4 hover:bg-slate-50/50 transition-colors text-left"
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                isComplete ? 'bg-green-100' : 'bg-amber-100'
+              }`}>
+                {isComplete ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-800">Safety Checklist</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    isComplete
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {isComplete ? `${completedCount}/${totalCount}` : 'Pending'}
+                  </span>
+                </div>
+                {isComplete && (
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Completed {format(new Date(watch.checklist_completed_at!), 'MMM d, h:mm a')}
+                    {photoItems.length > 0 && ` · ${photoItems.length} photo${photoItems.length > 1 ? 's' : ''}`}
+                  </p>
+                )}
+              </div>
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={`text-slate-400 flex-shrink-0 transition-transform duration-200 ${checklistExpanded ? 'rotate-180' : ''}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {/* Photo thumbnails — always visible when completed and has photos */}
+            {isComplete && photoItems.length > 0 && !checklistExpanded && (
+              <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
+                {photoItems.map((item) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={item.id}
+                    src={item.completion!.photo_url!}
+                    alt={item.label}
+                    className="w-14 h-14 object-cover rounded-lg border border-green-200 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                    onClick={() => window.open(item.completion!.photo_url!, '_blank')}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Checklist link + QR when not yet completed */}
+            {!isComplete && watch.checklist_token && (
+              <div className="mx-4 mb-4 p-3.5 rounded-xl border border-amber-200 bg-amber-50/80">
                 <div className="flex gap-3 items-start">
                   <div className="flex-shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-lg border border-amber-200 bg-white">
-                    <QRCodeSVG value={checklistUrl} size={64} level="M" includeMargin={false} />
+                    <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/checklist/${watch.checklist_token}`} size={64} level="M" includeMargin={false} />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col gap-2 justify-center">
                     <p className="text-xs font-semibold text-amber-700">Send to watcher before watch begins</p>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(checklistUrl).then(() => {
+                        const url = `${window.location.origin}/checklist/${watch.checklist_token}`
+                        navigator.clipboard.writeText(url).then(() => {
                           toast.success('Checklist link copied')
                         }).catch(() => toast.error('Unable to copy'))
                       }}
@@ -959,7 +1119,7 @@ export default function WatchDetailPage() {
                       Copy Link
                     </button>
                     <a
-                      href={checklistUrl}
+                      href={`${typeof window !== 'undefined' ? window.location.origin : ''}/checklist/${watch.checklist_token}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-1.5 px-3 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-amber-700 text-xs font-semibold transition-all text-center"
@@ -969,54 +1129,54 @@ export default function WatchDetailPage() {
                   </div>
                 </div>
               </div>
-            )
-          })()}
+            )}
 
-          <div className="space-y-2">
-            {checklistItems.map((item) => {
-              const completion = checklistCompletions.find((c) => c.item_id === item.id)
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-start gap-3 rounded-xl p-3.5 border ${
-                    completion ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                    completion ? 'border-green-500 bg-green-500 text-white' : 'border-slate-300 text-transparent'
-                  }`}>
-                    ✓
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${completion ? 'text-green-800' : 'text-slate-600'}`}>
-                      {item.label}
-                    </p>
-                    {item.requires_photo && completion?.photo_url && (
-                      <div className="mt-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Expanded item list */}
+            {checklistExpanded && (
+              <div className="px-4 pb-4 space-y-1.5">
+                {checklistItems.map((item) => {
+                  const completion = checklistCompletions.find((c) => c.item_id === item.id)
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-start gap-2.5 rounded-lg px-3 py-2 ${
+                        completion ? 'bg-green-50/70' : 'bg-slate-50'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        completion ? 'border-green-500 bg-green-500' : 'border-slate-300'
+                      }`}>
+                        {completion && (
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs leading-snug ${completion ? 'text-green-800' : 'text-slate-500'}`}>
+                          {item.label}
+                        </p>
+                        {completion && (
+                          <p className="text-[10px] text-green-500 mt-0.5">
+                            {format(new Date(completion.completed_at), 'h:mm a')}
+                          </p>
+                        )}
+                      </div>
+                      {item.requires_photo && completion?.photo_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={completion.photo_url}
-                          alt={`Photo for: ${item.label}`}
-                          className="w-24 h-24 object-cover rounded-lg border border-green-200 cursor-pointer hover:opacity-90 transition-opacity"
+                          alt={item.label}
+                          className="w-10 h-10 object-cover rounded-md border border-green-200 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
                           onClick={() => window.open(completion.photo_url!, '_blank')}
                         />
-                      </div>
-                    )}
-                    {item.requires_photo && !completion?.photo_url && (
-                      <span className="text-[10px] text-slate-500 font-semibold">📷 Photo required</span>
-                    )}
-                    {completion && (
-                      <p className="text-[10px] text-green-600 mt-1">
-                        Logged {format(new Date(completion.completed_at), 'h:mm a')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       </div>{/* END RIGHT COLUMN */}
 

@@ -102,6 +102,44 @@ export async function sendWatchSummarySMS(
   )
 }
 
+export async function sendOfflineAlertSMS(
+  to: string,
+  assignedName: string,
+  facilityName: string
+): Promise<string | null> {
+  return sendSMS(
+    to,
+    `DutyProof: ${assignedName} appears to be offline at ${facilityName}. Their check-in app is running locally and will sync when connectivity returns. No action needed unless you cannot reach them.`
+  )
+}
+
+export async function sendOnlineResolvedSMS(
+  to: string,
+  assignedName: string,
+  facilityName: string,
+  synced: number,
+  onTime: number,
+  late: number
+): Promise<string | null> {
+  const lateNote = late > 0 ? `, ${late} late` : ''
+  return sendSMS(
+    to,
+    `DutyProof: ${assignedName} is back online at ${facilityName}. ${synced} check-ins synced — ${onTime} on time${lateNote}.`
+  )
+}
+
+export async function sendStopWorkSMS(
+  to: string,
+  assignedName: string,
+  facilityName: string,
+  postWorkMin: number
+): Promise<string | null> {
+  return sendSMS(
+    to,
+    `DutyProof: Hot work completed at ${facilityName}. ${assignedName} has started the ${postWorkMin}-minute post-work monitoring period. Check-ins will continue until the cooldown period ends.`
+  )
+}
+
 export async function sendChecklistSMS(
   to: string,
   assignedName: string,

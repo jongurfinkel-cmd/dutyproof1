@@ -194,6 +194,9 @@ export async function POST(req: NextRequest) {
     const hasChecklist = Array.isArray(checklist_items) && checklist_items.length > 0
     const checklist_token = hasChecklist ? generateToken() : null
 
+    // Generate a persistent session token for the watch (one link for the entire watch)
+    const session_token = generateToken()
+
     // Display name used in SMS (includes wing/area when present)
     const displayName = location ? `${facility.name} — ${location}` : facility.name
 
@@ -222,6 +225,7 @@ export async function POST(req: NextRequest) {
         watch_latitude: watch_latitude ?? null,
         watch_longitude: watch_longitude ?? null,
         ...(watch_radius_m !== undefined && watch_radius_m !== null ? { watch_radius_m } : {}),
+        session_token,
       })
       .select()
       .single()
@@ -278,7 +282,8 @@ export async function POST(req: NextRequest) {
       : new Date(start_time)
     const expiresAt = addMinutes(scheduledTime, check_interval_min)
     const token = generateToken()
-    const checkInUrl = `${appUrl}/checkin/${token}`
+    // Use session_token for the link — one persistent URL for the whole watch
+    const checkInUrl = `${appUrl}/checkin/${session_token}`
 
     const { data: checkIn, error: checkInError } = await admin
       .from('check_ins')
@@ -343,7 +348,7 @@ export async function POST(req: NextRequest) {
     })
     if (startAlertErr) console.error('Failed to log watch_started alert:', startAlertErr)
 
-    return NextResponse.json({ watchId: watch.id, smsDelivered: !!twilioSid })
+    return NextResponse.json({ watchId: watch.id, smsDelivered: !!twilioSid, sessionToken: session_token })
   } catch (err) {
     console.error('Start watch error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

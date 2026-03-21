@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS } from '@/lib/sms'
+import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS, sendOfflineAlertSMS } from '@/lib/sms'
 import { addMinutes, formatDuration, intervalToDuration } from 'date-fns'
 
 export async function GET(req: NextRequest) {
@@ -72,7 +72,10 @@ export async function GET(req: NextRequest) {
         const reportUrl = `${appUrl}/watches/${watch.id}`
         const facility = watch.facilities
 
-        await sendWatchSummarySMS(watch.assigned_phone, facility.name, durationStr, total, completed, missed, reportUrl)
+        // Only send summary SMS if the watch has a phone number (SMS-enabled)
+        if (watch.assigned_phone) {
+          await sendWatchSummarySMS(watch.assigned_phone, facility.name, durationStr, total, completed, missed, reportUrl)
+        }
         if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
           await sendWatchSummarySMS(watch.escalation_phone, facility.name, durationStr, total, completed, missed, reportUrl)
         }
@@ -120,11 +123,11 @@ export async function GET(req: NextRequest) {
 
         missedCount++
 
-        // Increment consecutive misses and flag compliance gap if 2+ consecutive
+        // Increment consecutive misses and flag compliance gap
         const newConsecutive = (watch.consecutive_misses ?? 0) + 1
         const updateData: Record<string, unknown> = { consecutive_misses: newConsecutive }
         if (newConsecutive >= 2) {
-          updateData.compliance_status = 'gap_detected'
+          updateData.compliance_status = watch.session_token ? 'offline_suspected' : 'gap_detected'
         }
         const { error: missCountErr } = await admin
           .from('watches')
@@ -132,8 +135,90 @@ export async function GET(req: NextRequest) {
           .eq('id', watch.id)
         if (missCountErr) pushError(`Failed to update miss count for watch ${watch.id}: ${missCountErr.message}`)
 
-        // Send immediate alert to supervisor if escalation_phone is set and delay is 0
-        if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
+        // ── Session-token watches: determine if watcher is offline or genuinely missed ──
+        if (watch.session_token && watch.escalation_phone) {
+          // Check if the watcher has synced recently (within 2x the interval)
+          // If yes → they're online and genuinely missed → escalate normally
+          // If no → they're likely offline → send one-time offline alert
+          const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+          const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
+          const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
+
+          if (isRecentlyOnline) {
+            // Watcher is ONLINE but genuinely missed — escalate like a legacy watch
+            const ackToken = generateToken()
+            const ackUrl = `${appUrl}/ack/${ackToken}`
+
+            const alertSid = await sendAlertSMS(
+              watch.escalation_phone,
+              checkIn.assigned_name,
+              displayName,
+              new Date(checkIn.scheduled_time),
+              ackUrl
+            )
+
+            const { error: escAlertErr } = await admin.from('alerts').insert({
+              watch_id: watch.id,
+              check_in_id: checkIn.id,
+              alert_type: 'missed_checkin',
+              recipient_phone: watch.escalation_phone,
+              recipient_name: 'Supervisor',
+              message: `${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time} (watcher is online)`,
+              delivery_status: alertSid ? 'sent' : 'failed',
+              twilio_sid: alertSid,
+            })
+            if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
+
+            const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+              p_checkin_id: checkIn.id,
+              p_escalation_sent_at: new Date().toISOString(),
+              p_ack_token: ackToken,
+            })
+            if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
+          } else {
+            // Watcher is OFFLINE — send one-time offline alert on first miss only
+            if ((watch.consecutive_misses ?? 0) === 0) {
+              const offlineSid = await sendOfflineAlertSMS(
+                watch.escalation_phone,
+                checkIn.assigned_name,
+                displayName
+              )
+
+              const { error: offlineAlertErr } = await admin.from('alerts').insert({
+                watch_id: watch.id,
+                check_in_id: checkIn.id,
+                alert_type: 'watcher_offline',
+                recipient_phone: watch.escalation_phone,
+                recipient_name: 'Supervisor',
+                message: `${checkIn.assigned_name} appears offline at ${displayName}. Check-ins will sync when connectivity returns.`,
+                delivery_status: offlineSid ? 'sent' : 'failed',
+                twilio_sid: offlineSid,
+              })
+              if (offlineAlertErr) pushError(`Failed to log offline alert for ${checkIn.id}: ${offlineAlertErr.message}`)
+
+              if (watch.secondary_escalation_phone) {
+                const secOfflineSid = await sendOfflineAlertSMS(
+                  watch.secondary_escalation_phone,
+                  checkIn.assigned_name,
+                  displayName
+                )
+                const { error: secOfflineErr } = await admin.from('alerts').insert({
+                  watch_id: watch.id,
+                  check_in_id: checkIn.id,
+                  alert_type: 'watcher_offline',
+                  recipient_phone: watch.secondary_escalation_phone,
+                  recipient_name: 'Backup Supervisor',
+                  message: `${checkIn.assigned_name} appears offline at ${displayName}. Check-ins will sync when connectivity returns.`,
+                  delivery_status: secOfflineSid ? 'sent' : 'failed',
+                  twilio_sid: secOfflineSid,
+                })
+                if (secOfflineErr) pushError(`Failed to log secondary offline alert for ${checkIn.id}: ${secOfflineErr.message}`)
+              }
+            }
+            // Subsequent offline misses — stay quiet, supervisor already knows
+          }
+        } else if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
+          // ── Legacy watches: per-miss escalation as before ──
           const ackToken = generateToken()
           const ackUrl = `${appUrl}/ack/${ackToken}`
 
@@ -145,7 +230,6 @@ export async function GET(req: NextRequest) {
             ackUrl
           )
 
-          // Log escalation alert
           const { error: escAlertErr } = await admin.from('alerts').insert({
             watch_id: watch.id,
             check_in_id: checkIn.id,
@@ -158,7 +242,6 @@ export async function GET(req: NextRequest) {
           })
           if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
-          // Mark escalation as sent via RPC (write-once escalation_sent_at + ack_token)
           const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
             p_checkin_id: checkIn.id,
             p_escalation_sent_at: new Date().toISOString(),
@@ -173,7 +256,6 @@ export async function GET(req: NextRequest) {
         const nextScheduledTime = baseNextTime > new Date() ? baseNextTime : new Date()
         const nextExpiresAt = addMinutes(nextScheduledTime, watch.check_interval_min)
         const nextToken = generateToken()
-        const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
 
         const { data: nextCheckIn, error: nextError } = await admin
           .from('check_ins')
@@ -188,7 +270,10 @@ export async function GET(req: NextRequest) {
           .select()
           .single()
 
-        if (!nextError && nextCheckIn) {
+        // Session-token watches: fire watch already has the persistent link,
+        // so skip sending a new SMS. Only send SMS for legacy (non-session) watches.
+        if (!nextError && nextCheckIn && !watch.session_token) {
+          const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
           const nextSid = await sendCheckInSMS(
             watch.assigned_phone,
             displayName,
@@ -226,6 +311,14 @@ export async function GET(req: NextRequest) {
     for (const ci of pendingEscalations ?? []) {
       const watch = ci.watches
       if (!watch || watch.status !== 'active' || !watch.escalation_phone) continue
+      // Session-token watches: skip delayed escalation if watcher is offline (already got one-time alert)
+      // But allow it if watcher is online (genuine miss)
+      if (watch.session_token) {
+        const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+        const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
+        const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
+        if (!isRecentlyOnline) continue
+      }
 
       const escalateAt = new Date(ci.scheduled_time)
       escalateAt.setMinutes(escalateAt.getMinutes() + (watch.escalation_delay_min ?? 0))
@@ -281,6 +374,13 @@ export async function GET(req: NextRequest) {
     for (const ci of pendingSecondary ?? []) {
       const watch = ci.watches
       if (!watch || watch.status !== 'active' || !watch.secondary_escalation_phone) continue
+      // Session-token watches: skip secondary escalation if offline (already notified)
+      if (watch.session_token) {
+        const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+        const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
+        const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
+        if (!isRecentlyOnline) continue
+      }
 
       // Check if 3 minutes have passed since primary escalation
       const escalationTime = new Date(ci.escalation_sent_at!)

@@ -480,11 +480,10 @@ export default function CreateWatchForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to start watch')
       toast.success(
-        !smsEnabled ? 'Watch started!' :
-        checklistEnabled && checklistItems.length > 0 ? 'Watch started! Safety checklist sent.' :
-        'Watch started! First check-in SMS sent.'
+        'Watch started! You can print a watch sheet from the detail page.',
+        { duration: 6000 }
       )
-      router.push('/dashboard')
+      router.push('/watches/' + data.watchId)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to start watch')
     } finally {

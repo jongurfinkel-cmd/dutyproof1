@@ -26,7 +26,7 @@ export default function BrandLogo({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 480 72"
+      viewBox="0 0 295 72"
       width={width}
       height={height}
       className={className}

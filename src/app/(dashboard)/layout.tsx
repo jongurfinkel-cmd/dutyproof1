@@ -6,29 +6,100 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BrandLogo from '@/components/BrandLogo'
 
+/* ── Icons ──────────────────────────────────────────────────── */
+
+function IconFire({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+    </svg>
+  )
+}
+
+function IconClipboard({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+      <line x1="9" y1="12" x2="15" y2="12" />
+      <line x1="9" y1="16" x2="13" y2="16" />
+    </svg>
+  )
+}
+
+function IconBuilding({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M9 22v-4h6v4" />
+      <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" strokeWidth={2} />
+    </svg>
+  )
+}
+
+function IconCreditCard({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  )
+}
+
+function IconLogOut({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
+}
+
+function IconMenu({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  )
+}
+
+function IconUser({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
+/* ── Main Layout ────────────────────────────────────────────── */
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userDisplayName, setUserDisplayName] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [criticalCount, setCriticalCount] = useState(0)
   const sidebarRef = useRef<HTMLElement>(null)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
 
-  // Proxy already redirects unauthenticated users — just fetch email for display
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUserEmail(data.user.email ?? null)
+      if (data.user) {
+        setUserEmail(data.user.email ?? null)
+        const meta = data.user.user_metadata as Record<string, string> | undefined
+        setUserDisplayName(meta?.full_name ?? null)
+      }
     })
   }, [])
 
-  // Close sidebar on navigation
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
+  useEffect(() => { setSidebarOpen(false) }, [pathname])
 
-  // Close sidebar on Escape
   useEffect(() => {
     if (!sidebarOpen) return
     function onKey(e: KeyboardEvent) {
@@ -41,7 +112,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('keydown', onKey)
   }, [sidebarOpen])
 
-  // Focus trap inside sidebar when open on mobile
   const trapFocus = useCallback((e: KeyboardEvent) => {
     if (e.key !== 'Tab' || !sidebarRef.current) return
     const focusable = sidebarRef.current.querySelectorAll<HTMLElement>('a, button')
@@ -98,64 +168,72 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login')
   }
 
-  const navLinks = [
-    { href: '/dashboard', label: 'Active Watches', badge: criticalCount },
-    { href: '/history', label: 'Watch History', badge: 0 },
-    { href: '/facilities', label: 'Job Sites', badge: 0 },
-    { href: '/billing', label: 'Billing', badge: 0 },
+  const navLinks: { href: string; label: string; icon: typeof IconFire; badge: number }[] = [
+    { href: '/dashboard', label: 'Active Watches', icon: IconFire, badge: criticalCount },
+    { href: '/history', label: 'Watch History', icon: IconClipboard, badge: 0 },
+    { href: '/facilities', label: 'Job Sites', icon: IconBuilding, badge: 0 },
+    { href: '/billing', label: 'Billing', icon: IconCreditCard, badge: 0 },
   ]
-  const isNewWatch = pathname === '/watches/new'
+
+  const initials = userDisplayName
+    ? userDisplayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : userEmail
+      ? userEmail.charAt(0).toUpperCase()
+      : '?'
 
   return (
     <div className="h-screen bg-slate-50 flex overflow-hidden">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
           role="presentation"
         />
       )}
 
-      {/* Sidebar — fixed+off-screen on mobile, static in flow on desktop */}
+      {/* ── Sidebar ─────────────────────────────────────── */}
       <aside
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-30 w-60 bg-slate-950 text-white flex flex-col shrink-0 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-[240px] flex flex-col shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{
+          background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+        }}
       >
-        <div className="px-5 py-6 border-b border-slate-800/60">
-          <Link href="/dashboard">
-            <BrandLogo className="w-[180px] h-auto" variant="light" />
+        {/* Logo */}
+        <div className="px-5 pt-6 pb-5">
+          <Link href="/dashboard" className="block">
+            <BrandLogo className="w-[150px] h-auto" variant="light" />
           </Link>
         </div>
 
-        <nav className="flex-1 px-3 py-5 space-y-0.5" aria-label="Main navigation">
-          <Link
-            href="/watches/new"
-            className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-bold transition-all mb-3 ${
-              isNewWatch
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-900/40'
-                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30'
-            }`}
-          >
-            + Start New Watch
-          </Link>
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-2 space-y-1" aria-label="Main navigation">
           {navLinks.map((link) => {
             const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+            const Icon = link.icon
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
                   active
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
                 }`}
               >
-                <span>{link.label}</span>
+                {/* Active indicator bar */}
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-400" />
+                )}
+                <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                  active ? 'text-orange-400' : 'text-slate-500 group-hover:text-slate-400'
+                }`} />
+                <span className="flex-1">{link.label}</span>
                 {link.badge > 0 && (
-                  <span className="ml-2 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center leading-none">
+                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center leading-none shadow-lg shadow-red-500/30">
                     {link.badge > 9 ? '9+' : link.badge}
                   </span>
                 )}
@@ -164,36 +242,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="px-4 py-5 border-t border-slate-800/60">
-          <p className="text-xs text-slate-500 truncate mb-3">{userEmail}</p>
-          <button
-            onClick={handleLogout}
-            className="w-full px-3 py-2 text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            Sign Out
-          </button>
+        {/* User section */}
+        <div className="px-3 pb-5">
+          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20">
+                <span className="text-white text-xs font-extrabold">{initials}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                {userDisplayName && (
+                  <p className="text-xs text-slate-200 font-semibold truncate">{userDisplayName}</p>
+                )}
+                <p className={`text-xs text-slate-400 truncate ${userDisplayName ? 'text-[11px]' : 'font-medium text-slate-300'}`}>{userEmail}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white
+                border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06]
+                rounded-lg transition-all duration-200"
+            >
+              <IconLogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* Main area */}
+      {/* ── Main area ───────────────────────────────────── */}
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Mobile header */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-10">
           <button
             ref={hamburgerRef}
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
             aria-label="Open menu"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <rect x="2" y="4" width="16" height="2" rx="1" fill="#475569" />
-              <rect x="2" y="9" width="16" height="2" rx="1" fill="#475569" />
-              <rect x="2" y="14" width="16" height="2" rx="1" fill="#475569" />
-            </svg>
+            <IconMenu className="w-5 h-5 text-slate-600" />
           </button>
-          <BrandLogo className="w-[160px] h-auto" />
+          <BrandLogo className="w-[130px] h-auto" />
           {criticalCount > 0 && (
-            <span className="ml-auto min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+            <span className="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-lg shadow-red-200">
               {criticalCount > 9 ? '9+' : criticalCount}
             </span>
           )}

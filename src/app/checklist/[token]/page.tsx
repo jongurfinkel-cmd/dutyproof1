@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import Image from 'next/image'
 import { format } from 'date-fns'
+import BrandLogo from '@/components/BrandLogo'
 
 interface ChecklistItem {
   id: string
@@ -33,14 +33,7 @@ interface ItemCompletion {
 function Logo() {
   return (
     <div className="flex justify-center mb-6">
-      <Image
-        src="/logo.svg"
-        alt="DutyProof"
-        width={160}
-        height={48}
-        className="h-10 w-auto object-contain"
-        priority
-      />
+      <BrandLogo variant="light" className="h-10 w-auto" />
     </div>
   )
 }
@@ -313,28 +306,50 @@ export default function ChecklistPage() {
   const allChecked = items.every((item) => completions[item.id]?.checked)
   const completedCount = items.filter((item) => completions[item.id]?.checked).length
   const anyUploading = Object.values(completions).some((c) => c.uploading)
+  const pct = Math.round((completedCount / items.length) * 100)
 
   return (
     <div className="min-h-screen bg-slate-950 px-5 py-8">
+      <style>{`
+        @keyframes checkPop {
+          0% { transform: scale(0.8); }
+          50% { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+        .check-pop { animation: checkPop 0.25s ease-out; }
+      `}</style>
       <div className="w-full max-w-sm mx-auto">
         <Logo />
 
         {/* Header */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-4">
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Pre-Watch Safety Checklist</p>
-          <h1 className="text-white text-lg mb-1" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
-            {facilityName}
-          </h1>
-          <p className="text-slate-400 text-sm">{assignedName}</p>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-5">
+          <div className="px-5 pt-5 pb-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-900/40 border border-amber-700/30 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1"/>
+                  <path d="m9 14 2 2 4-4"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Pre-Watch Safety Checklist</p>
+                <h1 className="text-white text-lg leading-tight" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+                  {facilityName}
+                </h1>
+              </div>
+            </div>
+            <p className="text-slate-400 text-sm">{assignedName}</p>
+          </div>
 
           {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-              <span>{completedCount} of {items.length} complete</span>
-              <span>{Math.round((completedCount / items.length) * 100)}%</span>
+          <div className="px-5 pb-4">
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className={completedCount > 0 ? 'text-green-400 font-semibold' : 'text-slate-500'}>{completedCount} of {items.length} verified</span>
+              <span className={pct === 100 ? 'text-green-400 font-bold' : 'text-slate-500'}>{pct}%</span>
             </div>
             <div
-              className="h-1.5 bg-slate-800 rounded-full overflow-hidden"
+              className="h-2 bg-slate-800 rounded-full overflow-hidden"
               role="progressbar"
               aria-valuenow={completedCount}
               aria-valuemin={0}
@@ -342,15 +357,15 @@ export default function ChecklistPage() {
               aria-label={`${completedCount} of ${items.length} items complete`}
             >
               <div
-                className="h-full bg-green-500 rounded-full transition-all duration-300"
-                style={{ width: `${(completedCount / items.length) * 100}%` }}
+                className={`h-full rounded-full transition-all duration-500 ease-out ${pct === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                style={{ width: `${pct}%` }}
               />
             </div>
           </div>
         </div>
 
         {/* Checklist items */}
-        <div className="space-y-2.5 mb-4">
+        <div className="space-y-3 mb-5">
           {items.map((item, index) => {
             const comp = completions[item.id]
             const isChecked = comp?.checked ?? false
@@ -360,52 +375,66 @@ export default function ChecklistPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-slate-900 border rounded-xl p-4 transition-all ${
-                  isChecked ? 'border-green-800/60 bg-green-950/20' :
-                  submitAttempted ? 'border-red-700/60 bg-red-950/20' :
-                  'border-slate-800'
+                onClick={() => { if (!item.requires_photo) toggleItem(item.id) }}
+                className={`bg-slate-900 border rounded-2xl p-4 transition-all duration-200 ${!item.requires_photo ? 'cursor-pointer active:scale-[0.98]' : ''} ${
+                  isChecked ? 'border-green-700/50 bg-green-950/30' :
+                  submitAttempted && !isChecked ? 'border-red-700/60 bg-red-950/20' :
+                  'border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  {/* Checkbox / status */}
+                <div className="flex items-start gap-4">
+                  {/* Checkbox — larger touch target */}
                   {!item.requires_photo ? (
                     <button
-                      onClick={() => toggleItem(item.id)}
+                      onClick={(e) => { e.stopPropagation(); toggleItem(item.id) }}
                       role="checkbox"
                       aria-checked={isChecked}
                       aria-label={item.label}
-                      className={`mt-0.5 w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                      className={`mt-0.5 w-11 h-11 rounded-xl border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                         isChecked
-                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/40'
-                          : 'border-slate-600 text-transparent'
+                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/50 check-pop'
+                          : 'border-slate-600 hover:border-slate-500 text-transparent'
                       }`}
                     >
-                      <span className="text-sm font-bold">✓</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     </button>
                   ) : (
                     <button
-                      onClick={() => !hasPhoto && fileInputRefs.current[item.id]?.click()}
+                      onClick={(e) => { e.stopPropagation(); if (!hasPhoto) fileInputRefs.current[item.id]?.click() }}
                       role="checkbox"
                       aria-checked={hasPhoto}
                       aria-label={`${item.label} (photo required)`}
-                      className={`mt-0.5 w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                      className={`mt-0.5 w-11 h-11 rounded-xl border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                         hasPhoto
-                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/40'
-                          : 'border-slate-600 text-slate-500'
+                          ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-900/50 check-pop'
+                          : 'border-slate-600 hover:border-slate-500 text-slate-500'
                       }`}
                     >
-                      <span className="text-sm">{hasPhoto ? '✓' : '📷'}</span>
+                      {hasPhoto ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                      )}
                     </button>
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">{index + 1} / {items.length}</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isChecked ? 'text-green-500' : 'text-slate-600'}`}>
+                        {isChecked ? 'Verified' : `${index + 1} of ${items.length}`}
+                      </span>
                       {item.requires_photo && !hasPhoto && (
-                        <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider bg-blue-950/40 border border-blue-800/30 px-1.5 py-0.5 rounded">Photo</span>
+                        <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider bg-blue-950/40 border border-blue-800/30 px-1.5 py-0.5 rounded">Photo Required</span>
                       )}
                     </div>
-                    <p className={`text-sm font-semibold leading-snug ${isChecked ? 'text-green-300' : 'text-white'}`}>
+                    <p className={`text-sm font-semibold leading-snug transition-colors ${isChecked ? 'text-green-300' : 'text-white'}`}>
                       {item.label}
                     </p>
                     {item.requires_photo && (
@@ -421,7 +450,8 @@ export default function ChecklistPage() {
                             <div>
                               <p className="text-[10px] text-green-400 font-bold mb-1.5">Photo captured</p>
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation()
                                   setCompletions((prev) => ({
                                     ...prev,
                                     [item.id]: { ...prev[item.id], photo_url: null, checked: false },
@@ -435,9 +465,9 @@ export default function ChecklistPage() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => fileInputRefs.current[item.id]?.click()}
+                            onClick={(e) => { e.stopPropagation(); fileInputRefs.current[item.id]?.click() }}
                             disabled={isUploading}
-                            className="w-full flex items-center justify-center gap-2.5 px-4 py-4 bg-slate-800 hover:bg-slate-750 border border-dashed border-slate-600 hover:border-blue-600/50 rounded-xl text-sm text-slate-300 font-semibold transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                            className="w-full flex items-center justify-center gap-2.5 px-4 py-4 bg-slate-800 hover:bg-slate-750 border border-dashed border-slate-600 hover:border-blue-600/50 rounded-xl text-sm text-slate-300 font-semibold transition-all disabled:opacity-50 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                           >
                             {isUploading ? (
                               <>
@@ -538,17 +568,23 @@ export default function ChecklistPage() {
         <button
           onClick={handleSubmit}
           disabled={!allChecked || anyUploading}
-          className={`w-full py-5 text-white text-lg font-black rounded-2xl shadow-xl transition-all select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
+          className={`w-full py-5 text-white text-lg font-black rounded-2xl shadow-xl transition-all duration-200 select-none touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300 ${
             allChecked && !anyUploading
-              ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 shadow-blue-900/40'
+              ? 'bg-green-600 hover:bg-green-500 active:bg-green-700 shadow-green-900/40'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
           }`}
         >
-          {anyUploading ? 'UPLOADING PHOTO…' : allChecked ? 'SUBMIT CHECKLIST' : `${items.length - completedCount} ITEM${items.length - completedCount !== 1 ? 'S' : ''} REMAINING`}
+          {anyUploading
+            ? 'UPLOADING PHOTO...'
+            : allChecked
+              ? 'COMPLETE CHECKLIST'
+              : completedCount === 0
+                ? 'VERIFY ALL ITEMS TO CONTINUE'
+                : `${completedCount} of ${items.length} — KEEP GOING`}
         </button>
 
         <p className="text-slate-600 text-xs text-center mt-4 leading-relaxed">
-          All items are logged with server-side timestamps. Photos are stored securely.
+          All items are logged with timestamps for compliance records.
         </p>
       </div>
     </div>

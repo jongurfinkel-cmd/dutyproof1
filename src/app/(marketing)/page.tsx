@@ -48,7 +48,7 @@ export const metadata = {
 
 const includedFeatures = [
   'Run as many watches as you need — no extra charge',
-  'Workers get a check-in link every 15 or 30 min — they tap to verify',
+  'One persistent check-in link per watch — worker opens it once, it handles the rest',
   'Every check-in shows where your guy was standing',
   'Works even when there\'s no cell service on site',
   'If someone misses a check-in, your super knows in under 60 seconds',
@@ -134,7 +134,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'What does the fire watch worker need?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Any smartphone with a web browser — no app to download, no login required. DutyProof generates a secure check-in link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates. Links can be delivered via optional SMS, shared manually, or accessed from the dashboard.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Any smartphone with a web browser — no app to download, no login required. Each watch gets one persistent check-in link. The worker opens it once and the page handles the entire schedule — countdown, check-in button, GPS. It works fully offline too. Links can be shared via optional SMS, QR code, or copied from the dashboard.' },
       },
       {
         '@type': 'Question',

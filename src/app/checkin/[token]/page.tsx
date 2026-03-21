@@ -4,13 +4,14 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import BrandLogo from '@/components/BrandLogo'
 import { format } from 'date-fns'
-import { queueCheckin, syncPendingCheckins, cleanupOldEntries, getPendingCount } from '@/lib/offline-queue'
+import { queueCheckin, syncPendingCheckins, cleanupOldEntries, getPendingCount, cacheWatchConfig, getCachedWatchConfig, type CachedWatchConfig } from '@/lib/offline-queue'
+import { addMinutes } from 'date-fns'
 
 type CheckInState =
   | { phase: 'loading' }
   | { phase: 'expired'; message: string }
   | { phase: 'invalid'; message: string }
-  | { phase: 'checklist_pending'; message: string }
+  | { phase: 'checklist_pending'; message: string; checklistToken?: string }
   | { phase: 'ready'; facilityName: string; location: string | null; assignedName: string; scheduledTime: string; nextTime: string; watchLatitude: number | null; watchLongitude: number | null; watchRadiusM: number; escalationPhone: string | null }
   | { phase: 'submitting' }
   | { phase: 'confirmed'; nextCheckIn: string; serverTime: string; gpsCapture: boolean; facilityName: string; assignedName: string; nextToken?: string }
@@ -30,6 +31,47 @@ interface WatchMeta {
   watchLongitude: number | null
   watchRadiusM: number
   escalationPhone: string | null
+}
+
+// Session config for offline-first mode
+interface SessionConfig {
+  watchId: string
+  sessionToken: string
+  facilityName: string
+  location: string | null
+  assignedName: string
+  interval: number // minutes
+  startTime: string
+  plannedEndTime: string | null
+  watchLatitude: number | null
+  watchLongitude: number | null
+  watchRadiusM: number
+  escalationPhone: string | null
+  postWorkDurationMin: number
+  workStoppedAt: string | null
+  lastCompletedAt: string | null
+  serverClockOffset: number // ms: serverTime - clientTime
+}
+
+/** Compute the next scheduled check-in time given session config and last completed time */
+function computeNextScheduledTime(config: SessionConfig): Date {
+  const interval = config.interval
+  const start = new Date(config.startTime)
+  const now = new Date()
+  const lastCompleted = config.lastCompletedAt ? new Date(config.lastCompletedAt) : null
+
+  // If we have a last completed check-in, next is last + interval
+  if (lastCompleted) {
+    return addMinutes(lastCompleted, interval)
+  }
+
+  // Otherwise, find the next slot from start_time
+  // Walk forward from start_time by interval until we find a time >= now - interval
+  let slot = start
+  while (addMinutes(slot, interval).getTime() < now.getTime()) {
+    slot = addMinutes(slot, interval)
+  }
+  return slot
 }
 
 async function getLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | null> {
@@ -182,6 +224,12 @@ export default function CheckInPage() {
   const [online, setOnline] = useState(true)
   const [syncToast, setSyncToast] = useState<string | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [postWorkMin, setPostWorkMin] = useState(0)
+  const [workStopped, setWorkStopped] = useState(false)
+  const [stoppingWork, setStoppingWork] = useState(false)
+  const sessionRef = useRef<SessionConfig | null>(null)
+  const [isSessionMode, setIsSessionMode] = useState(false)
+  const [localCheckInCount, setLocalCheckInCount] = useState(0)
 
   // Keep screen awake during the entire watch
   useWakeLock()
@@ -264,40 +312,233 @@ export default function CheckInPage() {
     return () => { document.head.removeChild(link) }
   }, [])
 
-  // Validate token on mount
+  // Initialize session from server or cache
+  const initSession = useCallback((config: SessionConfig) => {
+    sessionRef.current = config
+    setIsSessionMode(true)
+    setPostWorkMin(config.postWorkDurationMin)
+    setWorkStopped(!!config.workStoppedAt)
+
+    watchMetaRef.current = {
+      facilityName: config.facilityName,
+      assignedName: config.assignedName,
+      location: config.location,
+      watchLatitude: config.watchLatitude,
+      watchLongitude: config.watchLongitude,
+      watchRadiusM: config.watchRadiusM,
+      escalationPhone: config.escalationPhone,
+    }
+
+    // Compute current position in the schedule
+    const nextScheduled = computeNextScheduledTime(config)
+    const now = Date.now()
+    const diff = nextScheduled.getTime() - now
+
+    if (diff > 0) {
+      // Next check-in is in the future — show watching (countdown)
+      const lastTime = config.lastCompletedAt ?? config.startTime
+      setState({
+        phase: 'watching',
+        facilityName: config.facilityName,
+        assignedName: config.assignedName,
+        nextCheckInTime: nextScheduled.toISOString(),
+        lastCheckInTime: lastTime,
+      })
+    } else {
+      // Check-in is due now or overdue — show ready
+      setState({
+        phase: 'ready',
+        facilityName: config.facilityName,
+        location: config.location,
+        assignedName: config.assignedName,
+        scheduledTime: nextScheduled.toISOString(),
+        nextTime: addMinutes(nextScheduled, config.interval).toISOString(),
+        watchLatitude: config.watchLatitude,
+        watchLongitude: config.watchLongitude,
+        watchRadiusM: config.watchRadiusM,
+        escalationPhone: config.escalationPhone,
+      })
+    }
+  }, [])
+
+  // Validate token on mount — try session mode first, then legacy, then cache
   useEffect(() => {
     async function validate() {
+      // Try session mode first
       try {
-        const res = await fetch(`/api/checkin/validate?token=${encodeURIComponent(token)}`)
-        const data = await res.json()
-        if (!res.ok) {
-          if (res.status === 410) {
-            setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
-          } else if (res.status === 409 && data.error === 'checklist_pending') {
-            setState({ phase: 'checklist_pending', message: data.message ?? 'Complete the pre-watch safety checklist first.' })
-          } else {
-            setState({ phase: 'invalid', message: data.error ?? 'Invalid check-in link.' })
+        const sessionRes = await fetch(`/api/checkin/validate?session=${encodeURIComponent(token)}`)
+        if (sessionRes.ok) {
+          const data = await sessionRes.json()
+          if (data.mode === 'session') {
+            const config: SessionConfig = {
+              watchId: data.watchId,
+              sessionToken: data.sessionToken,
+              facilityName: data.facilityName,
+              location: data.location,
+              assignedName: data.assignedName,
+              interval: data.interval,
+              startTime: data.startTime,
+              plannedEndTime: data.plannedEndTime,
+              watchLatitude: data.watchLatitude,
+              watchLongitude: data.watchLongitude,
+              watchRadiusM: data.watchRadiusM,
+              escalationPhone: data.escalationPhone,
+              postWorkDurationMin: data.postWorkDurationMin,
+              workStoppedAt: data.workStoppedAt,
+              lastCompletedAt: data.lastCompletedAt,
+              serverClockOffset: new Date(data.serverTime).getTime() - Date.now(),
+            }
+            // Cache config for offline use
+            await cacheWatchConfig({
+              ...config,
+              serverTime: data.serverTime,
+              checklistCompletedAt: data.checklistCompletedAt,
+              cachedAt: new Date().toISOString(),
+            }).catch(() => {})
+            initSession(config)
+            return
           }
+        }
+
+        // Session lookup failed — check error type
+        if (sessionRes.status === 409) {
+          const data = await sessionRes.json()
+          if (data.error === 'checklist_pending') {
+            setState({ phase: 'checklist_pending', message: data.message, checklistToken: data.checklistToken })
+            return
+          }
+        }
+        if (sessionRes.status === 410) {
+          const data = await sessionRes.json()
+          setState({ phase: 'expired', message: data.error ?? 'This fire watch has ended.' })
           return
         }
-        setState({
-          phase: 'ready',
-          facilityName: data.facilityName,
-          location: data.location ?? null,
-          assignedName: data.assignedName,
-          scheduledTime: data.scheduledTime,
-          nextTime: data.nextTime,
-          watchLatitude: data.watchLatitude ?? null,
-          watchLongitude: data.watchLongitude ?? null,
-          watchRadiusM: data.watchRadiusM ?? 100,
-          escalationPhone: data.escalationPhone ?? null,
-        })
+
+        // Not a session token — try legacy token
+        if (sessionRes.status === 404) {
+          const legacyRes = await fetch(`/api/checkin/validate?token=${encodeURIComponent(token)}`)
+          const data = await legacyRes.json()
+
+          if (!legacyRes.ok) {
+            if (legacyRes.status === 410) {
+              setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
+            } else if (legacyRes.status === 409 && data.error === 'checklist_pending') {
+              setState({ phase: 'checklist_pending', message: data.message, checklistToken: data.checklistToken })
+            } else {
+              setState({ phase: 'invalid', message: data.error ?? 'Invalid check-in link.' })
+            }
+            return
+          }
+
+          // If the legacy response tells us to switch to session mode
+          if (data.redirect === 'session' && data.sessionToken) {
+            const sRes = await fetch(`/api/checkin/validate?session=${encodeURIComponent(data.sessionToken)}`)
+            if (sRes.ok) {
+              const sData = await sRes.json()
+              if (sData.mode === 'session') {
+                const config: SessionConfig = {
+                  watchId: sData.watchId,
+                  sessionToken: sData.sessionToken,
+                  facilityName: sData.facilityName,
+                  location: sData.location,
+                  assignedName: sData.assignedName,
+                  interval: sData.interval,
+                  startTime: sData.startTime,
+                  plannedEndTime: sData.plannedEndTime,
+                  watchLatitude: sData.watchLatitude,
+                  watchLongitude: sData.watchLongitude,
+                  watchRadiusM: sData.watchRadiusM,
+                  escalationPhone: sData.escalationPhone,
+                  postWorkDurationMin: sData.postWorkDurationMin,
+                  workStoppedAt: sData.workStoppedAt,
+                  lastCompletedAt: sData.lastCompletedAt,
+                  serverClockOffset: new Date(sData.serverTime).getTime() - Date.now(),
+                }
+                await cacheWatchConfig({
+                  ...config,
+                  serverTime: sData.serverTime,
+                  checklistCompletedAt: sData.checklistCompletedAt,
+                  cachedAt: new Date().toISOString(),
+                }).catch(() => {})
+                initSession(config)
+                return
+              }
+            }
+          }
+
+          // If legacy response has a sessionToken, upgrade to session mode
+          if (data.sessionToken) {
+            const config: SessionConfig = {
+              watchId: data.watchId,
+              sessionToken: data.sessionToken,
+              facilityName: data.facilityName,
+              location: data.location,
+              assignedName: data.assignedName,
+              interval: data.interval,
+              startTime: data.scheduledTime,
+              plannedEndTime: null,
+              watchLatitude: data.watchLatitude,
+              watchLongitude: data.watchLongitude,
+              watchRadiusM: data.watchRadiusM,
+              escalationPhone: data.escalationPhone,
+              postWorkDurationMin: data.postWorkDurationMin ?? 0,
+              workStoppedAt: data.workStoppedAt,
+              lastCompletedAt: null,
+              serverClockOffset: 0,
+            }
+            initSession(config)
+            return
+          }
+
+          // Pure legacy mode (no session token on watch)
+          setPostWorkMin(data.postWorkDurationMin ?? 0)
+          setWorkStopped(!!data.workStoppedAt)
+          setState({
+            phase: 'ready',
+            facilityName: data.facilityName,
+            location: data.location ?? null,
+            assignedName: data.assignedName,
+            scheduledTime: data.scheduledTime,
+            nextTime: data.nextTime,
+            watchLatitude: data.watchLatitude ?? null,
+            watchLongitude: data.watchLongitude ?? null,
+            watchRadiusM: data.watchRadiusM ?? 100,
+            escalationPhone: data.escalationPhone ?? null,
+          })
+          return
+        }
       } catch {
-        setState({ phase: 'error', message: 'Network error. Please try again.' })
+        // Network error — try loading from cache
+        try {
+          const cached = await getCachedWatchConfig(token)
+          if (cached) {
+            const config: SessionConfig = {
+              watchId: cached.watchId,
+              sessionToken: cached.sessionToken,
+              facilityName: cached.facilityName,
+              location: cached.location,
+              assignedName: cached.assignedName,
+              interval: cached.interval,
+              startTime: cached.startTime,
+              plannedEndTime: cached.plannedEndTime,
+              watchLatitude: cached.watchLatitude,
+              watchLongitude: cached.watchLongitude,
+              watchRadiusM: cached.watchRadiusM,
+              escalationPhone: cached.escalationPhone,
+              postWorkDurationMin: cached.postWorkDurationMin,
+              workStoppedAt: cached.workStoppedAt,
+              lastCompletedAt: cached.lastCompletedAt,
+              serverClockOffset: new Date(cached.serverTime).getTime() - new Date(cached.cachedAt).getTime(),
+            }
+            initSession(config)
+            return
+          }
+        } catch {}
+        setState({ phase: 'error', message: 'No internet connection. Please connect and try again.' })
       }
     }
     validate()
-  }, [token])
+  }, [token, initSession])
 
   // Auto-transition from confirmed to watching after 2 seconds
   useEffect(() => {
@@ -305,7 +546,8 @@ export default function CheckInPage() {
     const timer = setTimeout(() => {
       const info = watchMetaRef.current
       if (!info) return
-      if (state.nextToken && state.nextCheckIn) {
+      // Session mode: always has nextCheckIn, no nextToken needed
+      if (state.nextCheckIn) {
         setState({
           phase: 'watching',
           facilityName: state.facilityName || info.facilityName,
@@ -461,6 +703,25 @@ export default function CheckInPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [state])
 
+  async function handleStopWork() {
+    if (stoppingWork || workStopped) return
+    setStoppingWork(true)
+    try {
+      const res = await fetch('/api/checkin/stop-work', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to stop work')
+      setWorkStopped(true)
+    } catch (err) {
+      console.error('Stop work error:', err)
+    } finally {
+      setStoppingWork(false)
+    }
+  }
+
   const handleCheckIn = useCallback(async (overrideToken?: string) => {
     if (submittingRef.current) return
     submittingRef.current = true
@@ -485,8 +746,75 @@ export default function CheckInPage() {
     const deviceTime = new Date().toISOString()
     const location = await getLocation()
     if (location) setUserLocation({ latitude: location.latitude, longitude: location.longitude })
-    const activeToken = overrideToken || token
     const trimmedNotes = notes.trim() || null
+
+    // ═══════════════════════════════════════════════════════════
+    // SESSION MODE: queue locally, transition immediately
+    // ═══════════════════════════════════════════════════════════
+    if (isSessionMode && sessionRef.current) {
+      const config = sessionRef.current
+      // Determine scheduled_time for this check-in
+      const scheduledTime = currentState.phase === 'ready'
+        ? currentState.scheduledTime
+        : currentState.phase === 'due' || currentState.phase === 'grace'
+          ? currentState.scheduledTime
+          : computeNextScheduledTime(config).toISOString()
+
+      // Queue locally — no server round-trip needed
+      try {
+        await queueCheckin({
+          token: '', // not used in session mode
+          session_token: config.sessionToken,
+          scheduled_time: scheduledTime,
+          device_time: deviceTime,
+          latitude: location?.latitude ?? null,
+          longitude: location?.longitude ?? null,
+          gps_accuracy: location?.accuracy ?? null,
+          notes: trimmedNotes,
+        })
+      } catch {
+        // IDB failed — still show confirmed (data is in memory)
+      }
+
+      // Update session state for next round
+      config.lastCompletedAt = scheduledTime
+      setLocalCheckInCount(c => c + 1)
+
+      // Clear notes
+      setNotes('')
+      setShowNotes(false)
+
+      // Compute next check-in time
+      const nextScheduled = addMinutes(new Date(scheduledTime), config.interval)
+
+      // Show confirmed briefly, then transition to watching
+      setState({
+        phase: 'confirmed',
+        nextCheckIn: nextScheduled.toISOString(),
+        serverTime: deviceTime, // use device time since we're offline-first
+        gpsCapture: location !== null,
+        facilityName,
+        assignedName,
+        nextToken: undefined,
+      })
+
+      // Background sync attempt (non-blocking)
+      syncPendingCheckins().then(result => {
+        if (result.synced > 0 || result.reconciled > 0) {
+          setSyncToast(`${result.synced + result.reconciled} check-in(s) synced`)
+          setTimeout(() => setSyncToast(null), 4000)
+        }
+        getPendingCount().then(setPendingCount).catch(() => {})
+      }).catch(() => {})
+
+      submittingRef.current = false
+      return
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // LEGACY MODE: server round-trip required
+    // ═══════════════════════════════════════════════════════════
+    const activeToken = overrideToken || token
 
     try {
       const res = await fetch('/api/checkin', {
@@ -506,7 +834,6 @@ export default function CheckInPage() {
         if (res.status === 410 || res.status === 404) {
           setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
         } else if (res.status === 409) {
-          // Already completed (double-tap) — show as success
           setState({ phase: 'expired', message: data.error ?? 'This check-in has already been recorded.' })
         } else {
           setState({ phase: 'error', message: data.error ?? 'Check-in failed. Please try again.' })
@@ -514,14 +841,12 @@ export default function CheckInPage() {
         submittingRef.current = false
         return
       }
-      // Service worker may return offline: true when network is down
       if (data.offline) {
         setState({ phase: 'queued', deviceTime, gpsCapture: location !== null })
         submittingRef.current = false
         return
       }
 
-      // Update watchMetaRef with API response data
       if (data.facilityName && watchMetaRef.current) {
         watchMetaRef.current.facilityName = data.facilityName || facilityName
         watchMetaRef.current.assignedName = data.assignedName || assignedName
@@ -531,7 +856,6 @@ export default function CheckInPage() {
         if (data.escalationPhone !== undefined) watchMetaRef.current.escalationPhone = data.escalationPhone
       }
 
-      // Clear notes after successful check-in
       setNotes('')
       setShowNotes(false)
 
@@ -545,7 +869,6 @@ export default function CheckInPage() {
         nextToken: data.nextToken,
       })
     } catch {
-      // Network error with no service worker -- try to queue directly
       try {
         await queueCheckin({
           token: activeToken,
@@ -561,7 +884,7 @@ export default function CheckInPage() {
       }
     }
     submittingRef.current = false
-  }, [token, state, notes])
+  }, [token, state, notes, isSessionMode])
 
   // ===== RENDER =====
 
@@ -616,10 +939,24 @@ export default function CheckInPage() {
           >
             Checklist First
           </h1>
-          <p className="text-amber-300 text-sm mb-2">{state.message}</p>
-          <p className="text-slate-500 text-xs">
-            Check your messages for the pre-watch safety checklist link and complete it before checking in.
+          <p className="text-amber-300 text-sm mb-3">{state.message}</p>
+          <p className="text-slate-400 text-xs mb-5 leading-relaxed">
+            You need to complete the pre-watch safety checklist before you can check in. This ensures all safety protocols are in place.
           </p>
+          {state.checklistToken && (
+            <a
+              href={`/checklist/${state.checklistToken}`}
+              className="block w-full py-3.5 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white text-sm font-bold rounded-xl transition-all active:scale-[0.97] mb-3"
+            >
+              Open Safety Checklist
+            </a>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition-all"
+          >
+            I Already Completed It
+          </button>
         </div>
       </div>
     )
@@ -831,6 +1168,10 @@ export default function CheckInPage() {
         online={online}
         syncToast={syncToast}
         pendingCount={pendingCount}
+        postWorkMin={postWorkMin}
+        workStopped={workStopped}
+        stoppingWork={stoppingWork}
+        onStopWork={handleStopWork}
       />
     )
   }
@@ -870,6 +1211,21 @@ export default function CheckInPage() {
   }
 
   if (state.phase === 'missed_waiting') {
+    // In session mode, auto-advance to next check-in after 5 seconds
+    if (isSessionMode && sessionRef.current) {
+      const config = sessionRef.current
+      const nextScheduled = computeNextScheduledTime(config)
+      setTimeout(() => {
+        setState({
+          phase: 'watching',
+          facilityName: config.facilityName,
+          assignedName: config.assignedName,
+          nextCheckInTime: nextScheduled.toISOString(),
+          lastCheckInTime: new Date().toISOString(),
+        })
+      }, 5000)
+    }
+
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
@@ -898,7 +1254,7 @@ export default function CheckInPage() {
             </div>
           )}
           <p className="text-slate-500 text-xs mt-4">
-            Your next check-in link will arrive shortly.
+            {isSessionMode ? 'Advancing to next check-in...' : 'Your next check-in link will arrive shortly.'}
           </p>
         </div>
       </div>
@@ -936,6 +1292,10 @@ function WatchingView({
   online,
   syncToast,
   pendingCount,
+  postWorkMin,
+  workStopped,
+  stoppingWork,
+  onStopWork,
 }: {
   facilityName: string
   assignedName: string
@@ -946,7 +1306,12 @@ function WatchingView({
   online: boolean
   syncToast: string | null
   pendingCount: number
+  postWorkMin: number
+  workStopped: boolean
+  stoppingWork: boolean
+  onStopWork: () => void
 }) {
+  const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(() => {
     return Math.max(0, Math.floor((new Date(nextCheckInTime).getTime() - Date.now()) / 1000))
   })
@@ -961,29 +1326,50 @@ function WatchingView({
 
   const totalInterval = Math.max(1, Math.floor((new Date(nextCheckInTime).getTime() - new Date(lastCheckInTime).getTime()) / 1000))
   const progress = Math.max(0, Math.min(1, 1 - secondsLeft / totalInterval))
+  // Approaching = less than 2 minutes left
+  const approaching = secondsLeft > 0 && secondsLeft <= 120
+  const progressColor = approaching ? 'bg-amber-500' : workStopped ? 'bg-blue-500' : 'bg-green-500'
+
+  // Circular progress for the timer
+  const radius = 90
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - progress)
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-5">
+      <style>{`
+        @keyframes subtlePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .timer-pulse { animation: subtlePulse 2s ease-in-out infinite; }
+      `}</style>
       <div className="w-full max-w-sm">
         <Logo />
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
           {/* Watch info header */}
           <div className="px-6 py-5 border-b border-slate-800">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-              </span>
-              <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">On Schedule</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1
+                  className="text-white text-xl mb-0.5"
+                  style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+                >
+                  {facilityName}
+                </h1>
+                <p className="text-slate-400 text-sm">{assignedName}</p>
+              </div>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${workStopped ? 'bg-blue-950 border border-blue-800' : approaching ? 'bg-amber-950 border border-amber-800' : 'bg-green-950 border border-green-800'}`}>
+                <span className="relative flex h-2 w-2">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${workStopped ? 'bg-blue-400' : approaching ? 'bg-amber-400' : 'bg-green-400'}`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${workStopped ? 'bg-blue-500' : approaching ? 'bg-amber-500' : 'bg-green-500'}`} />
+                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${workStopped ? 'text-blue-400' : approaching ? 'text-amber-400' : 'text-green-400'}`}>
+                  {workStopped ? 'Cooldown' : approaching ? 'Soon' : 'Active'}
+                </span>
+              </div>
             </div>
-            <h1
-              className="text-white text-xl mb-1"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-            >
-              {facilityName}
-            </h1>
-            <p className="text-slate-400 text-sm">{assignedName}</p>
           </div>
 
           {/* Geofence status */}
@@ -999,25 +1385,37 @@ function WatchingView({
             </div>
           )}
 
-          {/* Countdown */}
-          <div className="px-6 py-8 text-center">
-            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3">Next Check-In In</p>
-            <p
-              className="text-white text-6xl font-black tracking-tight"
-              style={{ fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}
-            >
-              {formatCountdown(secondsLeft)}
-            </p>
-            <p className="text-slate-500 text-sm mt-3">
-              Due at {format(new Date(nextCheckInTime), 'h:mm a')}
-            </p>
-
-            {/* Progress bar */}
-            <div className="mt-6 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                style={{ width: `${progress * 100}%` }}
-              />
+          {/* Circular countdown */}
+          <div className="px-6 py-8 flex flex-col items-center">
+            <div className="relative w-52 h-52 mb-4">
+              {/* Background circle */}
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r={radius} fill="none" stroke="#1e293b" strokeWidth="6" />
+                <circle
+                  cx="100" cy="100" r={radius} fill="none"
+                  stroke={approaching ? '#f59e0b' : workStopped ? '#3b82f6' : '#22c55e'}
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-1000 ease-linear"
+                />
+              </svg>
+              {/* Timer text in center */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${approaching ? 'text-amber-400' : 'text-slate-500'}`}>
+                  {approaching ? 'Get Ready' : 'Next Check-In'}
+                </p>
+                <p
+                  className={`text-5xl font-black tracking-tight ${approaching ? 'text-amber-400 timer-pulse' : 'text-white'}`}
+                  style={{ fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {formatCountdown(secondsLeft)}
+                </p>
+                <p className="text-slate-500 text-xs mt-1">
+                  {format(new Date(nextCheckInTime), 'h:mm a')}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -1045,16 +1443,67 @@ function WatchingView({
             </div>
           )}
 
-          {/* Footer info */}
-          <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 space-y-2">
-            <p className="text-slate-600 text-xs text-center">
-              {online
-                ? 'Keep this page open. You will be alerted when it is time to check in.'
-                : 'You are offline. Your check-in will be queued and synced when connection returns.'}
-            </p>
+          {/* Stop Work / Post-Work Cooldown */}
+          {postWorkMin > 0 && !workStopped && (
+            <div className="mx-6 mb-3">
+              {!showStopConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowStopConfirm(true)}
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl bg-orange-950/80 border border-orange-800/60 text-orange-400 hover:bg-orange-900 text-sm font-semibold transition-all active:scale-[0.97]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                  </svg>
+                  Hot Work Complete
+                </button>
+              ) : (
+                <div className="bg-orange-950 border border-orange-700 rounded-xl p-4 space-y-3">
+                  <p className="text-orange-300 text-sm font-semibold text-center">End hot work early?</p>
+                  <p className="text-orange-400/80 text-xs text-center leading-relaxed">
+                    This will start the {postWorkMin}-minute post-work monitoring period. Your supervisor will be notified.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowStopConfirm(false)}
+                      className="flex-1 px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { onStopWork(); setShowStopConfirm(false) }}
+                      disabled={stoppingWork}
+                      className="flex-1 px-3 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-800 text-white text-xs font-bold transition-colors"
+                    >
+                      {stoppingWork ? 'Stopping...' : 'Confirm Stop'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {workStopped && postWorkMin > 0 && (
+            <div className="mx-6 mb-3 flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-blue-950/80 border border-blue-800/60">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span className="text-blue-400 text-xs font-semibold">Post-work cooldown — {postWorkMin} min monitoring</span>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 space-y-2.5">
             {watchMeta?.escalationPhone && (
               <CallSupervisorButton phone={watchMeta.escalationPhone} />
             )}
+            <p className="text-slate-600 text-[11px] text-center leading-relaxed">
+              {online
+                ? 'Keep this page open. You\u2019ll be alerted when it\u2019s time.'
+                : 'Offline — check-ins will sync when connection returns.'}
+            </p>
           </div>
         </div>
       </div>
@@ -1119,6 +1568,7 @@ function DueView({
 }) {
   const [tapped, setTapped] = useState(false)
   const [online, setOnline] = useState(true)
+  const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
     setOnline(navigator.onLine)
@@ -1135,30 +1585,52 @@ function DueView({
     }
   }, [])
 
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  const overdueSec = Math.max(0, Math.floor((now - new Date(scheduledTime).getTime()) / 1000))
+  const overdueMin = Math.floor(overdueSec / 60)
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-5">
+      <style>{`
+        @keyframes buttonGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.1); }
+          50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.5), 0 0 80px rgba(34, 197, 94, 0.2); }
+        }
+        .button-glow { animation: buttonGlow 2s ease-in-out infinite; }
+      `}</style>
       <div className="w-full max-w-sm">
         <Logo />
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-4">
-          {/* Info header */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          {/* Header with urgency */}
           <div className="px-6 py-5 border-b border-slate-800">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
-              </span>
-              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Due Now</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+                </span>
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Check-In Due</span>
+              </div>
+              {overdueMin > 0 && (
+                <span className="text-[10px] text-red-400 font-bold bg-red-950 border border-red-800/60 px-2 py-1 rounded-full">
+                  {overdueMin} min overdue
+                </span>
+              )}
             </div>
             <h1
-              className="text-white text-xl mb-1"
+              className="text-white text-xl mb-0.5"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
             >
               {facilityName}
             </h1>
             <p className="text-slate-400 text-sm">{assignedName}</p>
-            <p className="text-slate-500 text-sm mt-1">
-              Due: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
+            <p className="text-slate-500 text-sm mt-1.5">
+              Due at <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
             </p>
           </div>
 
@@ -1177,11 +1649,9 @@ function DueView({
 
           {/* Connectivity indicator */}
           {!online && (
-            <div className="px-6 py-3 bg-amber-950 border-t border-amber-800 flex items-center justify-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-              </span>
-              <span className="text-amber-400 text-xs font-semibold">Offline — check-in will be queued</span>
+            <div className="mx-6 mt-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-950 border border-red-800">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-red-400 text-xs font-semibold">Offline — check-in will be queued</span>
             </div>
           )}
 
@@ -1196,23 +1666,28 @@ function DueView({
               onClick={() => { setTapped(true); onCheckIn() }}
               disabled={tapped}
               aria-label={`Check in now at ${facilityName}`}
-              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 disabled:bg-green-800 disabled:text-green-300 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
+              className={`w-full py-7 text-white text-2xl font-black rounded-2xl transition-all select-none touch-manipulation active:scale-[0.96] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300 ${
+                tapped
+                  ? 'bg-green-800 text-green-300'
+                  : 'bg-green-500 hover:bg-green-400 active:bg-green-600 button-glow'
+              }`}
             >
-              {tapped ? 'Checking in...' : 'CHECK IN NOW'}
+              {tapped ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="w-5 h-5 border-2 border-green-300 border-t-transparent rounded-full animate-spin" />
+                  Recording...
+                </span>
+              ) : 'CHECK IN NOW'}
             </button>
           </div>
-        </div>
 
-        {/* Supervisor contact */}
-        {watchMeta?.escalationPhone && (
-          <div className="mb-4">
-            <CallSupervisorButton phone={watchMeta.escalationPhone} />
+          {/* Footer */}
+          <div className="px-6 pb-4 space-y-2.5">
+            {watchMeta?.escalationPhone && (
+              <CallSupervisorButton phone={watchMeta.escalationPhone} />
+            )}
           </div>
-        )}
-
-        <p className="text-slate-600 text-xs text-center max-w-xs mx-auto leading-relaxed">
-          Tap the button to record your check-in.
-        </p>
+        </div>
       </div>
     </div>
   )
@@ -1244,43 +1719,75 @@ function GraceView({
   onToggleNotes: () => void
 }) {
   const [tapped, setTapped] = useState(false)
-  const [pulse, setPulse] = useState(false)
+  const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
-    const interval = setInterval(() => setPulse(p => !p), 1000)
-    return () => clearInterval(interval)
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
   }, [])
 
+  const overdueSec = Math.max(0, Math.floor((now - new Date(scheduledTime).getTime()) / 1000))
+  const overdueMin = Math.floor(overdueSec / 60)
+  const overdueSecs = overdueSec % 60
+
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center px-5 transition-colors duration-500 ${pulse ? 'bg-red-950' : 'bg-red-900'}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-5 bg-red-950">
+      <style>{`
+        @keyframes urgentPulse {
+          0%, 100% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.4), 0 0 80px rgba(239, 68, 68, 0.15); }
+          50% { box-shadow: 0 0 50px rgba(239, 68, 68, 0.7), 0 0 120px rgba(239, 68, 68, 0.3); }
+        }
+        @keyframes borderFlash {
+          0%, 100% { border-color: rgba(239, 68, 68, 0.6); }
+          50% { border-color: rgba(248, 113, 113, 0.9); }
+        }
+        .urgent-glow { animation: urgentPulse 1.5s ease-in-out infinite; }
+        .border-flash { animation: borderFlash 1.5s ease-in-out infinite; }
+      `}</style>
       <div className="w-full max-w-sm">
         <Logo />
 
-        <div className={`border rounded-2xl overflow-hidden mb-4 transition-colors duration-500 ${pulse ? 'bg-red-900 border-red-600' : 'bg-red-950 border-red-700'}`}>
+        <div className="border-2 rounded-2xl overflow-hidden bg-red-950/80 border-flash">
           {/* Header */}
-          <div className="px-6 py-5 border-b border-red-800">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+          <div className="px-6 py-5 border-b border-red-800/60 bg-red-900/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                </span>
+                <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest">Overdue</span>
+              </div>
+              <span className="text-[10px] text-red-300 font-bold bg-red-900 border border-red-700/60 px-2 py-1 rounded-full">
+                Was due {format(new Date(scheduledTime), 'h:mm a')}
               </span>
-              <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest">Overdue</span>
             </div>
             <h1
-              className="text-white text-xl mb-1"
+              className="text-white text-xl mb-0.5"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
             >
               {facilityName}
             </h1>
-            <p className="text-red-300 text-sm">{assignedName}</p>
-            <p className="text-red-400 text-sm mt-1">
-              Due: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
+            <p className="text-red-300/80 text-sm">{assignedName}</p>
+          </div>
+
+          {/* Overdue counter */}
+          <div className="px-6 py-6 text-center">
+            <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-2">Overdue By</p>
+            <p
+              className="text-red-300 text-5xl font-black tracking-tight"
+              style={{ fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}
+            >
+              {String(overdueMin).padStart(2, '0')}:{String(overdueSecs).padStart(2, '0')}
+            </p>
+            <p className="text-red-400/60 text-xs mt-2">
+              Your supervisor will be notified if not checked in soon
             </p>
           </div>
 
           {/* Geofence status */}
           {watchMeta?.watchLatitude != null && (
-            <div className="px-6 pt-4">
+            <div className="px-6 pb-3">
               <GeofenceBadge
                 userLat={userLocation?.latitude ?? null}
                 userLng={userLocation?.longitude ?? null}
@@ -1291,41 +1798,39 @@ function GraceView({
             </div>
           )}
 
-          {/* Overdue message */}
-          <div className="px-6 py-6 text-center">
-            <p
-              className="text-red-300 text-3xl font-black mb-2"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              OVERDUE
-            </p>
-            <p className="text-red-400 text-sm">CHECK IN NOW</p>
-          </div>
-
           {/* Notes input */}
           <div className="px-6 pb-2">
             <NotesInput notes={notes} onChange={onNotesChange} show={showNotes} onToggle={onToggleNotes} />
           </div>
 
           {/* The button */}
-          <div className="p-6 pt-0">
+          <div className="p-6 pt-2">
             <button
               onClick={() => { setTapped(true); onCheckIn() }}
               disabled={tapped}
               aria-label={`Check in now - overdue at ${facilityName}`}
-              className="w-full py-8 bg-red-600 hover:bg-red-500 active:bg-red-700 disabled:bg-red-900 disabled:text-red-400 text-white text-2xl font-black rounded-2xl border-2 border-red-400 shadow-2xl shadow-red-900/50 transition-all select-none touch-manipulation active:scale-[0.97] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-300"
+              className={`w-full py-7 text-white text-2xl font-black rounded-2xl transition-all select-none touch-manipulation active:scale-[0.96] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-300 ${
+                tapped
+                  ? 'bg-red-900 text-red-400'
+                  : 'bg-red-600 hover:bg-red-500 active:bg-red-700 urgent-glow'
+              }`}
             >
-              {tapped ? 'Checking in...' : 'CHECK IN NOW'}
+              {tapped ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="w-5 h-5 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+                  Recording...
+                </span>
+              ) : 'CHECK IN NOW'}
             </button>
           </div>
-        </div>
 
-        {/* Supervisor contact */}
-        {watchMeta?.escalationPhone && (
-          <div className="mb-4">
-            <CallSupervisorButton phone={watchMeta.escalationPhone} />
-          </div>
-        )}
+          {/* Supervisor contact */}
+          {watchMeta?.escalationPhone && (
+            <div className="px-6 pb-4">
+              <CallSupervisorButton phone={watchMeta.escalationPhone} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -1382,38 +1887,50 @@ function CheckInReady({
 
   const diffSec = Math.floor((now.getTime() - new Date(scheduledTime).getTime()) / 1000)
   const diffMin = Math.floor(Math.abs(diffSec) / 60)
+  const isOverdue = diffSec > 60
+  const isDueNow = diffSec >= -60 && diffSec <= 60
   const timeContext =
-    diffSec < -60 ? `Due in ${diffMin + 1} min` :
-    diffSec <= 60  ? 'Due now' :
-    diffMin === 1  ? 'Overdue by 1 min' :
-                     `Overdue by ${diffMin} min`
-  const contextColor =
-    diffSec > 60 ? 'text-red-400' :
-    diffSec > 0  ? 'text-amber-400' :
-                   'text-green-400'
+    diffSec < -60 ? `in ${diffMin + 1} min` :
+    diffSec <= 60  ? 'now' :
+    diffMin === 1  ? '1 min ago' :
+                     `${diffMin} min ago`
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-5">
+      <style>{`
+        @keyframes readyGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.1); }
+          50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.5), 0 0 80px rgba(34, 197, 94, 0.2); }
+        }
+        .ready-glow { animation: readyGlow 2s ease-in-out infinite; }
+      `}</style>
       <div className="w-full max-w-sm">
         <Logo />
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
           {/* Info header */}
           <div className="px-6 py-5 border-b border-slate-800">
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Fire Watch Check-In</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Fire Watch Check-In</p>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                isOverdue ? 'bg-red-950 border border-red-800/60 text-red-400' :
+                isDueNow ? 'bg-amber-950 border border-amber-800/60 text-amber-400' :
+                'bg-green-950 border border-green-800/60 text-green-400'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isOverdue ? 'bg-red-500' : isDueNow ? 'bg-amber-500' : 'bg-green-500'}`} />
+                Due {timeContext}
+              </div>
+            </div>
             <h1
-              className="text-white text-xl mb-1"
+              className="text-white text-xl mb-0.5"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
             >
               {facilityName}
             </h1>
             <p className="text-slate-400 text-sm">{assignedName}</p>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-slate-500 text-sm">
-                Due: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
-              </p>
-              <span className={`text-xs font-bold ${contextColor}`}>{timeContext}</span>
-            </div>
+            <p className="text-slate-500 text-sm mt-1.5">
+              Scheduled: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
+            </p>
           </div>
 
           {/* Geofence status */}
@@ -1431,11 +1948,9 @@ function CheckInReady({
 
           {/* Connectivity indicator */}
           {!online && (
-            <div className="px-6 py-3 bg-amber-950 border-t border-amber-800 flex items-center justify-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-              </span>
-              <span className="text-amber-400 text-xs font-semibold">Offline — check-in will be queued</span>
+            <div className="mx-6 mt-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-950 border border-red-800">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-red-400 text-xs font-semibold">Offline — check-in will be queued</span>
             </div>
           )}
 
@@ -1450,24 +1965,31 @@ function CheckInReady({
               onClick={() => { setTapped(true); onCheckIn() }}
               disabled={tapped}
               aria-label={`Check in now at ${facilityName}`}
-              className="w-full py-8 bg-green-500 hover:bg-green-400 active:bg-green-600 disabled:bg-green-800 disabled:text-green-300 text-white text-2xl font-black rounded-2xl shadow-2xl shadow-green-900/50 transition-all select-none touch-manipulation active:scale-[0.97] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300"
+              className={`w-full py-7 text-white text-2xl font-black rounded-2xl transition-all select-none touch-manipulation active:scale-[0.96] disabled:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300 ${
+                tapped
+                  ? 'bg-green-800 text-green-300'
+                  : 'bg-green-500 hover:bg-green-400 active:bg-green-600 ready-glow'
+              }`}
             >
-              {tapped ? 'Checking in...' : 'CHECK IN NOW'}
+              {tapped ? (
+                <span className="flex items-center justify-center gap-3">
+                  <span className="w-5 h-5 border-2 border-green-300 border-t-transparent rounded-full animate-spin" />
+                  Recording...
+                </span>
+              ) : 'CHECK IN NOW'}
             </button>
           </div>
-        </div>
 
-        {/* Supervisor contact */}
-        {watchMeta?.escalationPhone && (
-          <div className="mb-4">
-            <CallSupervisorButton phone={watchMeta.escalationPhone} />
+          {/* Footer */}
+          <div className="px-6 pb-4 space-y-2.5">
+            {watchMeta?.escalationPhone && (
+              <CallSupervisorButton phone={watchMeta.escalationPhone} />
+            )}
+            <p className="text-slate-600 text-[11px] text-center leading-relaxed">
+              GPS location is captured automatically with each check-in.
+            </p>
           </div>
-        )}
-
-        <p className="text-slate-600 text-xs text-center max-w-xs mx-auto leading-relaxed">
-          Tap the button to record your check-in. GPS is captured automatically.
-          Your next check-in link will be available when the next window opens.
-        </p>
+        </div>
       </div>
     </div>
   )

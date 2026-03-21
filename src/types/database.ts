@@ -44,7 +44,7 @@ export interface Watch {
   escalation_delay_min: number
   secondary_escalation_phone: string | null
   planned_end_time: string | null
-  compliance_status: 'clean' | 'gap_detected'
+  compliance_status: 'clean' | 'gap_detected' | 'offline_suspected'
   consecutive_misses: number
   closeout_notes: string | null
   closeout_photo_urls: string[] | null
@@ -54,6 +54,8 @@ export interface Watch {
   watch_latitude: number | null
   watch_longitude: number | null
   watch_radius_m: number
+  session_token: string | null
+  last_sync_at: string | null
 }
 
 export interface WatchChecklistItem {

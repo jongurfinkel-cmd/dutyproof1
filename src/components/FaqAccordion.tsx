@@ -30,7 +30,7 @@ const FAQS: { q: string; a: string; bold: string }[] = [
   },
   {
     q: 'What does the fire watch worker need?',
-    a: 'Any smartphone with a web browser — no app to download, no login required. DutyProof generates a secure check-in link at each interval; the worker taps it and the check-in is recorded with a server-side timestamp and GPS coordinates. Links can be delivered via optional SMS, shared manually by a supervisor, or accessed from the dashboard.',
+    a: 'Any smartphone with a web browser — no app to download, no login required. Each watch gets one persistent check-in link. The worker opens it once and the page handles the entire schedule — countdown timer, check-in button, GPS logging. It works fully offline too. Links can be shared via optional SMS, QR code, or copied from the dashboard.',
     bold: 'Any smartphone with a web browser',
   },
   {
