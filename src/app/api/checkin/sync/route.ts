@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
       const { data: existing } = await admin
         .from('check_ins')
-        .select('id, status, token')
+        .select('id, status, token, scheduled_time, token_expires_at')
         .eq('watch_id', watch.id)
         .gte('scheduled_time', minTime)
         .lte('scheduled_time', maxTime)
@@ -111,6 +111,18 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (existing) {
+        // Validate deviceTime is within a reasonable window (scheduled_time - 5min to token_expires_at + 5min)
+        const gracePeriodMs = 5 * 60 * 1000
+        const existingScheduled = new Date(existing.scheduled_time)
+        const existingExpires = new Date(existing.token_expires_at)
+        const windowStart = new Date(existingScheduled.getTime() - gracePeriodMs)
+        const windowEnd = new Date(existingExpires.getTime() + gracePeriodMs)
+
+        if (deviceTime < windowStart || deviceTime > windowEnd) {
+          failed++
+          continue
+        }
+
         if (existing.status === 'completed') {
           // Already completed — idempotent skip
           skipped++
@@ -143,7 +155,14 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // No matching row — create a new check-in record
+      // No matching row — validate deviceTime is within scheduledTime ± interval_minutes
+      const intervalMs = watch.check_interval_min * 60 * 1000
+      if (deviceTime < new Date(scheduledTime.getTime() - intervalMs) || deviceTime > new Date(scheduledTime.getTime() + intervalMs)) {
+        failed++
+        continue
+      }
+
+      // Create a new check-in record
       const newToken = generateToken()
       const expiresAt = new Date(scheduledTime.getTime() + watch.check_interval_min * 60 * 1000)
 
@@ -194,8 +213,9 @@ export async function POST(req: NextRequest) {
 
     // If the watch was in offline_suspected state, send "back online" resolution to supervisor
     if (watch.compliance_status === 'offline_suspected' && watch.escalation_phone) {
-      const facility = watch.facilities as unknown as { name: string }
-      const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+      const facility = watch.facilities as unknown as { name: string } | null
+      const facilityName = facility?.name ?? 'Unknown Facility'
+      const displayName = watch.location ? `${facilityName} — ${watch.location}` : facilityName
       const totalSynced = created + reconciled
       // All synced check-ins were completed, but some may have been reconciled from "missed" — count those as late
       const onTime = created + reconciled - failed

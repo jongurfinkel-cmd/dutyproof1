@@ -71,6 +71,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Watch is not active' }, { status: 400 })
     }
 
+    // Block handoff during post-work cooldown period
+    if (watch.work_stopped_at && watch.post_work_duration_min > 0) {
+      const cooldownEnd = addMinutes(new Date(watch.work_stopped_at), watch.post_work_duration_min)
+      if (new Date() < cooldownEnd) {
+        return NextResponse.json(
+          { error: 'Cannot handoff during post-work monitoring period. The cooldown must complete first.' },
+          { status: 409 }
+        )
+      }
+    }
+
     const oldName = watch.assigned_name
     const oldPhone = watch.assigned_phone
 
@@ -139,8 +150,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Send SMS to new watcher if enabled
-    const facility = watch.facilities
-    const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+    const facility = watch.facilities as { name: string } | null
+    const facilityName = facility?.name ?? 'Unknown Facility'
+    const displayName = watch.location ? `${facilityName} — ${watch.location}` : facilityName
 
     if (sms_enabled && updatedPhone && newCheckIn) {
       const sid = await sendCheckInSMS(

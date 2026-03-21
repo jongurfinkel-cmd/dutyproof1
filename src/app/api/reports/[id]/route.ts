@@ -39,6 +39,10 @@ export async function GET(
       return NextResponse.json({ error: 'Watch not found' }, { status: 404 })
     }
 
+    if (watch.status !== 'completed') {
+      return NextResponse.json({ error: 'Compliance report is only available after the watch has been completed.' }, { status: 409 })
+    }
+
     // Fetch check-ins, alerts, and checklist data
     const [checkInsRes, alertsRes, checklistItemsRes, checklistCompletionsRes] = await Promise.all([
       admin.from('check_ins').select('*').eq('watch_id', watchId).order('scheduled_time', { ascending: true }),

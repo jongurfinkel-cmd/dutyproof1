@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (longitude != null && (typeof longitude !== 'number' || longitude < -180 || longitude > 180)) {
       return NextResponse.json({ error: 'Invalid longitude' }, { status: 400 })
     }
-    if (gps_accuracy != null && (typeof gps_accuracy !== 'number' || gps_accuracy < 0)) {
+    if (gps_accuracy != null && (typeof gps_accuracy !== 'number' || gps_accuracy <= 0)) {
       return NextResponse.json({ error: 'Invalid GPS accuracy' }, { status: 400 })
     }
     // Validate notes if provided
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       const { error: reconAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
         check_in_id: checkIn.id,
-        alert_type: 'sms_sent', // reuse existing type for audit trail
+        alert_type: 'offline_reconciled',
         message: `Offline reconciliation: ${checkIn.assigned_name} checked in at ${completedAt} (device time) for ${displayName}. Originally marked missed — worker was offline.`,
       })
       if (reconAlertErr) console.error('Failed to log reconciliation alert:', reconAlertErr)
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
       const { error: lateAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
         check_in_id: checkIn.id,
-        alert_type: 'sms_sent',
+        alert_type: 'late_recovery',
         message: `Late check-in recovered: ${checkIn.assigned_name} checked in at ${completedAt} for ${displayName}. Originally marked missed by cron — worker was still on page.`,
       })
       if (lateAlertErr) console.error('Failed to log late check-in alert:', lateAlertErr)

@@ -110,7 +110,7 @@ export interface Alert {
   created_at: string
   watch_id: string
   check_in_id: string | null
-  alert_type: 'missed_checkin' | 'sms_delivered' | 'watch_started' | 'watch_ended' | 'sms_failed' | 'sms_sent' | 'escalation_acknowledged'
+  alert_type: 'missed_checkin' | 'sms_delivered' | 'watch_started' | 'watch_ended' | 'sms_failed' | 'sms_sent' | 'escalation_acknowledged' | 'watcher_offline' | 'watcher_online' | 'offline_reconciled' | 'late_recovery'
   recipient_phone: string | null
   recipient_name: string | null
   message: string | null

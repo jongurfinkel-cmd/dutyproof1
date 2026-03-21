@@ -907,12 +907,11 @@ export default function CheckInPage() {
           gps_accuracy: location?.accuracy ?? null,
           notes: trimmedNotes,
         })
+        // Only advance schedule after queue succeeds
+        config.lastCompletedAt = scheduledTime
       } catch {
         // IDB failed — still show confirmed (data is in memory)
       }
-
-      // Update session state for next round
-      config.lastCompletedAt = scheduledTime
       setLocalCheckInCount(c => c + 1)
 
       // Clear notes

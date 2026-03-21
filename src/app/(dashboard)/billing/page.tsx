@@ -22,7 +22,7 @@ export default function BillingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
-  const [subStatus, setSubStatus] = useState<SubStatus | undefined>(undefined)
+  const [subStatus, setSubStatus] = useState<SubStatus | undefined>()
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {

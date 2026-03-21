@@ -6,7 +6,6 @@ import {
   View,
   Image,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer'
 import { formatInTimeZone } from 'date-fns-tz'
 import type { WatchWithFacility, CheckIn, Alert, WatchChecklistItem, ChecklistCompletion } from '@/types/database'
@@ -16,6 +15,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     fontSize: 10,
     padding: 40,
+    paddingBottom: 60,
     color: '#1a1a1a',
   },
   // Header
@@ -120,10 +120,41 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  // Activity log (compact variant)
+  activityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 3,
+    marginRight: 8,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  activityTime: {
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 8,
+  },
+  activityLabel: {
+    fontSize: 8,
+    color: '#1e3a5f',
+    fontFamily: 'Helvetica-Bold',
+    marginTop: 1,
+  },
+  activityMessage: {
+    fontSize: 8,
+    color: '#666',
+    marginTop: 1,
+  },
   // Footer
   footer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 20,
     left: 40,
     right: 40,
     borderTopWidth: 1,
@@ -185,6 +216,45 @@ function getMapTileUrls(lat: number, lon: number): string[] {
   ]
 }
 
+/** Helper: create a row (label + value) only if the value is truthy */
+function condRow(labelText: string, valueText: string | null | undefined | false) {
+  if (!valueText) return null
+  return React.createElement(
+    View,
+    { style: styles.row },
+    React.createElement(Text, { style: styles.label }, labelText),
+    React.createElement(Text, { style: styles.value }, valueText)
+  )
+}
+
+/** Map alert types to human-readable labels for the activity log */
+const ACTIVITY_LABELS: Record<string, string> = {
+  watch_started: 'Watch started',
+  watch_ended: 'Watch ended',
+  missed_checkin: 'Missed check-in escalation',
+  watcher_offline: 'Watcher offline detected',
+  watcher_online: 'Watcher back online',
+  escalation_acknowledged: 'Escalation acknowledged',
+  offline_reconciled: 'Offline check-in reconciled',
+  late_recovery: 'Late check-in recovered',
+}
+
+/** Color for activity dots based on alert type */
+function activityDotColor(alertType: string, message: string | null): string {
+  if (message && message.includes('[HANDOFF]')) return '#8b5cf6'
+  switch (alertType) {
+    case 'watch_started': return '#16a34a'
+    case 'watch_ended': return '#1e3a5f'
+    case 'missed_checkin': return '#dc2626'
+    case 'watcher_offline': return '#dc2626'
+    case 'watcher_online': return '#16a34a'
+    case 'escalation_acknowledged': return '#d97706'
+    case 'offline_reconciled': return '#0ea5e9'
+    case 'late_recovery': return '#d97706'
+    default: return '#9ca3af'
+  }
+}
+
 export function WatchReport({ watch, checkIns, alerts, checklistItems, checklistCompletions, adminEmail }: ReportData) {
   const completed = checkIns.filter((c) => c.status === 'completed')
   const missed = checkIns.filter((c) => c.status === 'missed')
@@ -193,16 +263,35 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
   const reportId = watch.id.slice(0, 8).toUpperCase()
   const tz = watch.facilities.timezone || 'America/New_York'
 
+  const watchTypeLabel = watch.watch_type === 'impairment' ? 'Impairment Watch' : 'Hot Work Fire Watch'
+
+  // Filter alerts for activity log
+  const activityAlerts = alerts.filter((a) => {
+    if (ACTIVITY_LABELS[a.alert_type]) return true
+    if (a.message && a.message.includes('[HANDOFF]')) return true
+    return false
+  }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+
+  // Sorted, non-cancelled check-ins for the timeline
+  const timelineCheckIns = checkIns
+    .filter((c) => c.status !== 'cancelled')
+    .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime())
+
+  // GPS data for coverage map
+  const gpsCheckins = completed.filter((c) => c.latitude != null && c.longitude != null)
+  const ackCheckins = missed.filter((c) => c.ack_at && c.ack_latitude != null && c.ack_longitude != null)
+
   return React.createElement(
     Document,
     null,
     React.createElement(
       Page,
-      { size: 'LETTER', style: styles.page },
-      // Header
+      { size: 'LETTER', style: styles.page, wrap: true },
+
+      // ── Header ──
       React.createElement(
         View,
-        { style: styles.header },
+        { style: styles.header, fixed: true },
         React.createElement(Text, { style: styles.headerTitle }, 'DUTYPROOF'),
         React.createElement(Text, { style: styles.headerSubtitle }, 'Fire Watch Compliance Report'),
         React.createElement(
@@ -211,10 +300,11 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           `Report ID: ${reportId}  |  Generated: ${formatInTimeZone(new Date(), tz, 'MMM d, yyyy h:mm a')}  |  Immutable records — tamper-evident`
         )
       ),
-      // Facility Info
+
+      // ── Job Site Information ──
       React.createElement(
         View,
-        { style: styles.section },
+        { style: styles.section, wrap: true },
         React.createElement(Text, { style: styles.sectionTitle }, 'JOB SITE INFORMATION'),
         React.createElement(
           View,
@@ -222,13 +312,7 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           React.createElement(Text, { style: styles.label }, 'Job Site / Company:'),
           React.createElement(Text, { style: styles.value }, watch.facilities.name)
         ),
-        watch.facilities.address &&
-          React.createElement(
-            View,
-            { style: styles.row },
-            React.createElement(Text, { style: styles.label }, 'Address:'),
-            React.createElement(Text, { style: styles.value }, watch.facilities.address)
-          ),
+        condRow('Address:', watch.facilities.address),
         React.createElement(
           View,
           { style: styles.row },
@@ -236,17 +320,21 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           React.createElement(Text, { style: styles.value }, watch.facilities.timezone)
         )
       ),
-      // Watch Summary
+
+      // ── Watch Summary ──
       React.createElement(
         View,
-        { style: styles.section },
+        { style: styles.section, wrap: true },
         React.createElement(Text, { style: styles.sectionTitle }, 'WATCH SUMMARY'),
+        condRow('Watch Type:', watchTypeLabel),
         React.createElement(
           View,
           { style: styles.row },
           React.createElement(Text, { style: styles.label }, 'Reason for Watch:'),
           React.createElement(Text, { style: styles.value }, watch.reason || 'Not specified')
         ),
+        condRow('Location / Area:', watch.location),
+        condRow('Permit #:', watch.permit_number),
         React.createElement(
           View,
           { style: styles.row },
@@ -265,6 +353,9 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           React.createElement(Text, { style: styles.label }, 'Watch Started:'),
           React.createElement(Text, { style: styles.value }, formatTs(watch.start_time, tz))
         ),
+        condRow('Planned End:', watch.planned_end_time ? formatTs(watch.planned_end_time, tz) : null),
+        condRow('Work Stopped At:', watch.work_stopped_at ? formatTs(watch.work_stopped_at, tz) : null),
+        condRow('Post-Work Monitoring:', watch.post_work_duration_min > 0 ? `${watch.post_work_duration_min} minutes` : null),
         React.createElement(
           View,
           { style: styles.row },
@@ -277,18 +368,20 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           React.createElement(Text, { style: styles.label }, 'Duration:'),
           React.createElement(Text, { style: styles.value }, calcDuration(watch.start_time, watch.ended_at))
         ),
-        watch.ended_at &&
-          React.createElement(
-            View,
-            { style: styles.row },
-            React.createElement(Text, { style: styles.label }, 'Closed By:'),
-            React.createElement(Text, { style: styles.value }, adminEmail)
-          )
+        watch.ended_at
+          ? React.createElement(
+              View,
+              { style: styles.row },
+              React.createElement(Text, { style: styles.label }, 'Closed By:'),
+              React.createElement(Text, { style: styles.value }, adminEmail)
+            )
+          : null
       ),
-      // Compliance Score
+
+      // ── Compliance Summary ──
       React.createElement(
         View,
-        { style: styles.section },
+        { style: styles.section, wrap: true },
         React.createElement(Text, { style: styles.sectionTitle }, 'COMPLIANCE SUMMARY'),
         React.createElement(
           View,
@@ -325,120 +418,172 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
           )
         )
       ),
-      // GPS Coverage Map — show area map when GPS data is available
-      ...(() => {
-        const gpsCheckins = completed.filter((c) => c.latitude != null && c.longitude != null)
-        if (gpsCheckins.length === 0) return []
-        const avgLat = gpsCheckins.reduce((s, c) => s + c.latitude!, 0) / gpsCheckins.length
-        const avgLon = gpsCheckins.reduce((s, c) => s + c.longitude!, 0) / gpsCheckins.length
-        const tiles = getMapTileUrls(avgLat, avgLon)
-        const avgAccuracy = gpsCheckins.reduce((s, c) => s + (c.gps_accuracy ?? 0), 0) / gpsCheckins.length
-        return [
-          React.createElement(
-            View,
-            { style: styles.section },
-            React.createElement(Text, { style: styles.sectionTitle }, 'GPS COVERAGE MAP'),
+
+      // ── Closeout Evidence (only for completed watches) ──
+      ...(watch.ended_at
+        ? [
             React.createElement(
               View,
-              { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
-              ...tiles.map((url, i) =>
-                React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
-              )
-            ),
-            React.createElement(
-              Text,
-              { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
-              `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${gpsCheckins.length} GPS-verified check-in(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
-            ),
-            React.createElement(
-              Text,
-              { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
-              'Map data © OpenStreetMap contributors'
-            )
-          ),
-        ]
-      })(),
-      // Supervisor Acknowledgment Map — show map when ack GPS data is available
-      ...(() => {
-        const ackCheckins = missed.filter((c) => c.ack_at && c.ack_latitude != null && c.ack_longitude != null)
-        if (ackCheckins.length === 0) return []
-        const avgLat = ackCheckins.reduce((s, c) => s + c.ack_latitude!, 0) / ackCheckins.length
-        const avgLon = ackCheckins.reduce((s, c) => s + c.ack_longitude!, 0) / ackCheckins.length
-        const tiles = getMapTileUrls(avgLat, avgLon)
-        const avgAccuracy = ackCheckins.reduce((s, c) => s + (c.ack_gps_accuracy ?? 0), 0) / ackCheckins.length
-        return [
-          React.createElement(
-            View,
-            { style: styles.section },
-            React.createElement(Text, { style: styles.sectionTitle }, 'SUPERVISOR ACKNOWLEDGMENT MAP'),
-            React.createElement(
-              View,
-              { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
-              ...tiles.map((url, i) =>
-                React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
-              )
-            ),
-            React.createElement(
-              Text,
-              { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 6 } },
-              `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${ackCheckins.length} GPS-verified acknowledgment(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
-            ),
-            React.createElement(
-              Text,
-              { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 2 } },
-              'Map data © OpenStreetMap contributors'
-            )
-          ),
-        ]
-      })(),
-      // Check-In Timeline
-      React.createElement(
-        View,
-        { style: styles.section },
-        React.createElement(Text, { style: styles.sectionTitle }, 'CHECK-IN TIMELINE'),
-        ...checkIns
-          .filter((c) => c.status !== 'cancelled')
-          .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime())
-          .map((ci) =>
-            React.createElement(
-              View,
-              { key: ci.id, style: styles.timelineRow },
-              React.createElement(View, {
-                style: [
-                  styles.statusDot,
-                  {
-                    backgroundColor:
-                      ci.status === 'completed'
-                        ? '#16a34a'
-                        : ci.status === 'missed'
-                        ? '#dc2626'
-                        : '#9ca3af',
-                  },
-                ],
-              }),
+              { style: styles.section, wrap: true },
+              React.createElement(Text, { style: styles.sectionTitle }, 'CLOSEOUT EVIDENCE'),
               React.createElement(
                 View,
-                { style: styles.timelineContent },
+                { style: styles.row },
+                React.createElement(Text, { style: styles.label }, 'Closeout Notes:'),
+                React.createElement(Text, { style: styles.value }, watch.closeout_notes || 'None recorded')
+              ),
+              React.createElement(
+                View,
+                { style: styles.row },
+                React.createElement(Text, { style: styles.label }, 'Closeout Photos:'),
                 React.createElement(
                   Text,
-                  { style: styles.timelineTime },
-                  `${formatTs(ci.scheduled_time, tz)}  —  ${ci.status.toUpperCase()}`
+                  { style: styles.value },
+                  watch.closeout_photo_urls && watch.closeout_photo_urls.length > 0
+                    ? `${watch.closeout_photo_urls.length} photo${watch.closeout_photo_urls.length === 1 ? '' : 's'} attached`
+                    : 'None'
+                )
+              ),
+              // Impairment-specific restoration fields
+              ...(watch.watch_type === 'impairment'
+                ? [
+                    React.createElement(
+                      View,
+                      { style: styles.row },
+                      React.createElement(Text, { style: styles.label }, 'System Restored:'),
+                      React.createElement(
+                        Text,
+                        { style: [styles.value, { color: watch.system_restored ? '#16a34a' : '#dc2626', fontFamily: 'Helvetica-Bold' }] },
+                        watch.system_restored ? 'Yes' : 'No'
+                      )
+                    ),
+                    condRow('Verified By:', watch.restoration_verified_by),
+                    condRow('Verified At:', watch.restoration_verified_at ? formatTs(watch.restoration_verified_at, tz) : null),
+                  ]
+                : [])
+            ),
+          ]
+        : []),
+
+      // ── GPS Coverage Map ──
+      ...(gpsCheckins.length > 0
+        ? (() => {
+            const avgLat = gpsCheckins.reduce((s, c) => s + c.latitude!, 0) / gpsCheckins.length
+            const avgLon = gpsCheckins.reduce((s, c) => s + c.longitude!, 0) / gpsCheckins.length
+            const tiles = getMapTileUrls(avgLat, avgLon)
+            const avgAccuracy = gpsCheckins.reduce((s, c) => s + (c.gps_accuracy ?? 0), 0) / gpsCheckins.length
+            return [
+              React.createElement(
+                View,
+                { style: styles.section, wrap: true },
+                React.createElement(Text, { style: styles.sectionTitle }, 'GPS COVERAGE MAP'),
+                React.createElement(
+                  View,
+                  { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', marginTop: 8, marginBottom: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+                  ...tiles.map((url, i) =>
+                    React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+                  )
                 ),
-                ci.status === 'completed' && ci.completed_at &&
-                  React.createElement(
+                React.createElement(
+                  Text,
+                  { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 4 } },
+                  `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${gpsCheckins.length} GPS-verified check-in(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
+                ),
+                React.createElement(
+                  Text,
+                  { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 3 } },
+                  'Map data © OpenStreetMap contributors'
+                )
+              ),
+            ]
+          })()
+        : []),
+
+      // ── Supervisor Acknowledgment Map ──
+      ...(ackCheckins.length > 0
+        ? (() => {
+            const avgLat = ackCheckins.reduce((s, c) => s + c.ack_latitude!, 0) / ackCheckins.length
+            const avgLon = ackCheckins.reduce((s, c) => s + c.ack_longitude!, 0) / ackCheckins.length
+            const tiles = getMapTileUrls(avgLat, avgLon)
+            const avgAccuracy = ackCheckins.reduce((s, c) => s + (c.ack_gps_accuracy ?? 0), 0) / ackCheckins.length
+            return [
+              React.createElement(
+                View,
+                { style: styles.section, wrap: true },
+                React.createElement(Text, { style: styles.sectionTitle }, 'SUPERVISOR ACKNOWLEDGMENT MAP'),
+                React.createElement(
+                  View,
+                  { style: { flexDirection: 'row', flexWrap: 'wrap', width: 300, height: 300, alignSelf: 'center', marginTop: 8, marginBottom: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 4, overflow: 'hidden' } },
+                  ...tiles.map((url, i) =>
+                    React.createElement(Image, { key: String(i), src: url, style: { width: 150, height: 150 } })
+                  )
+                ),
+                React.createElement(
+                  Text,
+                  { style: { fontSize: 8, color: '#666', textAlign: 'center', marginTop: 4 } },
+                  `Center: ${avgLat.toFixed(5)}, ${avgLon.toFixed(5)}  |  ${ackCheckins.length} GPS-verified acknowledgment(s)  |  Avg accuracy: ±${avgAccuracy.toFixed(0)}m`
+                ),
+                React.createElement(
+                  Text,
+                  { style: { fontSize: 7, color: '#999', textAlign: 'center', marginTop: 3 } },
+                  'Map data © OpenStreetMap contributors'
+                )
+              ),
+            ]
+          })()
+        : []),
+
+      // ── Check-In Timeline ──
+      React.createElement(
+        View,
+        { style: styles.section, wrap: true },
+        React.createElement(Text, { style: styles.sectionTitle }, 'CHECK-IN TIMELINE'),
+        ...timelineCheckIns.map((ci) => {
+          const offlineTag = ci.completed_offline ? ' (OFFLINE)' : ''
+          const statusText = `${formatTs(ci.scheduled_time, tz)}  —  ${ci.status.toUpperCase()}${offlineTag}`
+
+          return React.createElement(
+            View,
+            { key: ci.id, style: styles.timelineRow, wrap: false },
+            React.createElement(View, {
+              style: [
+                styles.statusDot,
+                {
+                  backgroundColor:
+                    ci.status === 'completed'
+                      ? '#16a34a'
+                      : ci.status === 'missed'
+                      ? '#dc2626'
+                      : '#9ca3af',
+                },
+              ],
+            }),
+            React.createElement(
+              View,
+              { style: styles.timelineContent },
+              React.createElement(
+                Text,
+                { style: styles.timelineTime },
+                statusText
+              ),
+              // Completed check-in details
+              ci.status === 'completed' && ci.completed_at
+                ? React.createElement(
                     Text,
                     { style: styles.timelineDetail },
                     `Device time: ${formatTs(ci.completed_at, tz)}  |  Server received: ${formatTs(ci.server_received_at, tz)}` +
                     (ci.latitude ? `  |  GPS: ${ci.latitude.toFixed(5)}, ${ci.longitude?.toFixed(5)} (±${ci.gps_accuracy?.toFixed(0)}m)` : '  |  GPS: Not captured')
-                  ),
-                ci.status === 'missed' &&
-                  React.createElement(
+                  )
+                : null,
+              // Missed check-in details
+              ci.status === 'missed'
+                ? React.createElement(
                     View,
                     null,
                     React.createElement(
                       Text,
                       { style: styles.timelineDetail },
-                      `Scheduled window expired. Escalation sent to supervisor.`
+                      'Scheduled window expired. Escalation sent to supervisor.'
                     ),
                     ci.ack_at
                       ? React.createElement(
@@ -457,59 +602,116 @@ export function WatchReport({ watch, checkIns, alerts, checklistItems, checklist
                           )
                         : null
                   )
-              )
+                : null,
+              // Notes (for any status)
+              ci.notes
+                ? React.createElement(
+                    Text,
+                    { style: [styles.timelineDetail, { fontStyle: 'italic' }] },
+                    `Note: ${ci.notes}`
+                  )
+                : null
             )
           )
+        })
       ),
-      // Pre-Watch Safety Checklist (only if items exist)
-      ...(checklistItems.length > 0 ? [
-        React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'PRE-WATCH SAFETY CHECKLIST'),
-          React.createElement(
-            View,
-            { style: styles.row },
-            React.createElement(Text, { style: styles.label }, 'Status:'),
-            React.createElement(Text, { style: styles.value }, watch.checklist_completed_at ? `Completed ${formatTs(watch.checklist_completed_at, tz)}` : 'Not completed')
-          ),
-          ...checklistItems.map((item) => {
-            const completion = checklistCompletions.find((c) => c.item_id === item.id)
-            return React.createElement(
+
+      // ── Activity Log ──
+      ...(activityAlerts.length > 0
+        ? [
+            React.createElement(
               View,
-              { key: item.id, style: styles.timelineRow },
-              React.createElement(View, {
-                style: [styles.statusDot, { backgroundColor: completion ? '#16a34a' : '#dc2626' }],
-              }),
+              { style: styles.section, wrap: true },
+              React.createElement(Text, { style: styles.sectionTitle }, 'ACTIVITY LOG'),
+              ...activityAlerts.map((a) => {
+                const isHandoff = a.message && a.message.includes('[HANDOFF]')
+                const label = isHandoff ? 'Watcher handoff' : (ACTIVITY_LABELS[a.alert_type] || a.alert_type)
+                const dotColor = activityDotColor(a.alert_type, a.message)
+
+                return React.createElement(
+                  View,
+                  { key: a.id, style: styles.activityRow, wrap: false },
+                  React.createElement(View, {
+                    style: [styles.activityDot, { backgroundColor: dotColor }],
+                  }),
+                  React.createElement(
+                    View,
+                    { style: styles.timelineContent },
+                    React.createElement(
+                      Text,
+                      { style: styles.activityTime },
+                      formatTs(a.created_at, tz)
+                    ),
+                    React.createElement(
+                      Text,
+                      { style: styles.activityLabel },
+                      label
+                    ),
+                    a.message
+                      ? React.createElement(
+                          Text,
+                          { style: styles.activityMessage },
+                          a.message
+                        )
+                      : null
+                  )
+                )
+              })
+            ),
+          ]
+        : []),
+
+      // ── Pre-Watch Safety Checklist ──
+      ...(checklistItems.length > 0
+        ? [
+            React.createElement(
+              View,
+              { style: styles.section, wrap: true },
+              React.createElement(Text, { style: styles.sectionTitle }, 'PRE-WATCH SAFETY CHECKLIST'),
               React.createElement(
                 View,
-                { style: styles.timelineContent },
-                React.createElement(Text, { style: styles.timelineTime }, item.label),
-                completion
-                  ? React.createElement(Text, { style: styles.timelineDetail },
-                      `Completed: ${formatTs(completion.completed_at, tz)}` +
-                      (item.requires_photo ? (completion.photo_url ? '  |  Photo: Attached' : '  |  Photo: Missing') : '')
-                    )
-                  : React.createElement(Text, { style: [styles.timelineDetail, { color: '#dc2626' }] }, 'Not completed')
-              )
-            )
-          })
-        )
-      ] : []),
-      // Footer
+                { style: styles.row },
+                React.createElement(Text, { style: styles.label }, 'Status:'),
+                React.createElement(Text, { style: styles.value }, watch.checklist_completed_at ? `Completed ${formatTs(watch.checklist_completed_at, tz)}` : 'Not completed')
+              ),
+              ...checklistItems.map((item) => {
+                const completion = checklistCompletions.find((c) => c.item_id === item.id)
+                return React.createElement(
+                  View,
+                  { key: item.id, style: styles.timelineRow, wrap: false },
+                  React.createElement(View, {
+                    style: [styles.statusDot, { backgroundColor: completion ? '#16a34a' : '#dc2626' }],
+                  }),
+                  React.createElement(
+                    View,
+                    { style: styles.timelineContent },
+                    React.createElement(Text, { style: styles.timelineTime }, item.label),
+                    completion
+                      ? React.createElement(Text, { style: styles.timelineDetail },
+                          `Completed: ${formatTs(completion.completed_at, tz)}` +
+                          (item.requires_photo ? (completion.photo_url ? '  |  Photo: Attached' : '  |  Photo: Missing') : '')
+                        )
+                      : React.createElement(Text, { style: [styles.timelineDetail, { color: '#dc2626' }] }, 'Not completed')
+                  )
+                )
+              })
+            ),
+          ]
+        : []),
+
+      // ── Footer (fixed on every page) ──
       React.createElement(
         View,
         { style: styles.footer, fixed: true },
         React.createElement(
           Text,
           { style: styles.footerText },
-          `DutyProof Fire Watch Compliance Report  |  Report ID: ${reportId}`
+          `DutyProof Fire Watch Compliance Report  |  Report ID: ${reportId}  |  All times in ${tz}`
         ),
-        React.createElement(
-          Text,
-          { style: styles.footerText },
-          `Immutable records. All times in ${tz}. Generated by DutyProof.`
-        )
+        React.createElement(Text, {
+          style: styles.footerText,
+          render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `Page ${pageNumber} of ${totalPages}`,
+        })
       )
     )
   )

@@ -491,13 +491,15 @@ export default function WatchDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end">
-          <button
-            onClick={handleDownloadReport}
-            disabled={downloading}
-            className="px-3.5 py-2 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-xs font-semibold rounded-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            {downloading ? 'Generating…' : 'Download Report'}
-          </button>
+          {watch.status === 'completed' && (
+            <button
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="px-3.5 py-2 border border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-xs font-semibold rounded-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              {downloading ? 'Generating…' : 'Download Report'}
+            </button>
+          )}
           {watch.status === 'active' && process.env.NODE_ENV === 'development' && (
             <button
               onClick={handleSimulateCheckin}

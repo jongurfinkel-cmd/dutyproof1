@@ -121,6 +121,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'watch_longitude must be between -180 and 180' }, { status: 400 })
       }
     }
+    if ((watch_latitude != null) !== (watch_longitude != null)) {
+      return NextResponse.json({ error: 'watch_latitude and watch_longitude must both be provided or both be null' }, { status: 400 })
+    }
     if (watch_radius_m !== undefined && watch_radius_m !== null) {
       if (!Number.isInteger(watch_radius_m) || watch_radius_m < 10 || watch_radius_m > 5000) {
         return NextResponse.json({ error: 'watch_radius_m must be an integer between 10 and 5000' }, { status: 400 })
