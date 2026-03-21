@@ -312,7 +312,7 @@ export default function CreateWatchForm() {
   })
   const [customInterval, setCustomInterval] = useState('20')
   const [customPostWork, setCustomPostWork] = useState('45')
-  const [escalationEnabled, setEscalationEnabled] = useState(false)
+  const [escalationEnabled, setEscalationEnabled] = useState(true)
   const [checklistEnabled, setChecklistEnabled] = useState(false)
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([])
   const [newItemLabel, setNewItemLabel] = useState('')
@@ -411,8 +411,8 @@ export default function CreateWatchForm() {
     if (s === 2) {
       if (!form.assigned_name.trim()) { toast.error('Please enter the fire watcher name'); return false }
       if (smsEnabled && !isValidPhone(form.assigned_phone)) { toast.error('Please enter a valid worker phone number'); return false }
-      if (escalationEnabled && !isValidPhone(form.escalation_phone)) { toast.error('Please enter a valid supervisor phone number'); return false }
-      if (escalationEnabled && form.secondary_escalation_phone.trim() && !isValidPhone(form.secondary_escalation_phone)) { toast.error('Please enter a valid backup phone number'); return false }
+      if (!isValidPhone(form.escalation_phone)) { toast.error('Supervisor phone number is required — someone needs to be notified when a check-in is missed'); return false }
+      if (form.secondary_escalation_phone.trim() && !isValidPhone(form.secondary_escalation_phone)) { toast.error('Please enter a valid backup phone number'); return false }
       return true
     }
     if (s === 3) {
@@ -466,9 +466,9 @@ export default function CreateWatchForm() {
           assigned_phone: smsEnabled ? form.assigned_phone : null,
           sms_enabled: smsEnabled,
           check_interval_min: resolvedInterval,
-          escalation_phone: escalationEnabled ? form.escalation_phone : null,
-          secondary_escalation_phone: escalationEnabled && form.secondary_escalation_phone.trim() ? form.secondary_escalation_phone : null,
-          escalation_delay_min: escalationEnabled ? parseInt(form.escalation_delay_min) : 0,
+          escalation_phone: form.escalation_phone,
+          secondary_escalation_phone: form.secondary_escalation_phone.trim() ? form.secondary_escalation_phone : null,
+          escalation_delay_min: parseInt(form.escalation_delay_min),
           start_time: new Date(form.start_time).toISOString(),
           planned_end_time: form.planned_end_time ? new Date(form.planned_end_time).toISOString() : null,
           checklist_items: checklistEnabled ? checklistItems : [],
@@ -633,12 +633,19 @@ export default function CreateWatchForm() {
             </div>
           </ToggleSwitch>
 
-          <ToggleSwitch label="Supervisor Escalation" description="Alert a supervisor when a check-in is missed" recommended enabled={escalationEnabled} onToggle={toggleEscalation}>
+          {/* Supervisor Escalation — always required */}
+          <div className="border-2 border-amber-200 bg-amber-50/30 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span className="text-sm font-bold text-amber-800">Supervisor Escalation</span>
+              <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Required</span>
+            </div>
+            <p className="text-xs text-amber-700/70">When a check-in is missed, this person gets notified immediately.</p>
             <div>
               <Label required>Supervisor Phone</Label>
               <Field value={form.escalation_phone} valid={isValidPhone(form.escalation_phone)}>
                 <input type="tel" value={form.escalation_phone} onChange={(e) => set('escalation_phone', e.target.value)} onBlur={() => handlePhoneBlur('escalation_phone')}
-                  autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
+                  required autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
               </Field>
             </div>
             <div>
@@ -662,7 +669,7 @@ export default function CreateWatchForm() {
                 ))}
               </div>
             </div>
-          </ToggleSwitch>
+          </div>
 
           {smsEnabled && (
             <div className="border-2 border-blue-100 bg-blue-50/50 rounded-2xl px-5 py-4">
@@ -876,7 +883,7 @@ export default function CreateWatchForm() {
                 value={form.assigned_name || '—'}
                 tags={[
                   smsEnabled ? { text: `SMS: ${form.assigned_phone}`, color: 'bg-green-100 text-green-700' } : { text: 'No SMS', color: 'bg-slate-100 text-slate-400' },
-                  ...(escalationEnabled ? [{ text: `Escalation: ${form.escalation_phone}`, color: 'bg-amber-100 text-amber-700' }] : []),
+                  { text: `Escalation: ${form.escalation_phone}`, color: 'bg-amber-100 text-amber-700' },
                 ]}
               />
             </div>

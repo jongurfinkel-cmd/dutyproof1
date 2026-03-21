@@ -947,6 +947,31 @@ export default function WatchDetailPage() {
                         {resendingSms ? 'Sending…' : 'Send via SMS'}
                       </button>
                     )}
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(`Fire Watch Check-In Link — ${watch.location || 'Job Site'}`)}&body=${encodeURIComponent(
+`You've been assigned fire watch duty.
+
+TAP THIS LINK TO CHECK IN:
+${checkinUrl}
+
+INSTRUCTIONS:
+1. Open the link above on your phone
+2. When the countdown reaches zero, tap CHECK IN NOW
+3. Allow location access when prompted — your GPS is recorded
+4. Stay on site until the watch ends or you are relieved
+
+If you miss a check-in, your supervisor will be notified automatically.
+
+DO NOT close the browser tab — it handles your entire schedule.
+
+---
+Sent from DutyProof · dutyproof.com`
+                      )}`}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-blue-200 bg-white hover:bg-blue-50/50 text-slate-500 hover:text-blue-600 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      Send via Email
+                    </a>
                   </div>
                 </div>
               </div>

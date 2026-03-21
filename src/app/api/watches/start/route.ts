@@ -67,6 +67,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phone number is required when SMS is enabled' }, { status: 400 })
     }
 
+    // Supervisor escalation phone is always required
+    if (!escalation_phone) {
+      return NextResponse.json({ error: 'Supervisor phone number is required for missed check-in alerts' }, { status: 400 })
+    }
+
     // Validate check_interval_min is a safe integer in allowed range
     if (!Number.isInteger(check_interval_min) || check_interval_min < 1 || check_interval_min > 1440) {
       return NextResponse.json({ error: 'Check interval must be 1–1440 minutes' }, { status: 400 })
