@@ -410,7 +410,7 @@ export default function CreateWatchForm() {
     }
     if (s === 2) {
       if (!form.assigned_name.trim()) { toast.error('Please enter the fire watcher name'); return false }
-      if (smsEnabled && !isValidPhone(form.assigned_phone)) { toast.error('Please enter a valid worker phone number'); return false }
+      if (smsEnabled && !isValidPhone(form.assigned_phone)) { toast.error('Please enter a valid watcher phone number'); return false }
       if (!isValidPhone(form.escalation_phone)) { toast.error('Supervisor phone number is required — someone needs to be notified when a check-in is missed'); return false }
       if (form.secondary_escalation_phone.trim() && !isValidPhone(form.secondary_escalation_phone)) { toast.error('Please enter a valid backup phone number'); return false }
       return true
@@ -495,7 +495,7 @@ export default function CreateWatchForm() {
   const activePresets = getActivePresets()
   const allPresetsAdded = activePresets.every((p) => checklistItems.some((i) => i.label === p.label))
   const TOTAL_STEPS = 4
-  const stepLabels = ['Location', 'Worker', 'Schedule', 'Review']
+  const stepLabels = ['Location', 'Watcher', 'Schedule', 'Review']
   const selectedFacility = facilities.find((f) => f.id === form.facility_id)
 
   function getIntervalLabel(): string { return form.check_interval_min === 'custom' ? `${customInterval} min` : `${form.check_interval_min} min` }
@@ -612,7 +612,7 @@ export default function CreateWatchForm() {
       {/* ================================================================ */}
       {step === 2 && (
         <div className="space-y-5">
-          <SectionHeader title="Who's watching?" subtitle="Assign a fire watcher and set up notifications." icon={StepIcons.worker} />
+          <SectionHeader title="Who's watching?" subtitle="Assign your fire watcher and set up notifications." icon={StepIcons.worker} />
 
           <div>
             <Label required>Fire Watcher Name</Label>
@@ -624,7 +624,7 @@ export default function CreateWatchForm() {
           <ToggleSwitch label="SMS Check-in Reminders" description="Send check-in links and alerts via text message" enabled={smsEnabled}
             onToggle={() => { setSmsEnabled((prev) => { if (prev) { setForm((f) => ({ ...f, assigned_phone: '' })); setSmsConsent(false) }; return !prev }) }}>
             <div>
-              <Label required>Worker&apos;s Phone</Label>
+              <Label required>Watcher&apos;s Phone</Label>
               <Field value={form.assigned_phone} valid={isValidPhone(form.assigned_phone)}>
                 <input type="tel" value={form.assigned_phone} onChange={(e) => set('assigned_phone', e.target.value)} onBlur={() => handlePhoneBlur('assigned_phone')}
                   required autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
@@ -676,7 +676,7 @@ export default function CreateWatchForm() {
               <label className="flex items-start gap-3 cursor-pointer">
                 <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-1 rounded accent-blue-600 flex-shrink-0 w-4 h-4" />
                 <span className="text-sm text-slate-600 leading-relaxed">
-                  I confirm the worker has agreed to receive automated SMS messages from DutyProof for fire watch reminders and alerts.
+                  I confirm the watcher has agreed to receive automated SMS messages from DutyProof for fire watch reminders and alerts.
                   Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
                   <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Terms</a>
                   {' · '}
@@ -748,7 +748,7 @@ export default function CreateWatchForm() {
           </div>
 
           {/* Pre-Watch Checklist */}
-          <ToggleSwitch label="Pre-Watch Safety Checklist" description="Worker completes safety items via link before rounds begin" recommended enabled={checklistEnabled}
+          <ToggleSwitch label="Pre-Watch Safety Checklist" description="Watcher completes safety items via link before rounds begin" recommended enabled={checklistEnabled}
             onToggle={() => setChecklistEnabled((v) => !v)}>
 
             {/* Smart Add All Button */}
@@ -879,7 +879,7 @@ export default function CreateWatchForm() {
               />
             </div>
             <div className="px-5 py-4">
-              <ReviewRow label="Worker" onEdit={() => setStep(2)}
+              <ReviewRow label="Watcher" onEdit={() => setStep(2)}
                 value={form.assigned_name || '—'}
                 tags={[
                   smsEnabled ? { text: `SMS: ${form.assigned_phone}`, color: 'bg-green-100 text-green-700' } : { text: 'No SMS', color: 'bg-slate-100 text-slate-400' },

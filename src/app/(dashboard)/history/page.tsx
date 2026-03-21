@@ -461,7 +461,7 @@ export default function HistoryPage() {
                   <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Search by job site, worker, or reason..."
+                    placeholder="Search by job site, watcher, or reason..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm text-slate-900 bg-white

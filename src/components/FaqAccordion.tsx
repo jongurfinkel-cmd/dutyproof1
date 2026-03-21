@@ -25,21 +25,21 @@ const FAQS: { q: string; a: string; bold: string }[] = [
   },
   {
     q: 'Can I run multiple simultaneous watches on the same job site?',
-    a: 'Yes. You can run multiple concurrent watches — one per work area, floor, or welding bay — each with its own assigned worker, check-in interval, and audit trail. All active watches appear on your dashboard sorted by urgency. One subscription covers all active watches at that job site.',
+    a: 'Yes. You can run multiple concurrent watches — one per work area, floor, or welding bay — each with its own assigned watcher, check-in interval, and audit trail. All active watches appear on your dashboard sorted by urgency. One subscription covers all active watches at that job site.',
     bold: 'One subscription covers all active watches',
   },
   {
-    q: 'What does the fire watch worker need?',
-    a: 'Any smartphone with a web browser — no app to download, no login required. Each watch gets one persistent check-in link. The worker opens it once and the page handles the entire schedule — countdown timer, check-in button, GPS logging. It works fully offline too. Links can be shared via optional SMS, QR code, or copied from the dashboard.',
+    q: 'What does the fire watcher need?',
+    a: 'Any smartphone with a web browser — no app to download, no login required. Each watch gets one persistent check-in link. The watcher opens it once and the page handles the entire schedule — countdown timer, check-in button, GPS logging. It works fully offline too. Links can be shared via email, optional SMS, QR code, or copied from the dashboard.',
     bold: 'Any smartphone with a web browser',
   },
   {
     q: 'What if the job site has no cell service?',
-    a: 'DutyProof works offline. If the worker opened the check-in link before losing signal (basements, parking garages, steel-framed buildings), they can still tap CHECK IN NOW. The check-in is saved to their phone with the device timestamp and GPS coordinates, then syncs automatically to the server the moment connectivity returns. No false misses, no panicked calls to the office. The compliance report shows both the device time and the sync time for a complete audit trail.',
+    a: 'DutyProof works offline. If the watcher opened the check-in link before losing signal (basements, parking garages, steel-framed buildings), they can still tap CHECK IN NOW. The check-in is saved to their phone with the device timestamp and GPS coordinates, then syncs automatically to the server the moment connectivity returns. No false misses, no panicked calls to the office. The compliance report shows both the device time and the sync time for a complete audit trail.',
     bold: 'DutyProof works offline',
   },
   {
-    q: 'What if my worker doesn\'t check in on time?',
+    q: 'What if my watcher doesn\'t check in on time?',
     a: 'DutyProof automatically marks the check-in as missed and alerts your supervisor within 60 seconds — with a tap-to-acknowledge link. Alerts can be delivered via dashboard notification or optional SMS. The supervisor taps the link to confirm they saw the alert, and their acknowledgment is GPS-logged and timestamped. The miss and the response are both permanently recorded in the audit trail. OSHA inspectors see not just that a gap was detected, but that management responded.',
     bold: 'alerts your supervisor within 60 seconds',
   },

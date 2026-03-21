@@ -324,7 +324,7 @@ export default function WatchDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to resend SMS')
-      toast.success('SMS resent to worker ✓')
+      toast.success('SMS resent to watcher ✓')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to resend SMS')
     } finally {

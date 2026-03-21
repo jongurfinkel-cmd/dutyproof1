@@ -84,7 +84,7 @@ function CameraIcon({ size = 12 }: { size?: number }) {
 const phaseContent = [
   { label: 'Setup',     desc: 'Create a watch in 60 sec',          color: 'blue' },
   { label: 'Checklist', desc: 'Safety check with photos',          color: 'orange' },
-  { label: 'Check-In',  desc: 'Worker taps to verify',             color: 'blue' },
+  { label: 'Check-In',  desc: 'Watcher taps to verify',             color: 'blue' },
   { label: 'Tracking',  desc: 'See every round in real time',      color: 'green' },
   { label: 'Alert',     desc: 'Missed? Super knows in 60 sec',     color: 'red' },
   { label: 'Report',    desc: 'One-click PDF for inspectors',      color: 'blue' },
@@ -765,7 +765,7 @@ export default function InteractiveDemo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Left: Delivery methods */}
                 <div className="space-y-3">
-                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">How Workers Get the Link</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">How Watchers Get the Link</div>
 
                   {/* QR Code — primary */}
                   <div className={`rounded-xl border p-3.5 transition-all duration-500 ${step >= 1 ? 'bg-blue-950/40 border-blue-500/25 opacity-100 translate-y-0' : 'bg-slate-800/30 border-slate-700/30 opacity-0 translate-y-4'}`}>
@@ -796,7 +796,7 @@ export default function InteractiveDemo() {
                           <span className="text-[12px] font-bold text-slate-200">QR Code</span>
                           <span className="px-1.5 py-0.5 rounded text-[7px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">PRIMARY</span>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Supervisor shows QR on-site — worker scans to check in</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Supervisor shows QR on-site — watcher scans to check in</p>
                       </div>
                     </div>
                   </div>
@@ -825,7 +825,7 @@ export default function InteractiveDemo() {
                           <span className="text-[12px] font-bold text-slate-400">SMS</span>
                           <span className="px-1.5 py-0.5 rounded text-[7px] font-bold bg-slate-800 text-slate-500 border border-slate-700">OPTIONAL</span>
                         </div>
-                        <p className="text-[10px] text-slate-600">Send link by text if worker opts in</p>
+                        <p className="text-[10px] text-slate-600">Send link by text if watcher opts in</p>
                       </div>
                     </div>
                   </div>
