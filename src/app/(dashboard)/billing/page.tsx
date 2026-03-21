@@ -29,14 +29,19 @@ export default function BillingPage() {
     async function loadStatus() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: profile } = await supabase
+      if (!user) { setSubStatus(null); return }
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('subscription_status, is_admin')
         .eq('id', user.id)
         .single()
-      setSubStatus((profile?.subscription_status as SubStatus) ?? null)
-      setIsAdmin(profile?.is_admin ?? false)
+      if (error || !profile) {
+        // No profile row yet — treat as new user needing subscription
+        setSubStatus(null)
+        return
+      }
+      setSubStatus((profile.subscription_status as SubStatus) ?? null)
+      setIsAdmin(profile.is_admin ?? false)
     }
     loadStatus()
   }, [])
