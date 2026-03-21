@@ -136,7 +136,7 @@ function PhaseStepper({ phase, onJump }: { phase: number; onJump?: (phase: numbe
 // Main Component — unified sales pitch + demo
 // ─────────────────────────────────────────────────────────
 export default function InteractiveDemo() {
-  const [phase, setPhase] = useState(4)
+  const [phase, setPhase] = useState(0)
   const [step, setStep] = useState(0)
   const [cursorPos, setCursorPos] = useState({ x: '50%', y: '50%' })
   const [clicking, setClicking] = useState(false)
@@ -144,7 +144,7 @@ export default function InteractiveDemo() {
   const [loopCount, setLoopCount] = useState(0)
   const [countdownActive, setCountdownActive] = useState(false)
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const jumpRef = useRef<number | null>(4)
+  const jumpRef = useRef<number | null>(0)
 
   const facilityText = useTypedText('Harbor Steel — Welding Bay 2', phase === 0 && step >= 1, TYPE_SPEED)
   const guardText    = useTypedText('D. Kim', phase === 0 && step >= 2, TYPE_SPEED)

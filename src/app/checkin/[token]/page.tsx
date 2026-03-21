@@ -7,8 +7,11 @@ import { format } from 'date-fns'
 import { queueCheckin, syncPendingCheckins, cleanupOldEntries, getPendingCount, cacheWatchConfig, getCachedWatchConfig, type CachedWatchConfig } from '@/lib/offline-queue'
 import { addMinutes } from 'date-fns'
 
+type GpsPermission = 'unknown' | 'checking' | 'granted' | 'denied' | 'unavailable' | 'dismissed'
+
 type CheckInState =
   | { phase: 'loading' }
+  | { phase: 'gps_prompt' }
   | { phase: 'expired'; message: string }
   | { phase: 'invalid'; message: string }
   | { phase: 'checklist_pending'; message: string; checklistToken?: string }
@@ -151,6 +154,47 @@ function formatCountdown(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+// ===== GPS WARNING BANNER =====
+function GpsWarningBanner({ status, accuracy }: { status: GpsPermission; accuracy: number | null }) {
+  if (status === 'granted' && accuracy !== null) return null
+  if (status === 'granted') return null
+  if (status === 'unknown' || status === 'checking') return null
+
+  return (
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold mb-3 ${
+      status === 'denied' || status === 'unavailable'
+        ? 'bg-red-950 border border-red-800 text-red-400'
+        : 'bg-amber-950 border border-amber-800 text-amber-400'
+    }`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      {status === 'denied' ? 'Location denied — check-ins have no GPS proof' :
+       status === 'unavailable' ? 'GPS unavailable — check-ins have no location data' :
+       'Location not enabled — check-ins may lack GPS proof'}
+    </div>
+  )
+}
+
+// ===== GPS ACCURACY PILL =====
+function GpsAccuracyPill({ accuracy }: { accuracy: number | null }) {
+  if (accuracy === null) return null
+  const good = accuracy <= 20
+  const ok = accuracy <= 50
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+      good ? 'bg-green-900/50 border border-green-800 text-green-400' :
+      ok ? 'bg-amber-900/50 border border-amber-800 text-amber-400' :
+      'bg-red-900/50 border border-red-800 text-red-400'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${good ? 'bg-green-500' : ok ? 'bg-amber-500' : 'bg-red-500'}`} />
+      GPS ±{Math.round(accuracy)}m
+    </span>
+  )
+}
+
 // ===== GEOFENCE STATUS BADGE =====
 function GeofenceBadge({ userLat, userLng, watchLat, watchLng, radius }: {
   userLat: number | null; userLng: number | null;
@@ -218,7 +262,9 @@ export default function CheckInPage() {
   const submittingRef = useRef(false)
   const watchMetaRef = useRef<WatchMeta | null>(null)
   const alarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null)
+  const [gpsPermission, setGpsPermission] = useState<GpsPermission>('unknown')
+  const gpsWatchIdRef = useRef<number | null>(null)
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
   const [online, setOnline] = useState(true)
@@ -230,6 +276,7 @@ export default function CheckInPage() {
   const sessionRef = useRef<SessionConfig | null>(null)
   const [isSessionMode, setIsSessionMode] = useState(false)
   const [localCheckInCount, setLocalCheckInCount] = useState(0)
+  const gpsGatePassedRef = useRef(false) // true once user has seen/dismissed GPS prompt
 
   // Keep screen awake during the entire watch
   useWakeLock()
@@ -278,11 +325,49 @@ export default function CheckInPage() {
     }
   }, [])
 
-  // Capture user location on mount for geofence display
+  // Continuous GPS tracking — keeps location fresh for geofence and check-ins
   useEffect(() => {
-    getLocation().then(loc => {
-      if (loc) setUserLocation({ latitude: loc.latitude, longitude: loc.longitude })
-    })
+    if (!navigator.geolocation) {
+      setGpsPermission('unavailable')
+      return
+    }
+
+    // Check permission state if available (Chrome/Edge)
+    if ('permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' }).then(result => {
+        if (result.state === 'granted') setGpsPermission('granted')
+        else if (result.state === 'denied') setGpsPermission('denied')
+        else setGpsPermission('unknown') // 'prompt'
+        result.addEventListener('change', () => {
+          if (result.state === 'granted') setGpsPermission('granted')
+          else if (result.state === 'denied') setGpsPermission('denied')
+        })
+      }).catch(() => {})
+    }
+
+    // Start watching position
+    gpsWatchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserLocation({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        })
+        setGpsPermission('granted')
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setGpsPermission('denied')
+        else if (err.code === err.POSITION_UNAVAILABLE) setGpsPermission('unavailable')
+        // TIMEOUT — keep trying, don't change status
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
+    )
+
+    return () => {
+      if (gpsWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchIdRef.current)
+      }
+    }
   }, [])
 
   // Capture watch meta when entering ready state
@@ -312,6 +397,31 @@ export default function CheckInPage() {
     return () => { document.head.removeChild(link) }
   }, [])
 
+  // Pending state held while GPS prompt is shown
+  const pendingStateRef = useRef<CheckInState | null>(null)
+
+  // Gate: show GPS prompt before entering active phases (first time only)
+  const gateGps = useCallback((nextState: CheckInState) => {
+    if (gpsGatePassedRef.current || gpsPermission === 'granted') {
+      gpsGatePassedRef.current = true
+      setState(nextState)
+    } else {
+      // Hold the state and show GPS prompt first
+      pendingStateRef.current = nextState
+      setState({ phase: 'gps_prompt' })
+    }
+  }, [gpsPermission])
+
+  // When GPS prompt is resolved (granted or dismissed), apply the pending state
+  useEffect(() => {
+    if (state.phase === 'loading' && pendingStateRef.current && (gpsPermission === 'granted' || gpsPermission === 'dismissed')) {
+      gpsGatePassedRef.current = true
+      const pending = pendingStateRef.current
+      pendingStateRef.current = null
+      setState(pending)
+    }
+  }, [state.phase, gpsPermission])
+
   // Initialize session from server or cache
   const initSession = useCallback((config: SessionConfig) => {
     sessionRef.current = config
@@ -335,9 +445,8 @@ export default function CheckInPage() {
     const diff = nextScheduled.getTime() - now
 
     if (diff > 0) {
-      // Next check-in is in the future — show watching (countdown)
       const lastTime = config.lastCompletedAt ?? config.startTime
-      setState({
+      gateGps({
         phase: 'watching',
         facilityName: config.facilityName,
         assignedName: config.assignedName,
@@ -345,8 +454,7 @@ export default function CheckInPage() {
         lastCheckInTime: lastTime,
       })
     } else {
-      // Check-in is due now or overdue — show ready
-      setState({
+      gateGps({
         phase: 'ready',
         facilityName: config.facilityName,
         location: config.location,
@@ -359,7 +467,7 @@ export default function CheckInPage() {
         escalationPhone: config.escalationPhone,
       })
     }
-  }, [])
+  }, [gateGps])
 
   // Validate token on mount — try session mode first, then legacy, then cache
   useEffect(() => {
@@ -493,7 +601,7 @@ export default function CheckInPage() {
           // Pure legacy mode (no session token on watch)
           setPostWorkMin(data.postWorkDurationMin ?? 0)
           setWorkStopped(!!data.workStoppedAt)
-          setState({
+          gateGps({
             phase: 'ready',
             facilityName: data.facilityName,
             location: data.location ?? null,
@@ -633,9 +741,9 @@ export default function CheckInPage() {
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState !== 'visible') return
-      // Re-acquire GPS on return
+      // Re-acquire GPS on return (watchPosition handles this, but force a fresh read)
       getLocation().then(loc => {
-        if (loc) setUserLocation({ latitude: loc.latitude, longitude: loc.longitude })
+        if (loc) setUserLocation({ latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy })
       })
 
       if (state.phase === 'watching') {
@@ -744,8 +852,10 @@ export default function CheckInPage() {
 
     setState({ phase: 'submitting' })
     const deviceTime = new Date().toISOString()
-    const location = await getLocation()
-    if (location) setUserLocation({ latitude: location.latitude, longitude: location.longitude })
+    // Use already-tracked location from watchPosition (faster than one-shot getLocation)
+    // Fall back to getLocation() if watchPosition hasn't fired yet
+    const location = userLocation ?? await getLocation()
+    if (location && !userLocation) setUserLocation(location)
     const trimmedNotes = notes.trim() || null
 
     // ═══════════════════════════════════════════════════════════
@@ -887,6 +997,108 @@ export default function CheckInPage() {
   }, [token, state, notes, isSessionMode])
 
   // ===== RENDER =====
+
+  // ═══════════════════════════════════════════════════════════
+  // GPS PERMISSION GATE
+  // ═══════════════════════════════════════════════════════════
+  if (state.phase === 'gps_prompt') {
+    const requestGps = () => {
+      setGpsPermission('checking')
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          })
+          setGpsPermission('granted')
+          setState({ phase: 'loading' })
+        },
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) setGpsPermission('denied')
+          else setGpsPermission('unavailable')
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      )
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+        <Logo />
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-blue-900/50 border-2 border-blue-700 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+          <h1 className="text-xl text-white mb-2" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+            Enable Location
+          </h1>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            Your GPS location is recorded with every check-in for compliance records. This is required for OSHA-ready documentation.
+          </p>
+
+          {gpsPermission === 'denied' ? (
+            <>
+              <div className="bg-red-950 border border-red-800 rounded-xl p-4 mb-4">
+                <p className="text-red-300 text-sm font-semibold mb-2">Location access was denied</p>
+                <p className="text-red-400/70 text-xs leading-relaxed">
+                  Open your browser settings and allow location access for this site, then tap &quot;Try Again.&quot;
+                </p>
+              </div>
+              <button
+                onClick={requestGps}
+                className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all mb-3"
+              >
+                Try Again
+              </button>
+            </>
+          ) : gpsPermission === 'checking' ? (
+            <div className="flex items-center justify-center gap-3 py-4 mb-4">
+              <div className="w-5 h-5 border-2 border-blue-700 border-t-blue-400 rounded-full animate-spin" />
+              <span className="text-blue-400 text-sm font-medium">Requesting location access...</span>
+            </div>
+          ) : gpsPermission === 'unavailable' ? (
+            <>
+              <div className="bg-amber-950 border border-amber-800 rounded-xl p-4 mb-4">
+                <p className="text-amber-300 text-sm font-semibold mb-1">GPS not available</p>
+                <p className="text-amber-400/70 text-xs leading-relaxed">
+                  This device doesn&apos;t support GPS or location services are turned off in system settings.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setGpsPermission('dismissed')
+                  setState({ phase: 'loading' })
+                }}
+                className="w-full py-3.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-sm transition-all mb-3"
+              >
+                Continue Without GPS
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={requestGps}
+              className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all mb-3"
+            >
+              Allow Location Access
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              setGpsPermission('dismissed')
+              setState({ phase: 'loading' })
+            }}
+            className="w-full py-2.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+          >
+            Skip — check-ins won&apos;t have GPS proof
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (state.phase === 'loading') {
     return (
@@ -1156,57 +1368,79 @@ export default function CheckInPage() {
     )
   }
 
+  // GPS overlay banner for all active phases
+  const gpsOverlay = (gpsPermission === 'denied' || gpsPermission === 'unavailable' || gpsPermission === 'dismissed') ? (
+    <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2">
+      <GpsWarningBanner status={gpsPermission} accuracy={userLocation?.accuracy ?? null} />
+    </div>
+  ) : null
+
+  // GPS accuracy pill for views that need it
+  const gpsPill = <GpsAccuracyPill accuracy={userLocation?.accuracy ?? null} />
+
   if (state.phase === 'watching') {
     return (
-      <WatchingView
-        facilityName={state.facilityName}
-        assignedName={state.assignedName}
-        nextCheckInTime={state.nextCheckInTime}
-        lastCheckInTime={state.lastCheckInTime}
-        watchMeta={watchMetaRef.current}
-        userLocation={userLocation}
-        online={online}
-        syncToast={syncToast}
-        pendingCount={pendingCount}
-        postWorkMin={postWorkMin}
-        workStopped={workStopped}
-        stoppingWork={stoppingWork}
-        onStopWork={handleStopWork}
-      />
+      <>
+        {gpsOverlay}
+        <WatchingView
+          facilityName={state.facilityName}
+          assignedName={state.assignedName}
+          nextCheckInTime={state.nextCheckInTime}
+          lastCheckInTime={state.lastCheckInTime}
+          watchMeta={watchMetaRef.current}
+          userLocation={userLocation}
+          online={online}
+          syncToast={syncToast}
+          pendingCount={pendingCount}
+          postWorkMin={postWorkMin}
+          workStopped={workStopped}
+          stoppingWork={stoppingWork}
+          onStopWork={handleStopWork}
+          gpsPill={gpsPill}
+        />
+      </>
     )
   }
 
   if (state.phase === 'due') {
     return (
-      <DueView
-        facilityName={state.facilityName}
-        assignedName={state.assignedName}
-        scheduledTime={state.scheduledTime}
-        onCheckIn={() => handleCheckIn(state.nextToken)}
-        watchMeta={watchMetaRef.current}
-        userLocation={userLocation}
-        notes={notes}
-        onNotesChange={setNotes}
-        showNotes={showNotes}
-        onToggleNotes={() => setShowNotes(v => !v)}
-      />
+      <>
+        {gpsOverlay}
+        <DueView
+          facilityName={state.facilityName}
+          assignedName={state.assignedName}
+          scheduledTime={state.scheduledTime}
+          onCheckIn={() => handleCheckIn(state.nextToken)}
+          watchMeta={watchMetaRef.current}
+          userLocation={userLocation}
+          notes={notes}
+          onNotesChange={setNotes}
+          showNotes={showNotes}
+          onToggleNotes={() => setShowNotes(v => !v)}
+          gpsPill={gpsPill}
+        />
+      </>
     )
   }
 
   if (state.phase === 'grace') {
     return (
-      <GraceView
-        facilityName={state.facilityName}
-        assignedName={state.assignedName}
-        scheduledTime={state.scheduledTime}
-        onCheckIn={() => handleCheckIn(state.nextToken)}
-        watchMeta={watchMetaRef.current}
-        userLocation={userLocation}
-        notes={notes}
-        onNotesChange={setNotes}
-        showNotes={showNotes}
-        onToggleNotes={() => setShowNotes(v => !v)}
-      />
+      <>
+        {gpsOverlay}
+        <GraceView
+          facilityName={state.facilityName}
+          assignedName={state.assignedName}
+          scheduledTime={state.scheduledTime}
+          onCheckIn={() => handleCheckIn(state.nextToken)}
+          watchMeta={watchMetaRef.current}
+          userLocation={userLocation}
+          notes={notes}
+          onNotesChange={setNotes}
+          showNotes={showNotes}
+          onToggleNotes={() => setShowNotes(v => !v)}
+          gpsPill={gpsPill}
+        />
+      </>
     )
   }
 
@@ -1265,18 +1499,22 @@ export default function CheckInPage() {
   const { facilityName, assignedName, scheduledTime } = state
 
   return (
-    <CheckInReady
-      facilityName={facilityName}
-      assignedName={assignedName}
-      scheduledTime={scheduledTime}
-      onCheckIn={() => handleCheckIn()}
-      watchMeta={watchMetaRef.current}
-      userLocation={userLocation}
-      notes={notes}
-      onNotesChange={setNotes}
-      showNotes={showNotes}
-      onToggleNotes={() => setShowNotes(v => !v)}
-    />
+    <>
+      {gpsOverlay}
+      <CheckInReady
+        facilityName={facilityName}
+        assignedName={assignedName}
+        scheduledTime={scheduledTime}
+        onCheckIn={() => handleCheckIn()}
+        watchMeta={watchMetaRef.current}
+        userLocation={userLocation}
+        notes={notes}
+        onNotesChange={setNotes}
+        showNotes={showNotes}
+        onToggleNotes={() => setShowNotes(v => !v)}
+        gpsPill={gpsPill}
+      />
+    </>
   )
 }
 
@@ -1296,13 +1534,14 @@ function WatchingView({
   workStopped,
   stoppingWork,
   onStopWork,
+  gpsPill,
 }: {
   facilityName: string
   assignedName: string
   nextCheckInTime: string
   lastCheckInTime: string
   watchMeta: WatchMeta | null
-  userLocation: { latitude: number; longitude: number } | null
+  userLocation: { latitude: number; longitude: number; accuracy: number } | null
   online: boolean
   syncToast: string | null
   pendingCount: number
@@ -1310,6 +1549,7 @@ function WatchingView({
   workStopped: boolean
   stoppingWork: boolean
   onStopWork: () => void
+  gpsPill?: React.ReactNode
 }) {
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(() => {
@@ -1554,17 +1794,19 @@ function DueView({
   onNotesChange,
   showNotes,
   onToggleNotes,
+  gpsPill,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
   watchMeta: WatchMeta | null
-  userLocation: { latitude: number; longitude: number } | null
+  userLocation: { latitude: number; longitude: number; accuracy: number } | null
   notes: string
   onNotesChange: (v: string) => void
   showNotes: boolean
   onToggleNotes: () => void
+  gpsPill?: React.ReactNode
 }) {
   const [tapped, setTapped] = useState(false)
   const [online, setOnline] = useState(true)
@@ -1629,9 +1871,12 @@ function DueView({
               {facilityName}
             </h1>
             <p className="text-slate-400 text-sm">{assignedName}</p>
-            <p className="text-slate-500 text-sm mt-1.5">
-              Due at <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
-            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-slate-500 text-sm">
+                Due at <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
+              </p>
+              {gpsPill}
+            </div>
           </div>
 
           {/* Geofence status */}
@@ -1706,17 +1951,19 @@ function GraceView({
   onNotesChange,
   showNotes,
   onToggleNotes,
+  gpsPill,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
   watchMeta: WatchMeta | null
-  userLocation: { latitude: number; longitude: number } | null
+  userLocation: { latitude: number; longitude: number; accuracy: number } | null
   notes: string
   onNotesChange: (v: string) => void
   showNotes: boolean
   onToggleNotes: () => void
+  gpsPill?: React.ReactNode
 }) {
   const [tapped, setTapped] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -1768,7 +2015,10 @@ function GraceView({
             >
               {facilityName}
             </h1>
-            <p className="text-red-300/80 text-sm">{assignedName}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-red-300/80 text-sm">{assignedName}</p>
+              {gpsPill}
+            </div>
           </div>
 
           {/* Overdue counter */}
@@ -1849,17 +2099,19 @@ function CheckInReady({
   onNotesChange,
   showNotes,
   onToggleNotes,
+  gpsPill,
 }: {
   facilityName: string
   assignedName: string
   scheduledTime: string
   onCheckIn: () => void
   watchMeta: WatchMeta | null
-  userLocation: { latitude: number; longitude: number } | null
+  userLocation: { latitude: number; longitude: number; accuracy: number } | null
   notes: string
   onNotesChange: (v: string) => void
   showNotes: boolean
   onToggleNotes: () => void
+  gpsPill?: React.ReactNode
 }) {
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(true)
@@ -1928,9 +2180,12 @@ function CheckInReady({
               {facilityName}
             </h1>
             <p className="text-slate-400 text-sm">{assignedName}</p>
-            <p className="text-slate-500 text-sm mt-1.5">
-              Scheduled: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
-            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-slate-500 text-sm">
+                Scheduled: <span className="text-white font-bold">{format(new Date(scheduledTime), 'h:mm a')}</span>
+              </p>
+              {gpsPill}
+            </div>
           </div>
 
           {/* Geofence status */}
