@@ -27,21 +27,26 @@ export default function BillingPage() {
 
   useEffect(() => {
     async function loadStatus() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setSubStatus(null); return }
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('subscription_status, is_admin')
-        .eq('id', user.id)
-        .single()
-      if (error || !profile) {
-        // No profile row yet — treat as new user needing subscription
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setSubStatus(null); return }
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('subscription_status, is_admin')
+          .eq('id', user.id)
+          .single()
+        if (error || !profile) {
+          // No profile row yet — treat as new user needing subscription
+          setSubStatus(null)
+          return
+        }
+        setSubStatus((profile.subscription_status as SubStatus) ?? null)
+        setIsAdmin(profile.is_admin ?? false)
+      } catch {
+        // Supabase unreachable or auth error — show subscribe card
         setSubStatus(null)
-        return
       }
-      setSubStatus((profile.subscription_status as SubStatus) ?? null)
-      setIsAdmin(profile.is_admin ?? false)
     }
     loadStatus()
   }, [])
@@ -202,8 +207,8 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* New subscription state */}
-      {(subStatus === null || isCanceled || statusLoading) && (
+      {/* New subscription state (covers null, canceled, incomplete, and loading) */}
+      {(!isActive && !isPastDue) && (
         <div className={`space-y-6 ${statusLoading ? 'opacity-50 pointer-events-none' : ''}`}>
           {/* Monthly plan */}
           <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100">

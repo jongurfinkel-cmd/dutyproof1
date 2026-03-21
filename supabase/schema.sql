@@ -124,70 +124,106 @@ alter table public.check_ins enable row level security;
 alter table public.alerts enable row level security;
 
 -- Profiles
-create policy "Users see own profile"
-  on public.profiles for select using (auth.uid() = id);
+DO $$ BEGIN
+  create policy "Users see own profile"
+    on public.profiles for select using (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users update own profile"
-  on public.profiles for update using (auth.uid() = id);
+DO $$ BEGIN
+  create policy "Users update own profile"
+    on public.profiles for update using (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role can upsert profiles"
-  on public.profiles for insert with check (auth.uid() = id);
+DO $$ BEGIN
+  create policy "Service role can upsert profiles"
+    on public.profiles for insert with check (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role can update any profile"
-  on public.profiles for update using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role can update any profile"
+    on public.profiles for update using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Facilities
-create policy "Users see own facilities"
-  on public.facilities for select using (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users see own facilities"
+    on public.facilities for select using (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users create own facilities"
-  on public.facilities for insert with check (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users create own facilities"
+    on public.facilities for insert with check (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users update own facilities"
-  on public.facilities for update using (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users update own facilities"
+    on public.facilities for update using (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users delete own facilities"
-  on public.facilities for delete using (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users delete own facilities"
+    on public.facilities for delete using (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Watches
-create policy "Users see own watches"
-  on public.watches for select using (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users see own watches"
+    on public.watches for select using (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users create own watches"
-  on public.watches for insert with check (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users create own watches"
+    on public.watches for insert with check (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Users update own watches"
-  on public.watches for update using (auth.uid() = owner_id);
+DO $$ BEGIN
+  create policy "Users update own watches"
+    on public.watches for update using (auth.uid() = owner_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Check-ins: viewable by watch owner; insertable by service role only
-create policy "Users see check-ins for own watches"
-  on public.check_ins for select using (
-    watch_id in (select id from public.watches where owner_id = auth.uid())
-  );
+DO $$ BEGIN
+  create policy "Users see check-ins for own watches"
+    on public.check_ins for select using (
+      watch_id in (select id from public.watches where owner_id = auth.uid())
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- IMMUTABILITY: No direct updates or deletes on check_ins from client.
 -- Updates happen only via security-definer Postgres functions below.
-create policy "check_ins are immutable - no updates"
-  on public.check_ins for update using (false);
+DO $$ BEGIN
+  create policy "check_ins are immutable - no updates"
+    on public.check_ins for update using (false);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "check_ins are immutable - no deletes"
-  on public.check_ins for delete using (false);
+DO $$ BEGIN
+  create policy "check_ins are immutable - no deletes"
+    on public.check_ins for delete using (false);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Only service role can insert check-ins (service role bypasses RLS, but this blocks anon/authenticated)
-create policy "Service role can insert check-ins"
-  on public.check_ins for insert with check (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role can insert check-ins"
+    on public.check_ins for insert with check (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Alerts: viewable by watch owner
-create policy "Users see alerts for own watches"
-  on public.alerts for select using (
-    watch_id in (select id from public.watches where owner_id = auth.uid())
-  );
+DO $$ BEGIN
+  create policy "Users see alerts for own watches"
+    on public.alerts for select using (
+      watch_id in (select id from public.watches where owner_id = auth.uid())
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role can insert alerts"
-  on public.alerts for insert with check (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role can insert alerts"
+    on public.alerts for insert with check (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role can update alerts"
-  on public.alerts for update using (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role can update alerts"
+    on public.alerts for update using (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================
 -- POSTGRES FUNCTIONS (bypass RLS for specific transitions)
@@ -380,31 +416,39 @@ create index if not exists idx_watches_checklist_token        on public.watches(
 alter table public.watch_checklist_items  enable row level security;
 alter table public.checklist_completions  enable row level security;
 
-create policy "Owner reads own checklist items"
-  on public.watch_checklist_items for select
-  using (
-    exists (
-      select 1 from public.watches w
-      where w.id = watch_id and w.owner_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  create policy "Owner reads own checklist items"
+    on public.watch_checklist_items for select
+    using (
+      exists (
+        select 1 from public.watches w
+        where w.id = watch_id and w.owner_id = auth.uid()
+      )
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role full access to checklist items"
-  on public.watch_checklist_items for all
-  using (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role full access to checklist items"
+    on public.watch_checklist_items for all
+    using (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Owner reads own checklist completions"
-  on public.checklist_completions for select
-  using (
-    exists (
-      select 1 from public.watches w
-      where w.id = watch_id and w.owner_id = auth.uid()
-    )
-  );
+DO $$ BEGIN
+  create policy "Owner reads own checklist completions"
+    on public.checklist_completions for select
+    using (
+      exists (
+        select 1 from public.watches w
+        where w.id = watch_id and w.owner_id = auth.uid()
+      )
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-create policy "Service role full access to completions"
-  on public.checklist_completions for all
-  using (auth.role() = 'service_role');
+DO $$ BEGIN
+  create policy "Service role full access to completions"
+    on public.checklist_completions for all
+    using (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================
 -- STORAGE BUCKET — checklist photos
@@ -422,13 +466,15 @@ on conflict (id) do update set
   file_size_limit    = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-create policy "Service role manages checklist photos"
-  on storage.objects for all
-  using (
-    bucket_id = 'checklist-photos'
-    and auth.role() = 'service_role'
-  )
-  with check (
-    bucket_id = 'checklist-photos'
-    and auth.role() = 'service_role'
-  );
+DO $$ BEGIN
+  create policy "Service role manages checklist photos"
+    on storage.objects for all
+    using (
+      bucket_id = 'checklist-photos'
+      and auth.role() = 'service_role'
+    )
+    with check (
+      bucket_id = 'checklist-photos'
+      and auth.role() = 'service_role'
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
