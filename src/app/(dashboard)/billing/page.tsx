@@ -39,6 +39,7 @@ export default function BillingPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [usage, setUsage] = useState<UsageStats | null>(null)
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
+  const [firstSubscribedAt, setFirstSubscribedAt] = useState<string | null>(null)
   const [showRetention, setShowRetention] = useState(false)
   const [retentionStep, setRetentionStep] = useState<RetentionStep>('stats')
   const [retentionExiting, setRetentionExiting] = useState(false)
@@ -51,7 +52,7 @@ export default function BillingPage() {
         if (!user) { setSubStatus(null); return }
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('subscription_status, is_admin, current_period_end, created_at')
+          .select('subscription_status, is_admin, current_period_end, created_at, first_subscribed_at')
           .eq('id', user.id)
           .single()
         if (error || !profile) {
@@ -61,6 +62,7 @@ export default function BillingPage() {
         setSubStatus((profile.subscription_status as SubStatus) ?? null)
         setIsAdmin(profile.is_admin ?? false)
         setCurrentPeriodEnd(profile.current_period_end ?? null)
+        setFirstSubscribedAt(profile.first_subscribed_at ?? null)
 
         // Load usage stats for active subscribers
         const status = (profile.subscription_status as SubStatus) ?? null
@@ -177,6 +179,18 @@ export default function BillingPage() {
   const memberSinceFormatted = usage?.memberSince
     ? new Date(usage.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null
+
+  // 30-day money-back guarantee only for first-time subscribers within 30 days
+  const refundEligible = (() => {
+    if (!firstSubscribedAt) return true // first-timer, hasn't subscribed yet
+    const daysSinceFirst = Math.floor((Date.now() - new Date(firstSubscribedAt).getTime()) / (1000 * 60 * 60 * 24))
+    return daysSinceFirst <= 30
+  })()
+  const daysLeftForRefund = (() => {
+    if (!firstSubscribedAt) return 30
+    const days = 30 - Math.floor((Date.now() - new Date(firstSubscribedAt).getTime()) / (1000 * 60 * 60 * 24))
+    return Math.max(0, days)
+  })()
 
   if (isAdmin) {
     return (
@@ -335,7 +349,7 @@ export default function BillingPage() {
                       Loading&hellip;
                     </span>
                   ) : (
-                    {'Manage Billing \u2192'}
+                    <>Manage Billing &#8594;</>
                   )}
                 </button>
                 <p className="text-center text-slate-400 text-xs">
@@ -411,7 +425,7 @@ export default function BillingPage() {
                   )}
                 </button>
                 <p className="text-center text-slate-500 text-xs mt-3">
-                  Secured by Stripe &middot; Cancel any time &middot; 30-day money-back guarantee
+                  Secured by Stripe &middot; Cancel any time{refundEligible ? <> &middot; 30-day money-back guarantee</> : null}
                 </p>
               </div>
             </div>
@@ -614,10 +628,16 @@ export default function BillingPage() {
                   </p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
-                  <div className="font-semibold text-slate-800 text-sm mb-1">Remember: 30-day money-back guarantee</div>
-                  <div className="text-slate-500 text-xs">If you&apos;re within your first 30 days, we&apos;ll refund you in full — no questions asked. Just email us.</div>
-                </div>
+                {refundEligible ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
+                    <div className="font-semibold text-slate-800 text-sm mb-1">You have {daysLeftForRefund} day{daysLeftForRefund !== 1 ? 's' : ''} left on your money-back guarantee</div>
+                    <div className="text-slate-500 text-xs">Email <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline">support@dutyproof.com</a> for a full refund — no questions asked.</div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
+                    <div className="text-slate-500 text-xs">Need help? Email <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline">support@dutyproof.com</a> and we&apos;ll respond within 24 hours.</div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <button
@@ -630,7 +650,7 @@ export default function BillingPage() {
                     onClick={proceedToCancel}
                     className="w-full py-3 rounded-xl border-2 border-red-200 hover:border-red-300 hover:bg-red-50 text-red-500 font-semibold text-sm transition-all"
                   >
-                    {'Cancel in Stripe \u2192'}
+                    Cancel in Stripe &#8594;
                   </button>
                 </div>
               </div>

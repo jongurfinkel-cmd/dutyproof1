@@ -15,6 +15,7 @@ create table if not exists public.profiles (
   subscription_status text default null, -- 'incomplete', 'trialing', 'active', 'past_due', 'canceled', 'unpaid'
   trial_ends_at timestamptz,
   current_period_end timestamptz,
+  first_subscribed_at timestamptz,        -- set once on first checkout, never overwritten
   is_admin boolean default false not null -- bypasses all subscription checks
 );
 

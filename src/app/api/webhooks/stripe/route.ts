@@ -51,6 +51,15 @@ export async function POST(req: NextRequest) {
         session.subscription as string
       )
 
+      // Check if this is the user's first-ever subscription
+      const { data: existingProfile } = await admin
+        .from('profiles')
+        .select('first_subscribed_at')
+        .eq('id', userId)
+        .single()
+
+      const isFirstSubscription = !existingProfile?.first_subscribed_at
+
       const { error: upsertError } = await admin.from('profiles').upsert({
         id: userId,
         stripe_customer_id: session.customer as string,
@@ -60,6 +69,8 @@ export async function POST(req: NextRequest) {
           ? new Date(subscription.trial_end * 1000).toISOString()
           : null,
         current_period_end: getPeriodEnd(subscription),
+        // Only set first_subscribed_at once — never overwrite on resubscription
+        ...(isFirstSubscription ? { first_subscribed_at: new Date().toISOString() } : {}),
       })
       if (upsertError) console.error('Stripe checkout.session.completed upsert error:', upsertError)
       break
