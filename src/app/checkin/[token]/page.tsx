@@ -23,6 +23,7 @@ type CheckInState =
   | { phase: 'due'; facilityName: string; assignedName: string; scheduledTime: string; nextToken?: string }
   | { phase: 'grace'; facilityName: string; assignedName: string; scheduledTime: string; nextToken?: string }
   | { phase: 'missed_waiting'; facilityName: string; assignedName: string }
+  | { phase: 'watch_complete'; facilityName: string; assignedName: string; startTime: string; endedAt: string; totalCheckIns: number; completedCheckIns: number; missedCheckIns: number }
   | { phase: 'error'; message: string }
 
 // Persistent watch metadata
@@ -518,7 +519,20 @@ export default function CheckInPage() {
         }
         if (sessionRes.status === 410) {
           const data = await sessionRes.json()
-          setState({ phase: 'expired', message: data.error ?? 'This fire watch has ended.' })
+          if (data.error === 'watch_completed' && data.totalCheckIns != null) {
+            setState({
+              phase: 'watch_complete',
+              facilityName: data.facilityName,
+              assignedName: data.assignedName,
+              startTime: data.startTime,
+              endedAt: data.endedAt,
+              totalCheckIns: data.totalCheckIns,
+              completedCheckIns: data.completedCheckIns,
+              missedCheckIns: data.missedCheckIns,
+            })
+          } else {
+            setState({ phase: 'expired', message: data.error ?? 'This fire watch has ended.' })
+          }
           return
         }
 
@@ -528,7 +542,18 @@ export default function CheckInPage() {
           const data = await legacyRes.json()
 
           if (!legacyRes.ok) {
-            if (legacyRes.status === 410) {
+            if (legacyRes.status === 410 && data.error === 'watch_completed' && data.totalCheckIns != null) {
+              setState({
+                phase: 'watch_complete',
+                facilityName: data.facilityName,
+                assignedName: data.assignedName,
+                startTime: data.startTime,
+                endedAt: data.endedAt,
+                totalCheckIns: data.totalCheckIns,
+                completedCheckIns: data.completedCheckIns,
+                missedCheckIns: data.missedCheckIns,
+              })
+            } else if (legacyRes.status === 410) {
               setState({ phase: 'expired', message: data.error ?? 'This check-in window has expired.' })
             } else if (legacyRes.status === 409 && data.error === 'checklist_pending') {
               setState({ phase: 'checklist_pending', message: data.message, checklistToken: data.checklistToken })
@@ -1109,6 +1134,61 @@ export default function CheckInPage() {
     )
   }
 
+  if (state.phase === 'watch_complete') {
+    const pct = state.totalCheckIns > 0 ? Math.round((state.completedCheckIns / state.totalCheckIns) * 100) : 100
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+        <Logo />
+        <div className="bg-green-950 border border-green-800 rounded-2xl p-8 max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-900 border-2 border-green-500 flex items-center justify-center">
+            <span className="text-green-400 text-3xl font-bold">&#10003;</span>
+          </div>
+          <h1
+            className="text-2xl text-white mb-2"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          >
+            Watch Complete
+          </h1>
+          <p className="text-green-300 text-sm mb-6">
+            This fire watch has been closed out by your supervisor. You are relieved.
+          </p>
+
+          {/* Stats */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-4 mb-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-xs">Job Site</span>
+              <span className="text-white text-sm font-semibold">{state.facilityName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 text-xs">Fire Watch</span>
+              <span className="text-white text-sm font-semibold">{state.assignedName}</span>
+            </div>
+            {state.endedAt && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-xs">Ended</span>
+                <span className="text-white text-sm font-semibold">{format(new Date(state.endedAt), 'MMM d, h:mm a')}</span>
+              </div>
+            )}
+            <div className="border-t border-slate-800 pt-3 flex justify-between items-center">
+              <span className="text-slate-400 text-xs">Check-Ins</span>
+              <span className="text-white text-sm font-semibold">{state.completedCheckIns}/{state.totalCheckIns} ({pct}%)</span>
+            </div>
+            {state.missedCheckIns > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-xs">Missed</span>
+                <span className="text-red-400 text-sm font-semibold">{state.missedCheckIns}</span>
+              </div>
+            )}
+          </div>
+
+          <p className="text-slate-500 text-xs">
+            You may close this page. Thank you for your service.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (state.phase === 'expired') {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
@@ -1394,9 +1474,11 @@ export default function CheckInPage() {
           pendingCount={pendingCount}
           postWorkMin={postWorkMin}
           workStopped={workStopped}
+          workStoppedAt={sessionRef.current?.workStoppedAt ?? null}
           stoppingWork={stoppingWork}
           onStopWork={handleStopWork}
           gpsPill={gpsPill}
+          plannedEndTime={sessionRef.current?.plannedEndTime ?? null}
         />
       </>
     )
@@ -1532,9 +1614,11 @@ function WatchingView({
   pendingCount,
   postWorkMin,
   workStopped,
+  workStoppedAt,
   stoppingWork,
   onStopWork,
   gpsPill,
+  plannedEndTime,
 }: {
   facilityName: string
   assignedName: string
@@ -1547,14 +1631,17 @@ function WatchingView({
   pendingCount: number
   postWorkMin: number
   workStopped: boolean
+  workStoppedAt: string | null
   stoppingWork: boolean
   onStopWork: () => void
   gpsPill?: React.ReactNode
+  plannedEndTime: string | null
 }) {
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(() => {
     return Math.max(0, Math.floor((new Date(nextCheckInTime).getTime() - Date.now()) / 1000))
   })
+  const [postWorkSecondsLeft, setPostWorkSecondsLeft] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1563,6 +1650,20 @@ function WatchingView({
     }, 1000)
     return () => clearInterval(interval)
   }, [nextCheckInTime])
+
+  // Post-work countdown for the watcher
+  useEffect(() => {
+    if (!workStopped || !workStoppedAt || !postWorkMin) return
+    const calcRemaining = () => {
+      const postWorkEnd = new Date(workStoppedAt).getTime() + postWorkMin * 60 * 1000
+      return Math.max(0, Math.ceil((postWorkEnd - Date.now()) / 1000))
+    }
+    setPostWorkSecondsLeft(calcRemaining())
+    const iv = setInterval(() => setPostWorkSecondsLeft(calcRemaining()), 1000)
+    return () => clearInterval(iv)
+  }, [workStopped, workStoppedAt, postWorkMin])
+
+  const postWorkComplete = workStopped && postWorkSecondsLeft === 0
 
   const totalInterval = Math.max(1, Math.floor((new Date(nextCheckInTime).getTime() - new Date(lastCheckInTime).getTime()) / 1000))
   const progress = Math.max(0, Math.min(1, 1 - secondsLeft / totalInterval))
@@ -1726,11 +1827,41 @@ function WatchingView({
           )}
 
           {workStopped && postWorkMin > 0 && (
-            <div className="mx-6 mb-3 flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-blue-950/80 border border-blue-800/60">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400" aria-hidden="true">
+            <div className={`mx-6 mb-3 px-4 py-3 rounded-xl border ${postWorkComplete ? 'bg-green-950/80 border-green-800/60' : 'bg-blue-950/80 border-blue-800/60'}`}>
+              <div className="flex items-center justify-center gap-2.5">
+                {postWorkComplete ? (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                    <span className="text-green-400 text-xs font-semibold">Post-work monitoring complete</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span className="text-blue-400 text-xs font-semibold">
+                      Post-work cooldown — {Math.floor(postWorkSecondsLeft / 60)}:{String(postWorkSecondsLeft % 60).padStart(2, '0')} remaining
+                    </span>
+                  </>
+                )}
+              </div>
+              {postWorkComplete && (
+                <p className="text-green-400/70 text-[10px] text-center mt-1.5">
+                  Cooldown period is done. Wait for your supervisor to close out the watch.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Planned end time */}
+          {plannedEndTime && !workStopped && (
+            <div className="mx-6 mb-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
-              <span className="text-blue-400 text-xs font-semibold">Post-work cooldown — {postWorkMin} min monitoring</span>
+              <span className="text-slate-400 text-xs font-semibold">
+                Watch ends at {format(new Date(plannedEndTime), 'h:mm a')}
+              </span>
             </div>
           )}
 

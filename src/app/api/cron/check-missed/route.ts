@@ -272,7 +272,7 @@ export async function GET(req: NextRequest) {
 
         // Session-token watches: fire watch already has the persistent link,
         // so skip sending a new SMS. Only send SMS for legacy (non-session) watches.
-        if (!nextError && nextCheckIn && !watch.session_token) {
+        if (!nextError && nextCheckIn && !watch.session_token && watch.assigned_phone) {
           const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
           const nextSid = await sendCheckInSMS(
             watch.assigned_phone,

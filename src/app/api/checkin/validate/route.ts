@@ -39,7 +39,27 @@ export async function GET(req: NextRequest) {
     }
 
     if (watch.status !== 'active') {
-      return NextResponse.json({ error: 'This fire watch has ended.' }, { status: 410 })
+      // Return completion stats so watcher sees a proper "Watch Complete" screen
+      const { data: checkIns } = await admin
+        .from('check_ins')
+        .select('status')
+        .eq('watch_id', watch.id)
+
+      const completed = (checkIns ?? []).filter((c) => c.status === 'completed').length
+      const missed = (checkIns ?? []).filter((c) => c.status === 'missed').length
+      const total = completed + missed
+      const f = watch.facilities as Record<string, unknown>
+
+      return NextResponse.json({
+        error: 'watch_completed',
+        facilityName: f.name,
+        assignedName: watch.assigned_name,
+        startTime: watch.start_time,
+        endedAt: watch.ended_at,
+        totalCheckIns: total,
+        completedCheckIns: completed,
+        missedCheckIns: missed,
+      }, { status: 410 })
     }
 
     // Update last_sync_at — proves the watcher's device is online
@@ -142,7 +162,25 @@ export async function GET(req: NextRequest) {
   }
 
   if (checkIn.watches.status !== 'active') {
-    return NextResponse.json({ error: 'This fire watch has ended.' }, { status: 410 })
+    const { data: legacyCheckIns } = await admin
+      .from('check_ins')
+      .select('status')
+      .eq('watch_id', checkIn.watches.id)
+
+    const legacyCompleted = (legacyCheckIns ?? []).filter((c) => c.status === 'completed').length
+    const legacyMissed = (legacyCheckIns ?? []).filter((c) => c.status === 'missed').length
+    const legacyTotal = legacyCompleted + legacyMissed
+
+    return NextResponse.json({
+      error: 'watch_completed',
+      facilityName: checkIn.watches.facilities.name,
+      assignedName: checkIn.assigned_name,
+      startTime: checkIn.watches.start_time,
+      endedAt: checkIn.watches.ended_at,
+      totalCheckIns: legacyTotal,
+      completedCheckIns: legacyCompleted,
+      missedCheckIns: legacyMissed,
+    }, { status: 410 })
   }
 
   // Gate: if this watch has a checklist, it must be completed before check-ins are accepted

@@ -41,6 +41,8 @@ export default function WatchDetailPage() {
 
   // Closeout form state
   const [closeoutNotes, setCloseoutNotes] = useState('')
+  const [closeoutPhotos, setCloseoutPhotos] = useState<string[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [systemRestored, setSystemRestored] = useState(false)
   const [restorationVerifiedBy, setRestorationVerifiedBy] = useState('')
 
@@ -247,7 +249,7 @@ export default function WatchDetailPage() {
     try {
       const body: Record<string, unknown> = { watchId: id }
       if (closeoutNotes.trim()) body.closeout_notes = closeoutNotes.trim()
-      body.closeout_photo_urls = []
+      body.closeout_photo_urls = closeoutPhotos.length > 0 ? closeoutPhotos : []
       if (watch?.watch_type === 'impairment') {
         body.system_restored = systemRestored
         if (restorationVerifiedBy.trim()) body.restoration_verified_by = restorationVerifiedBy.trim()
@@ -265,6 +267,28 @@ export default function WatchDetailPage() {
       toast.error(err instanceof Error ? err.message : 'Error ending watch')
     } finally {
       setEnding(false)
+    }
+  }
+
+  async function handleCloseoutPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/watches/upload-closeout', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to upload photo')
+      setCloseoutPhotos(prev => [...prev, data.photo_url])
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error uploading photo')
+    } finally {
+      setUploadingPhoto(false)
+      e.target.value = '' // reset input
     }
   }
 
@@ -637,6 +661,48 @@ export default function WatchDetailPage() {
                 placeholder="Any final observations, notes, or remarks..."
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
               />
+            </div>
+            {/* Closeout photos */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Closeout Photos (optional)</label>
+              <p className="text-xs text-slate-400 mb-2">Document final site conditions — e.g. cooled surfaces, equipment secured</p>
+              {closeoutPhotos.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {closeoutPhotos.map((url, i) => (
+                    <div key={i} className="relative group">
+                      <img src={url} alt={`Closeout photo ${i + 1}`} className="w-16 h-16 rounded-lg object-cover border border-slate-200" />
+                      <button
+                        type="button"
+                        onClick={() => setCloseoutPhotos(prev => prev.filter((_, j) => j !== i))}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove photo"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 text-sm font-medium cursor-pointer transition-all hover:border-slate-400 hover:bg-slate-50 ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'text-slate-600'}`}>
+                {uploadingPhoto ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-slate-400 border-t-slate-600 rounded-full animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Add Photo
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic"
+                  onChange={handleCloseoutPhotoUpload}
+                  className="sr-only"
+                  disabled={uploadingPhoto}
+                />
+              </label>
             </div>
             {watch.watch_type === 'impairment' && (
               <>
