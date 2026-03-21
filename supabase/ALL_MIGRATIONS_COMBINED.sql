@@ -311,5 +311,19 @@ ALTER TABLE public.profiles
 
 
 -- ════════════════════════════════════════════════════════════
+-- MIGRATION v9: SMS Double Opt-In
+-- ════════════════════════════════════════════════════════════
+
+-- Consent token sent in the first SMS to the watcher.
+-- Watcher taps a link containing this token to confirm consent.
+ALTER TABLE public.watches
+  ADD COLUMN IF NOT EXISTS sms_consent_token text UNIQUE,
+  ADD COLUMN IF NOT EXISTS sms_consent_confirmed_at timestamptz;
+
+CREATE INDEX IF NOT EXISTS idx_watches_sms_consent_token
+  ON public.watches(sms_consent_token);
+
+
+-- ════════════════════════════════════════════════════════════
 -- DONE — All migrations applied.
 -- ════════════════════════════════════════════════════════════

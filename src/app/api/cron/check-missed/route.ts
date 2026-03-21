@@ -80,8 +80,8 @@ export async function GET(req: NextRequest) {
         const reportUrl = `${appUrl}/watches/${watch.id}`
         const facility = watch.facilities
 
-        // Only send summary SMS if the watch has a phone number (SMS-enabled)
-        if (watch.assigned_phone) {
+        // Only send summary SMS if the watch has a phone number (SMS-enabled) and watcher consented
+        if (watch.assigned_phone && watch.sms_consent_confirmed_at) {
           await sendWatchSummarySMS(watch.assigned_phone, facility.name, durationStr, total, completed, missed, reportUrl)
         }
         if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
@@ -280,7 +280,7 @@ export async function GET(req: NextRequest) {
 
         // Session-token watches: fire watch already has the persistent link,
         // so skip sending a new SMS. Only send SMS for legacy (non-session) watches.
-        if (!nextError && nextCheckIn && !watch.session_token && watch.assigned_phone) {
+        if (!nextError && nextCheckIn && !watch.session_token && watch.assigned_phone && watch.sms_consent_confirmed_at) {
           const nextCheckInUrl = `${appUrl}/checkin/${nextToken}`
           const nextSid = await sendCheckInSMS(
             watch.assigned_phone,

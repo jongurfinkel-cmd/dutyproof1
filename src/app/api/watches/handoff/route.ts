@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS } from '@/lib/sms'
+import { sendConsentSMS } from '@/lib/sms'
 import { addMinutes } from 'date-fns'
 
 export async function POST(req: NextRequest) {
@@ -95,14 +95,18 @@ export async function POST(req: NextRequest) {
     // 2. Regenerate session_token so the old watcher's persistent link stops working
     const newSessionToken = generateToken()
 
-    // Update the watch with new watcher info and new session_token
+    // Update the watch with new watcher info, new session_token,
+    // and reset SMS consent (new watcher must re-consent)
     const updatedPhone = new_assigned_phone || oldPhone
+    const newConsentToken = generateToken()
     const { error: updateError } = await admin
       .from('watches')
       .update({
         assigned_name: trimmedName,
         assigned_phone: updatedPhone,
         session_token: newSessionToken,
+        sms_consent_confirmed_at: null,
+        sms_consent_token: newConsentToken,
       })
       .eq('id', watchId)
 
@@ -154,22 +158,22 @@ export async function POST(req: NextRequest) {
     const facilityName = facility?.name ?? 'Unknown Facility'
     const displayName = watch.location ? `${facilityName} — ${watch.location}` : facilityName
 
-    if (sms_enabled && updatedPhone && newCheckIn) {
-      const sid = await sendCheckInSMS(
+    if (sms_enabled && updatedPhone) {
+      // New watcher hasn't consented yet — send consent SMS instead of check-in SMS
+      const consentUrl = `${appUrl}/sms-confirm/${newConsentToken}`
+      const sid = await sendConsentSMS(
         updatedPhone,
-        displayName,
         trimmedName,
-        checkInUrl,
-        scheduledTime
+        displayName,
+        consentUrl
       )
 
       await admin.from('alerts').insert({
         watch_id: watchId,
-        check_in_id: newCheckIn.id,
         alert_type: sid ? 'sms_sent' : 'sms_failed',
         recipient_phone: updatedPhone,
         recipient_name: trimmedName,
-        message: `[HANDOFF] Check-in SMS sent to new watcher ${trimmedName}`,
+        message: `[HANDOFF] SMS consent request sent to new watcher ${trimmedName}`,
         delivery_status: sid ? 'sent' : 'failed',
         twilio_sid: sid,
       })

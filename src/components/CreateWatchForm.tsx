@@ -676,8 +676,7 @@ export default function CreateWatchForm() {
               <label className="flex items-start gap-3 cursor-pointer">
                 <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-1 rounded accent-blue-600 flex-shrink-0 w-4 h-4" />
                 <span className="text-sm text-slate-600 leading-relaxed">
-                  I confirm the watcher has agreed to receive automated SMS messages from DutyProof for fire watch reminders and alerts.
-                  Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
+                  I authorize DutyProof to send a one-time SMS consent request to the watcher at the number provided. The watcher must confirm directly before any operational messages are sent. Message &amp; data rates may apply. The watcher can reply STOP to opt out at any time or HELP for assistance. SMS is not required to use DutyProof.{' '}
                   <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Terms</a>
                   {' · '}
                   <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Privacy</a>

@@ -248,27 +248,29 @@ export async function POST(req: NextRequest) {
       if (nextCheckInError) {
         nextToken = undefined
       } else if (nextCheckIn) {
-        // Send next SMS
-        const twilioSid = await sendCheckInSMS(
-          watch.assigned_phone,
-          displayName,
-          checkIn.assigned_name,
-          nextCheckInUrl,
-          nextScheduledTime
-        )
+        // Send next SMS (only if watcher has confirmed SMS consent)
+        if (watch.sms_consent_confirmed_at) {
+          const twilioSid = await sendCheckInSMS(
+            watch.assigned_phone,
+            displayName,
+            checkIn.assigned_name,
+            nextCheckInUrl,
+            nextScheduledTime
+          )
 
-        const { error: alertError } = await admin.from('alerts').insert({
-          watch_id: watch.id,
-          check_in_id: nextCheckIn.id,
-          alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
-          recipient_phone: watch.assigned_phone,
-          recipient_name: checkIn.assigned_name,
-          message: `Check-in SMS for ${nextScheduledTime.toISOString()}`,
-          delivery_status: twilioSid ? 'sent' : 'failed',
-          twilio_sid: twilioSid,
-        })
-        if (alertError) {
-          console.error('Failed to log check-in alert:', alertError)
+          const { error: alertError } = await admin.from('alerts').insert({
+            watch_id: watch.id,
+            check_in_id: nextCheckIn.id,
+            alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
+            recipient_phone: watch.assigned_phone,
+            recipient_name: checkIn.assigned_name,
+            message: `Check-in SMS for ${nextScheduledTime.toISOString()}`,
+            delivery_status: twilioSid ? 'sent' : 'failed',
+            twilio_sid: twilioSid,
+          })
+          if (alertError) {
+            console.error('Failed to log check-in alert:', alertError)
+          }
         }
       }
     }

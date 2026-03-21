@@ -169,8 +169,8 @@ export async function POST(req: NextRequest) {
 
     const reportUrl = `${appUrl}/watches/${watchId}`
 
-    // Notify the assigned worker (only if SMS is configured)
-    if (watch.assigned_phone) {
+    // Notify the assigned worker (only if SMS is configured and watcher consented)
+    if (watch.assigned_phone && watch.sms_consent_confirmed_at) {
       const workerSmsSid = await sendWatchSummarySMS(
         watch.assigned_phone,
         watch.facilities.name,

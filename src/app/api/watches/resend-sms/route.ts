@@ -66,6 +66,11 @@ export async function POST(req: NextRequest) {
     }
     const checkInUrl = `${appUrl}/checkin/${checkIn.token}`
 
+    // Only send SMS if watcher has confirmed consent
+    if (!watch.sms_consent_confirmed_at) {
+      return NextResponse.json({ error: 'Watcher has not confirmed SMS consent' }, { status: 403 })
+    }
+
     const sid = await sendCheckInSMS(
       watch.assigned_phone,
       watch.facilities.name,

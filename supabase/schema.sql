@@ -64,6 +64,8 @@ create table if not exists public.watches (
   location text,
   escalation_phone text,
   escalation_delay_min int default 0,
+  sms_consent_token text unique,            -- double opt-in token sent to watcher
+  sms_consent_confirmed_at timestamptz,     -- when watcher confirmed SMS consent
   planned_end_time timestamptz,
   ended_by uuid references auth.users(id) on delete set null,
   ended_at timestamptz,

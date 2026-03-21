@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 import { generateToken } from '@/lib/tokens'
-import { sendCheckInSMS, sendChecklistSMS } from '@/lib/sms'
+import { sendCheckInSMS, sendChecklistSMS, sendConsentSMS } from '@/lib/sms'
 import { addMinutes } from 'date-fns'
 
 export async function POST(req: NextRequest) {
@@ -205,6 +205,9 @@ export async function POST(req: NextRequest) {
     // Generate a persistent session token for the watch (one link for the entire watch)
     const session_token = generateToken()
 
+    // Generate SMS consent token for double opt-in (if SMS enabled)
+    const sms_consent_token = sms_enabled ? generateToken() : null
+
     // Display name used in SMS (includes wing/area when present)
     const displayName = location ? `${facility.name} — ${location}` : facility.name
 
@@ -234,6 +237,7 @@ export async function POST(req: NextRequest) {
         watch_longitude: watch_longitude ?? null,
         ...(watch_radius_m !== undefined && watch_radius_m !== null ? { watch_radius_m } : {}),
         session_token,
+        sms_consent_token,
       })
       .select()
       .single()
@@ -259,27 +263,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to create checklist. Please try again.' }, { status: 500 })
       }
 
-      // Send checklist SMS only if SMS is enabled
-      if (sms_enabled && assigned_phone) {
-        const checklistUrl = `${appUrl}/checklist/${checklist_token}`
-        const checklistSid = await sendChecklistSMS(
-          assigned_phone,
-          assigned_name,
-          displayName,
-          checklistUrl
-        )
-
-        const { error: clAlertErr } = await admin.from('alerts').insert({
-          watch_id: watch.id,
-          alert_type: checklistSid ? 'sms_sent' : 'sms_failed',
-          recipient_phone: assigned_phone,
-          recipient_name: assigned_name,
-          message: `Safety checklist SMS sent`,
-          delivery_status: checklistSid ? 'sent' : 'failed',
-          twilio_sid: checklistSid,
-        })
-        if (clAlertErr) console.error('Failed to log checklist alert:', clAlertErr)
-      }
+      // Checklist SMS will be sent AFTER watcher confirms SMS consent (handled by /api/sms/confirm)
     }
 
     // Create first check-in row
@@ -311,41 +295,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create check-in' }, { status: 500 })
     }
 
-    // Send first check-in SMS only if SMS is enabled
+    // Send SMS: either consent request (double opt-in) or direct check-in
     let twilioSid: string | null = null
-    if (sms_enabled && assigned_phone) {
-      twilioSid = await sendCheckInSMS(
+    if (sms_enabled && assigned_phone && sms_consent_token) {
+      // Double opt-in: send consent SMS first. Operational SMS starts only after watcher confirms.
+      const consentUrl = `${appUrl}/sms-confirm/${sms_consent_token}`
+      twilioSid = await sendConsentSMS(
         assigned_phone,
-        displayName,
         assigned_name,
-        checkInUrl,
-        scheduledTime
+        displayName,
+        consentUrl
       )
 
       // Log alert
-      const { error: ciAlertErr } = await admin.from('alerts').insert({
+      const { error: consentAlertErr } = await admin.from('alerts').insert({
         watch_id: watch.id,
-        check_in_id: checkIn.id,
         alert_type: twilioSid ? 'sms_sent' : 'sms_failed',
         recipient_phone: assigned_phone,
         recipient_name: assigned_name,
-        message: `Check-in SMS for ${scheduledTime.toISOString()}`,
+        message: `SMS consent request sent (double opt-in)`,
         delivery_status: twilioSid ? 'sent' : 'failed',
         twilio_sid: twilioSid,
       })
-      if (ciAlertErr) console.error('Failed to log check-in alert:', ciAlertErr)
-
-      if (!twilioSid) {
-        const { error: failAlertErr } = await admin.from('alerts').insert({
-          watch_id: watch.id,
-          alert_type: 'sms_failed',
-          recipient_phone: assigned_phone,
-          recipient_name: assigned_name,
-          message: `FAILED to send first check-in SMS to ${assigned_name}`,
-          delivery_status: 'failed',
-        })
-        if (failAlertErr) console.error('Failed to log SMS failure alert:', failAlertErr)
-      }
+      if (consentAlertErr) console.error('Failed to log consent SMS alert:', consentAlertErr)
     }
 
     // Log watch_started alert

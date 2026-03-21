@@ -151,3 +151,19 @@ export async function sendChecklistSMS(
     `DutyProof: ${assignedName}, before your fire watch begins at ${facilityName}, please complete the safety checklist: ${checklistUrl}`
   )
 }
+
+// ── Double Opt-In Consent SMS ──
+// First message sent to a watcher when SMS is enabled.
+// Contains a link for the watcher to directly confirm consent.
+// No operational SMS is sent until the watcher confirms.
+export async function sendConsentSMS(
+  to: string,
+  assignedName: string,
+  facilityName: string,
+  consentUrl: string
+): Promise<string | null> {
+  return sendSMS(
+    to,
+    `DutyProof: ${assignedName}, your supervisor has assigned you to fire watch at ${facilityName}. To receive check-in reminders via text, confirm here: ${consentUrl}\n\nMsg frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help. Consent is not required to use DutyProof.`
+  )
+}
