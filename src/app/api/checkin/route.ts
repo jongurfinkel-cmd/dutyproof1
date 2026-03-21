@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
     if (!wasReconciled) {
       const { error: resetErr } = await admin
         .from('watches')
-        .update({ consecutive_misses: 0 })
+        .update({ consecutive_misses: 0, compliance_status: 'clean' })
         .eq('id', checkIn.watch_id)
       if (resetErr) console.error('Failed to reset consecutive misses:', resetErr)
     }

@@ -46,6 +46,14 @@ export async function GET(req: NextRequest) {
 
     for (const watch of expiredWatches ?? []) {
       try {
+        // If work has been stopped and there's a post-work cooldown period,
+        // don't auto-end until the cooldown finishes.
+        if (watch.work_stopped_at && watch.post_work_duration_min > 0) {
+          const postWorkEnd = new Date(watch.work_stopped_at)
+          postWorkEnd.setMinutes(postWorkEnd.getMinutes() + watch.post_work_duration_min)
+          if (new Date() < postWorkEnd) continue // cooldown still active — skip
+        }
+
         const { error: endErr } = await admin
           .from('watches')
           .update({ status: 'completed', ended_at: now })
@@ -137,10 +145,10 @@ export async function GET(req: NextRequest) {
 
         // ── Session-token watches: determine if watcher is offline or genuinely missed ──
         if (watch.session_token && watch.escalation_phone) {
-          // Check if the watcher has synced recently (within 2x the interval)
+          // Check if the watcher has synced recently (within 5 minutes)
           // If yes → they're online and genuinely missed → escalate normally
           // If no → they're likely offline → send one-time offline alert
-          const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+          const syncGraceMs = 5 * 60 * 1000
           const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
           const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
 
@@ -314,7 +322,7 @@ export async function GET(req: NextRequest) {
       // Session-token watches: skip delayed escalation if watcher is offline (already got one-time alert)
       // But allow it if watcher is online (genuine miss)
       if (watch.session_token) {
-        const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+        const syncGraceMs = 5 * 60 * 1000
         const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
         const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
         if (!isRecentlyOnline) continue
@@ -376,7 +384,7 @@ export async function GET(req: NextRequest) {
       if (!watch || watch.status !== 'active' || !watch.secondary_escalation_phone) continue
       // Session-token watches: skip secondary escalation if offline (already notified)
       if (watch.session_token) {
-        const syncGraceMs = watch.check_interval_min * 2 * 60 * 1000
+        const syncGraceMs = 5 * 60 * 1000
         const lastSync = watch.last_sync_at ? new Date(watch.last_sync_at).getTime() : 0
         const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
         if (!isRecentlyOnline) continue

@@ -81,13 +81,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to process handoff' }, { status: 500 })
     }
 
-    // 2. Update the watch with new watcher info
+    // 2. Regenerate session_token so the old watcher's persistent link stops working
+    const newSessionToken = generateToken()
+
+    // Update the watch with new watcher info and new session_token
     const updatedPhone = new_assigned_phone || oldPhone
     const { error: updateError } = await admin
       .from('watches')
       .update({
         assigned_name: trimmedName,
         assigned_phone: updatedPhone,
+        session_token: newSessionToken,
       })
       .eq('id', watchId)
 
@@ -97,7 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Log the handoff
-    const handoffMessage = `[HANDOFF] Watcher reassigned: ${oldName} → ${trimmedName}. ${reason ? `Reason: ${reason}` : 'No reason provided.'}`
+    const handoffMessage = `[HANDOFF] Watcher reassigned from old_assigned_name="${oldName}" to new_assigned_name="${trimmedName}". ${reason ? `Reason: ${reason}` : 'No reason provided.'}`
     await admin.from('alerts').insert({
       watch_id: watchId,
       alert_type: 'watch_started', // Using watch_started with [HANDOFF] prefix
@@ -114,7 +118,7 @@ export async function POST(req: NextRequest) {
     const scheduledTime = now
     const expiresAt = addMinutes(scheduledTime, watch.check_interval_min)
     const token = generateToken()
-    const checkInUrl = `${appUrl}/checkin/${token}`
+    const checkInUrl = `${appUrl}/checkin/${newSessionToken}`
 
     const { data: newCheckIn, error: checkInError } = await admin
       .from('check_ins')

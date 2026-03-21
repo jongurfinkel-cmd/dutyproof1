@@ -38,6 +38,8 @@ export default function WatchDetailPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [checklistExpanded, setChecklistExpanded] = useState(false)
+  const [overridingChecklist, setOverridingChecklist] = useState(false)
+  const [confirmingChecklistOverride, setConfirmingChecklistOverride] = useState(false)
 
   // Closeout form state
   const [closeoutNotes, setCloseoutNotes] = useState('')
@@ -1192,6 +1194,52 @@ export default function WatchDetailPage() {
                     >
                       Open Checklist
                     </a>
+                    {!confirmingChecklistOverride ? (
+                      <button
+                        onClick={() => setConfirmingChecklistOverride(true)}
+                        className="w-full py-1.5 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 text-xs font-medium transition-all text-center"
+                      >
+                        Supervisor Override
+                      </button>
+                    ) : (
+                      <div className="p-2.5 rounded-lg border border-red-200 bg-red-50 space-y-2">
+                        <p className="text-xs text-red-700 font-medium">Mark checklist as complete without watcher input?</p>
+                        <p className="text-[11px] text-red-500">This cannot be undone. Use only if the watcher is unable to complete the checklist themselves.</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setConfirmingChecklistOverride(false)}
+                            disabled={overridingChecklist}
+                            className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-xs font-medium hover:bg-slate-50 transition-all"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setOverridingChecklist(true)
+                              try {
+                                const supabase = createClient()
+                                const { error } = await supabase
+                                  .from('watches')
+                                  .update({ checklist_completed_at: new Date().toISOString() })
+                                  .eq('id', id)
+                                if (error) throw error
+                                toast.success('Checklist marked as complete')
+                                setConfirmingChecklistOverride(false)
+                                await loadData()
+                              } catch {
+                                toast.error('Failed to override checklist')
+                              } finally {
+                                setOverridingChecklist(false)
+                              }
+                            }}
+                            disabled={overridingChecklist}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
+                          >
+                            {overridingChecklist ? 'Overriding...' : 'Confirm Override'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
