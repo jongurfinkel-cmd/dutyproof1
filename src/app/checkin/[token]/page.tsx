@@ -1026,6 +1026,9 @@ export default function CheckInPage() {
   // GPS PERMISSION GATE
   // ═══════════════════════════════════════════════════════════
   if (state.phase === 'gps_prompt') {
+    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad/.test(navigator.userAgent)
+    const isAndroid = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent)
+
     const requestGps = () => {
       setGpsPermission('checking')
       navigator.geolocation.getCurrentPosition(
@@ -1046,6 +1049,210 @@ export default function CheckInPage() {
       )
     }
 
+    const skipGps = () => {
+      setGpsPermission('dismissed')
+      setState({ phase: 'loading' })
+    }
+
+    // ─── DENIED STATE ───
+    if (gpsPermission === 'denied') {
+      return (
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+          <Logo />
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full overflow-hidden">
+            {/* Header */}
+            <div className="bg-amber-600 px-6 py-5">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <h1 className="text-lg text-white font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>
+                Location is Blocked
+              </h1>
+              <p className="text-amber-100 text-sm mt-1">
+                Your browser blocked GPS. You have two options:
+              </p>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              {/* Option 1: Continue without GPS — big, prominent, green */}
+              <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-green-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">Recommended</span>
+                </div>
+                <h3 className="text-white font-bold text-sm mb-1">Continue without GPS</h3>
+                <p className="text-slate-400 text-xs leading-relaxed mb-3">
+                  Your check-ins will still be recorded with timestamps. GPS coordinates will be blank on the report.
+                </p>
+                <button
+                  onClick={skipGps}
+                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-all active:scale-[0.98]"
+                >
+                  Start Checking In &rarr;
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-slate-700" />
+                <span className="text-slate-500 text-xs font-medium">or</span>
+                <div className="flex-1 h-px bg-slate-700" />
+              </div>
+
+              {/* Option 2: Fix it — step-by-step */}
+              <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                <h3 className="text-white font-bold text-sm mb-1">Enable GPS for full compliance</h3>
+                <p className="text-slate-400 text-xs leading-relaxed mb-3">
+                  GPS adds coordinates to every check-in for OSHA documentation.
+                </p>
+
+                {isIOS ? (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Open iPhone Settings</p>
+                        <p className="text-slate-500 text-[11px]">The gray gear icon on your home screen</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Scroll down, tap Safari</p>
+                        <p className="text-slate-500 text-[11px]">Or whichever browser you&apos;re using (Chrome, etc.)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Tap Location &rarr; set to &ldquo;Allow&rdquo;</p>
+                        <p className="text-slate-500 text-[11px]">Under &ldquo;Settings for Websites&rdquo; section</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-green-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">4</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Come back and tap the button below</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : isAndroid ? (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Tap the lock icon in the address bar</p>
+                        <p className="text-slate-500 text-[11px]">It&apos;s at the top of your screen, left of the URL</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Tap &ldquo;Permissions&rdquo;</p>
+                        <p className="text-slate-500 text-[11px]">Or &ldquo;Site settings&rdquo; depending on your browser</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Turn on Location</p>
+                        <p className="text-slate-500 text-[11px]">Toggle the switch or select &ldquo;Allow&rdquo;</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-green-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">4</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Come back and tap the button below</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Open your browser&apos;s site settings</p>
+                        <p className="text-slate-500 text-[11px]">Usually the lock or info icon in the address bar</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-blue-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Set Location to &ldquo;Allow&rdquo;</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-slate-900 rounded-lg p-3">
+                      <span className="bg-green-600 text-white rounded-md w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold">Come back and tap the button below</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={requestGps}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all active:scale-[0.98]"
+                >
+                  I Fixed It &mdash; Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ─── UNAVAILABLE STATE ───
+    if (gpsPermission === 'unavailable') {
+      return (
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+          <Logo />
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full overflow-hidden">
+            <div className="bg-amber-700 px-6 py-5">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <line x1="10" y1="8" x2="14" y2="12" />
+                  <line x1="14" y1="8" x2="10" y2="12" />
+                </svg>
+              </div>
+              <h1 className="text-lg text-white font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>
+                GPS Not Available
+              </h1>
+              <p className="text-amber-100 text-sm mt-1">
+                This device can&apos;t provide GPS data right now.
+              </p>
+            </div>
+            <div className="px-6 py-5 space-y-3">
+              <p className="text-slate-400 text-sm leading-relaxed">
+                This usually means location services are turned off in your device settings, or the device doesn&apos;t have GPS hardware.
+              </p>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                You can still check in &mdash; everything is recorded with timestamps. GPS coordinates will be blank on the compliance report.
+              </p>
+              <button
+                onClick={skipGps}
+                className="w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-all active:scale-[0.98] mt-2"
+              >
+                Start Checking In &rarr;
+              </button>
+              <button
+                onClick={requestGps}
+                className="w-full py-2.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ─── DEFAULT / CHECKING STATE ───
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
         <Logo />
@@ -1060,64 +1267,36 @@ export default function CheckInPage() {
             Enable Location
           </h1>
           <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-            Your GPS location is recorded with every check-in for compliance records. This is required for OSHA-ready documentation.
+            GPS coordinates are recorded with every check-in for OSHA compliance documentation.
           </p>
 
-          {gpsPermission === 'denied' ? (
-            <>
-              <div className="bg-red-950 border border-red-800 rounded-xl p-4 mb-4">
-                <p className="text-red-300 text-sm font-semibold mb-2">Location access was denied</p>
-                <p className="text-red-400/70 text-xs leading-relaxed">
-                  Open your browser settings and allow location access for this site, then tap &quot;Try Again.&quot;
-                </p>
+          {gpsPermission === 'checking' ? (
+            <div className="flex flex-col items-center gap-3 py-4 mb-4">
+              <div className="w-8 h-8 border-3 border-blue-800 border-t-blue-400 rounded-full animate-spin" />
+              <div>
+                <span className="text-blue-400 text-sm font-semibold block">Waiting for permission&hellip;</span>
+                <span className="text-slate-500 text-xs block mt-1">Tap &ldquo;Allow&rdquo; on the popup from your browser</span>
               </div>
+            </div>
+          ) : (
+            <>
               <button
                 onClick={requestGps}
-                className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all mb-3"
+                className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all active:scale-[0.98] mb-3"
               >
-                Try Again
+                Allow Location Access
               </button>
+              <p className="text-slate-600 text-[11px] mb-4 leading-relaxed">
+                Your browser will show a popup &mdash; tap <strong className="text-slate-400">&ldquo;Allow&rdquo;</strong> to enable GPS.
+              </p>
             </>
-          ) : gpsPermission === 'checking' ? (
-            <div className="flex items-center justify-center gap-3 py-4 mb-4">
-              <div className="w-5 h-5 border-2 border-blue-700 border-t-blue-400 rounded-full animate-spin" />
-              <span className="text-blue-400 text-sm font-medium">Requesting location access...</span>
-            </div>
-          ) : gpsPermission === 'unavailable' ? (
-            <>
-              <div className="bg-amber-950 border border-amber-800 rounded-xl p-4 mb-4">
-                <p className="text-amber-300 text-sm font-semibold mb-1">GPS not available</p>
-                <p className="text-amber-400/70 text-xs leading-relaxed">
-                  This device doesn&apos;t support GPS or location services are turned off in system settings.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setGpsPermission('dismissed')
-                  setState({ phase: 'loading' })
-                }}
-                className="w-full py-3.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-sm transition-all mb-3"
-              >
-                Continue Without GPS
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={requestGps}
-              className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all mb-3"
-            >
-              Allow Location Access
-            </button>
           )}
 
           <button
-            onClick={() => {
-              setGpsPermission('dismissed')
-              setState({ phase: 'loading' })
-            }}
-            className="w-full py-2.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+            onClick={skipGps}
+            className="w-full py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 hover:bg-slate-800 text-slate-400 hover:text-slate-300 text-xs font-medium transition-all"
           >
-            Skip — check-ins won&apos;t have GPS proof
+            Skip &mdash; continue without GPS
           </button>
         </div>
       </div>
