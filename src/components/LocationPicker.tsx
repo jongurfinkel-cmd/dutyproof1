@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import AddressSearch from '@/components/AddressSearch'
 
 interface LocationPickerProps {
   latitude: number | null
@@ -132,7 +133,13 @@ export default function LocationPicker({ latitude, longitude, radius, onChange }
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 mb-2">
+      <AddressSearch
+        placeholder="Search by address..."
+        onSelect={(result) => {
+          onChange({ latitude: result.latitude, longitude: result.longitude })
+        }}
+      />
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleUseMyLocation}
@@ -151,7 +158,7 @@ export default function LocationPicker({ latitude, longitude, radius, onChange }
         ref={mapRef}
         className="w-full h-[250px] rounded-xl overflow-hidden border border-slate-200"
       />
-      <p className="text-xs text-slate-400">Click on the map to set the watch location.</p>
+      <p className="text-xs text-slate-400">Search an address, use your location, or click the map.</p>
     </div>
   )
 }

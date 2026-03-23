@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, forwardRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { Facility } from '@/types/database'
+import AddressSearch from '@/components/AddressSearch'
 
 const TZ_GROUPS: { label: string; zones: { value: string; label: string }[] }[] = [
   {
@@ -399,11 +400,9 @@ export default function FacilitiesPage() {
                   <Label>
                     Address <span className="text-slate-300 normal-case font-normal">(optional)</span>
                   </Label>
-                  <Input
-                    type="text"
-                    value={form.address}
-                    onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                    placeholder="123 Main St, City, ST"
+                  <AddressSearch
+                    placeholder="Search address..."
+                    onSelect={(result) => setForm((p) => ({ ...p, address: result.address }))}
                   />
                 </div>
                 <div>
@@ -525,11 +524,9 @@ export default function FacilitiesPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <Label>Address</Label>
-                            <Input
-                              type="text"
-                              value={editForm.address}
-                              onChange={(e) => setEditForm((p) => ({ ...p, address: e.target.value }))}
-                              placeholder="Optional"
+                            <AddressSearch
+                              placeholder="Search address..."
+                              onSelect={(result) => setEditForm((p) => ({ ...p, address: result.address }))}
                             />
                           </div>
                           <div>
