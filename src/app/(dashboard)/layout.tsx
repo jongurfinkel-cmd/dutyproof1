@@ -94,6 +94,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUserEmail(data.user.email ?? null)
         const meta = data.user.user_metadata as Record<string, string> | undefined
         setUserDisplayName(meta?.full_name ?? null)
+      } else {
+        router.push('/login')
       }
     })
   }, [])
@@ -210,60 +212,106 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-2 space-y-1" aria-label="Main navigation">
-          {navLinks.map((link) => {
-            const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
-            const Icon = link.icon
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
-                  active
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
-                }`}
-              >
-                {/* Active indicator bar */}
-                {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-400" />
-                )}
-                <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
-                  active ? 'text-orange-400' : 'text-slate-500 group-hover:text-slate-400'
-                }`} />
-                <span className="flex-1">{link.label}</span>
-                {link.badge > 0 && (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center leading-none shadow-lg shadow-red-500/30">
-                    {link.badge > 9 ? '9+' : link.badge}
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+        <nav className="flex-1 px-3 pt-2 pb-4 flex flex-col" aria-label="Main navigation">
+          {/* New Watch CTA */}
+          <Link
+            href="/watches/new"
+            className="flex items-center justify-center gap-2 mx-1 mb-4 px-3 py-2.5 rounded-xl text-[13px] font-bold
+              bg-gradient-to-r from-blue-600 to-blue-500 text-white
+              shadow-lg shadow-blue-500/20
+              hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5
+              transition-all duration-200"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New Watch
+          </Link>
+
+          {/* Watches group */}
+          <p className="px-3 mb-1.5 text-[9px] font-bold text-slate-500/60 uppercase tracking-[0.15em]">Watches</p>
+          <div className="space-y-0.5">
+            {navLinks.slice(0, 2).map((link) => {
+              const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+              const Icon = link.icon
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
+                    active
+                      ? 'bg-white/10 text-white shadow-sm'
+                      : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-400" />
+                  )}
+                  <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                    active ? 'text-orange-400' : 'text-slate-500 group-hover:text-slate-400'
+                  }`} />
+                  <span className="flex-1">{link.label}</span>
+                  {link.badge > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center leading-none shadow-lg shadow-red-500/30">
+                      {link.badge > 9 ? '9+' : link.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Manage group */}
+          <p className="px-3 mt-5 mb-1.5 text-[9px] font-bold text-slate-500/60 uppercase tracking-[0.15em]">Manage</p>
+          <div className="space-y-0.5">
+            {navLinks.slice(2).map((link) => {
+              const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+              const Icon = link.icon
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
+                    active
+                      ? 'bg-white/10 text-white shadow-sm'
+                      : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-400" />
+                  )}
+                  <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+                    active ? 'text-orange-400' : 'text-slate-500 group-hover:text-slate-400'
+                  }`} />
+                  <span className="flex-1">{link.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
         </nav>
 
         {/* User section */}
-        <div className="px-3 pb-5">
-          <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20">
-                <span className="text-white text-xs font-extrabold">{initials}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                {userDisplayName && (
-                  <p className="text-xs text-slate-200 font-semibold truncate">{userDisplayName}</p>
-                )}
-                <p className={`text-xs text-slate-400 truncate ${userDisplayName ? 'text-[11px]' : 'font-medium text-slate-300'}`}>{userEmail}</p>
-              </div>
+        <div className="px-3 pb-4">
+          <div className="flex items-center gap-2.5 px-3 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20">
+              <span className="text-white text-xs font-extrabold">{initials}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] text-slate-200 font-semibold truncate">{userDisplayName || userEmail}</p>
+              {userDisplayName && (
+                <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
+              )}
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white
-                border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06]
-                rounded-lg transition-all duration-200"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all duration-200"
+              title="Sign out"
             >
               <IconLogOut className="w-3.5 h-3.5" />
-              Sign Out
             </button>
           </div>
         </div>

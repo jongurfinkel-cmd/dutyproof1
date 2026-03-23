@@ -205,7 +205,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
               {watch.facilities.name}
             </h3>
             {watch.location && (
-              <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
+              <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
                 <IconMapPin className="w-3 h-3 shrink-0" />
                 <span className="truncate">{watch.location}</span>
               </div>
@@ -234,16 +234,16 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
         {/* Info grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
           <div className="flex items-center gap-2">
-            <IconUser className="w-4 h-4 text-slate-300 shrink-0" />
+            <IconUser className="w-4 h-4 text-slate-400 shrink-0" />
             <div className="min-w-0">
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Fire Watch</div>
+              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Fire Watch</div>
               <div className="text-sm text-slate-700 font-semibold truncate">{watch.assigned_name}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <IconClock className="w-4 h-4 text-slate-300 shrink-0" />
+            <IconClock className="w-4 h-4 text-slate-400 shrink-0" />
             <div className="min-w-0">
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Started</div>
+              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Started</div>
               <div className="text-sm text-slate-700 font-semibold">
                 {formatDistanceToNow(new Date(watch.start_time), { addSuffix: true })}
               </div>

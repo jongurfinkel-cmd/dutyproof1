@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, differenceInMinutes } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
@@ -85,38 +86,11 @@ function IconChevron({ className, direction = 'right' }: { className?: string; d
   )
 }
 
-function IconEye({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
-
 function IconMapPin({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
-    </svg>
-  )
-}
-
-function IconClock({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
-}
-
-function IconUser({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
     </svg>
   )
 }
@@ -145,28 +119,21 @@ function ComplianceBadge({ completed, missed }: { completed: number; missed: num
   const total = completed + missed
   if (total === 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-400 text-xs font-medium">
-        No check-ins
-      </span>
+      <span className="text-xs text-slate-300 font-medium">Ended early</span>
     )
   }
   const pct = Math.round((completed / total) * 100)
   const color = pct === 100
-    ? { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-600', bar: 'bg-emerald-400', ring: 'ring-emerald-500' }
+    ? 'text-emerald-600 bg-emerald-50'
     : pct >= 80
-      ? { bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-600', bar: 'bg-amber-400', ring: 'ring-amber-500' }
-      : { bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-600', bar: 'bg-red-400', ring: 'ring-red-500' }
+      ? 'text-amber-600 bg-amber-50'
+      : 'text-red-600 bg-red-50'
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-20 h-2 rounded-full bg-slate-100 overflow-hidden shrink-0">
-        <div className={`h-full rounded-full ${color.bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${color.bg} border ${color.border} ${color.text} text-xs font-bold tabular-nums`}>
-        {pct}%
-        <span className="font-normal text-[10px] opacity-70">({completed}/{total})</span>
-      </span>
-    </div>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold tabular-nums ${color}`}>
+      {pct}%
+      <span className="font-semibold text-[10px] opacity-60">{completed}/{total}</span>
+    </span>
   )
 }
 
@@ -182,21 +149,57 @@ function StatsBar({ watches }: { watches: WatchWithCompliance[] }) {
     return t > 0 && w._completed === t
   }).length
 
-  const stats = [
-    { label: 'Watches', value: String(watches.length), color: 'text-slate-700' },
-    { label: 'Overall Compliance', value: `${overallPct}%`, color: overallPct === 100 ? 'text-emerald-600' : overallPct >= 90 ? 'text-amber-600' : 'text-red-600' },
-    { label: 'Perfect Watches', value: String(perfect), color: 'text-emerald-600' },
-    { label: 'Check-ins Missed', value: String(totalMissed), color: totalMissed > 0 ? 'text-red-600' : 'text-slate-700' },
-  ]
+  const compColor = overallPct === 100
+    ? 'text-emerald-500'
+    : overallPct >= 80
+      ? 'text-amber-500'
+      : 'text-red-500'
+  const ringColor = overallPct === 100
+    ? 'stroke-emerald-400'
+    : overallPct >= 80
+      ? 'stroke-amber-400'
+      : 'stroke-red-400'
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      {stats.map((s) => (
-        <div key={s.label} className="bg-white rounded-xl border-2 border-slate-100 p-3.5 text-center">
-          <div className={`text-xl font-extrabold ${s.color} tabular-nums`}>{s.value}</div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</div>
+    <div className="flex flex-col sm:flex-row items-stretch gap-4 mb-6">
+      {/* Hero compliance ring */}
+      <div className="bg-white rounded-2xl border-2 border-slate-100 p-6 flex items-center gap-6 sm:min-w-[280px]">
+        <div className="relative w-20 h-20 shrink-0">
+          <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="34" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+            <circle
+              cx="40" cy="40" r="34" fill="none"
+              className={ringColor}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 34}`}
+              strokeDashoffset={`${2 * Math.PI * 34 * (1 - overallPct / 100)}`}
+              style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`text-xl font-extrabold tabular-nums ${compColor}`}>{overallPct}%</span>
+          </div>
         </div>
-      ))}
+        <div>
+          <p className="text-sm font-bold text-slate-800" style={{ fontFamily: 'var(--font-display)' }}>Overall Compliance</p>
+          <p className="text-xs text-slate-500 mt-0.5">{totalCompleted} of {totalCheckins} check-ins completed</p>
+        </div>
+      </div>
+
+      {/* Supporting stats */}
+      <div className="flex-1 grid grid-cols-3 gap-3">
+        {[
+          { label: 'Watches', value: String(watches.length), color: 'text-slate-800', sub: 'completed' },
+          { label: 'Perfect', value: String(perfect), color: 'text-emerald-500', sub: '100% compliance' },
+          { label: 'Missed', value: String(totalMissed), color: totalMissed > 0 ? 'text-red-500' : 'text-slate-800', sub: 'check-ins' },
+        ].map((s) => (
+          <div key={s.label} className="bg-white rounded-2xl border-2 border-slate-100 p-4 flex flex-col items-center justify-center text-center">
+            <div className={`text-2xl font-extrabold ${s.color} tabular-nums leading-none`} style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5">{s.label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -204,6 +207,7 @@ function StatsBar({ watches }: { watches: WatchWithCompliance[] }) {
 /* ── Main Page ──────────────────────────────────────────────── */
 
 export default function HistoryPage() {
+  const router = useRouter()
   const [watches, setWatches] = useState<WatchWithCompliance[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -374,7 +378,7 @@ export default function HistoryPage() {
                 Watch History
               </h2>
               {!loading && (
-                <p className="text-slate-400 text-xs mt-0.5">
+                <p className="text-slate-500 text-xs mt-0.5">
                   {watches.length} completed watch{watches.length !== 1 ? 'es' : ''}
                   {filtered.length !== watches.length && (
                     <span className="text-blue-500 ml-1">&bull; {filtered.length} shown</span>
@@ -445,7 +449,7 @@ export default function HistoryPage() {
             >
               No completed watches yet
             </h3>
-            <p className="text-slate-400 text-sm max-w-xs mx-auto">
+            <p className="text-slate-500 text-sm max-w-xs mx-auto">
               When you end a fire watch, it will appear here with the full compliance audit trail.
             </p>
           </div>
@@ -587,22 +591,21 @@ export default function HistoryPage() {
                 </div>
 
                 {/* ── Desktop Table ──────────────────────── */}
-                <div className="hidden sm:block bg-white rounded-2xl border-2 border-slate-100 overflow-hidden shadow-sm">
+                <div className="hidden sm:block bg-white rounded-2xl border-2 border-slate-100 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b-2 border-slate-50">
+                        <tr className="border-b-2 border-slate-100/60">
                           {([
-                            { key: 'facility' as SortKey, label: 'Job Site', w: '' },
-                            { key: null, label: 'Fire Watcher', w: '' },
-                            { key: 'started' as SortKey, label: 'Started', w: '' },
-                            { key: 'duration' as SortKey, label: 'Duration', w: 'w-24' },
-                            { key: 'compliance' as SortKey, label: 'Compliance', w: '' },
-                            { key: null, label: 'Reason', w: '' },
-                          ]).map(({ key, label, w }) => (
+                            { key: 'facility' as SortKey, label: 'Job Site' },
+                            { key: null, label: 'Fire Watcher' },
+                            { key: 'started' as SortKey, label: 'Started' },
+                            { key: 'duration' as SortKey, label: 'Duration' },
+                            { key: 'compliance' as SortKey, label: 'Compliance' },
+                          ]).map(({ key, label }) => (
                             <th
                               key={label}
-                              className={`text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.12em] select-none ${w} ${
+                              className={`text-left px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] select-none ${
                                 key ? 'cursor-pointer text-slate-400 hover:text-slate-600 transition-colors' : 'text-slate-400'
                               }`}
                               onClick={key ? () => handleSort(key) : undefined}
@@ -618,70 +621,40 @@ export default function HistoryPage() {
                               </span>
                             </th>
                           ))}
-                          <th className="text-right px-5 py-3.5 text-[10px] text-slate-400 font-bold uppercase tracking-[0.12em] w-24" />
                         </tr>
                       </thead>
                       <tbody>
-                        {paginated.map((w, i) => {
-                          const total = w._completed + w._missed
-                          const pct = total > 0 ? Math.round((w._completed / total) * 100) : -1
-                          return (
-                            <tr
-                              key={w.id}
-                              className={`group transition-colors duration-150 ${
-                                i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
-                              } hover:bg-blue-50/40`}
-                            >
-                              <td className="px-5 py-4">
-                                <div className="font-bold text-slate-800 text-[13px]">{w.facilities.name}</div>
-                                {w.location && (
-                                  <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
-                                    <IconMapPin className="w-3 h-3 shrink-0" />
-                                    {w.location}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-5 py-4">
-                                <div className="flex items-center gap-1.5 text-slate-600 text-[13px]">
-                                  <IconUser className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                  {w.assigned_name}
+                        {paginated.map((w, i) => (
+                          <tr
+                            key={w.id}
+                            onClick={() => router.push(`/watches/${w.id}`)}
+                            className={`group cursor-pointer transition-colors duration-150 ${
+                              i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                            } hover:bg-blue-50/50`}
+                          >
+                            <td className="px-5 py-3.5">
+                              <div className="font-bold text-slate-800 text-[13px] group-hover:text-blue-600 transition-colors">{w.facilities.name}</div>
+                              {w.location && (
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
+                                  <IconMapPin className="w-2.5 h-2.5 shrink-0" />
+                                  <span className="truncate max-w-[180px]">{w.location}</span>
                                 </div>
-                              </td>
-                              <td className="px-5 py-4 text-slate-500 text-[13px] whitespace-nowrap">
-                                {format(new Date(w.start_time), 'MMM d, h:mm a')}
-                              </td>
-                              <td className="px-5 py-4 whitespace-nowrap">
-                                <span className="inline-flex items-center gap-1 text-slate-500 text-[13px]">
-                                  <IconClock className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                                  {formatDuration(w.start_time, w.ended_at)}
-                                </span>
-                              </td>
-                              <td className="px-5 py-4">
-                                <ComplianceBadge completed={w._completed} missed={w._missed} />
-                              </td>
-                              <td className="px-5 py-4 text-slate-400 text-[13px] max-w-[160px] truncate">
-                                {w.reason || <span className="text-slate-200">&mdash;</span>}
-                              </td>
-                              <td className="px-5 py-4 text-right">
-                                <Link
-                                  href={`/watches/${w.id}`}
-                                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                                    pct === 100
-                                      ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100'
-                                      : pct >= 80
-                                        ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100'
-                                        : pct >= 0
-                                          ? 'text-red-600 bg-red-50 hover:bg-red-100 border border-red-100'
-                                          : 'text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100'
-                                  }`}
-                                >
-                                  <IconEye className="w-3.5 h-3.5" />
-                                  View
-                                </Link>
-                              </td>
-                            </tr>
-                          )
-                        })}
+                              )}
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <span className="text-slate-600 text-[13px]">{w.assigned_name}</span>
+                            </td>
+                            <td className="px-5 py-3.5 text-slate-500 text-[13px] whitespace-nowrap">
+                              {format(new Date(w.start_time), 'MMM d, h:mm a')}
+                            </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap text-slate-500 text-[13px]">
+                              {formatDuration(w.start_time, w.ended_at)}
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <ComplianceBadge completed={w._completed} missed={w._missed} />
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -737,11 +710,11 @@ export default function HistoryPage() {
                 </div>
 
                 {/* ── Mobile Cards ───────────────────────── */}
-                <div className="sm:hidden space-y-3">
+                <div className="sm:hidden space-y-2.5">
                   {paginated.map((w) => {
                     const total = w._completed + w._missed
                     const pct = total > 0 ? Math.round((w._completed / total) * 100) : -1
-                    const borderColor = pct === 100
+                    const accentColor = pct === 100
                       ? 'border-l-emerald-400'
                       : pct >= 80
                         ? 'border-l-amber-400'
@@ -752,49 +725,31 @@ export default function HistoryPage() {
                       <Link
                         key={w.id}
                         href={`/watches/${w.id}`}
-                        className={`block bg-white rounded-2xl border-2 border-slate-100 border-l-4 ${borderColor} p-4 hover:shadow-md transition-all duration-200`}
+                        className={`block bg-white rounded-xl border border-slate-100 border-l-[3px] ${accentColor} px-4 py-3.5 active:bg-slate-50 transition-colors`}
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-slate-800 text-sm truncate">{w.facilities.name}</h3>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1.5 flex-wrap">
-                              <span className="flex items-center gap-1">
-                                <IconUser className="w-3 h-3" />
-                                {w.assigned_name}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <IconClock className="w-3 h-3" />
-                                {formatDuration(w.start_time, w.ended_at)}
-                              </span>
+                            <h3 className="font-bold text-slate-800 text-[13px] truncate">{w.facilities.name}</h3>
+                            <div className="flex items-center gap-2.5 text-[11px] text-slate-500 mt-1">
+                              <span>{w.assigned_name}</span>
+                              <span className="text-slate-200">&middot;</span>
+                              <span>{formatDuration(w.start_time, w.ended_at)}</span>
+                              <span className="text-slate-200">&middot;</span>
                               <span>{format(new Date(w.start_time), 'MMM d')}</span>
                             </div>
-                            {w.location && (
-                              <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1">
-                                <IconMapPin className="w-3 h-3 shrink-0" />
-                                <span className="truncate">{w.location}</span>
-                              </div>
-                            )}
                           </div>
-                          <div className="shrink-0 text-right">
+                          <div className="shrink-0">
                             {pct >= 0 ? (
-                              <div className={`text-lg font-extrabold tabular-nums ${
+                              <span className={`text-base font-extrabold tabular-nums ${
                                 pct === 100 ? 'text-emerald-500' : pct >= 80 ? 'text-amber-500' : 'text-red-500'
                               }`}>
                                 {pct}%
-                              </div>
+                              </span>
                             ) : (
-                              <div className="text-xs text-slate-300 font-medium">No data</div>
-                            )}
-                            {total > 0 && (
-                              <div className="text-[10px] text-slate-400">{w._completed}/{total}</div>
+                              <span className="text-[11px] text-slate-300">—</span>
                             )}
                           </div>
                         </div>
-                        {w.reason && (
-                          <div className="mt-2.5 pt-2.5 border-t border-slate-50 text-xs text-slate-400 truncate">
-                            {w.reason}
-                          </div>
-                        )}
                       </Link>
                     )
                   })}

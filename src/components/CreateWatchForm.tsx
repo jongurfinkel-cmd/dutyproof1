@@ -73,41 +73,42 @@ function StepIndicator({ current, total, labels, onStepClick }: {
   const icons = [StepIcons.location, StepIcons.worker, StepIcons.schedule, StepIcons.review]
   return (
     <div className="mb-8">
-      <div className="flex items-center">
+      {/* Progress bar */}
+      <div className="h-1.5 bg-slate-100 rounded-full mb-5 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between">
         {Array.from({ length: total }, (_, i) => {
           const step = i + 1
           const isActive = step === current
           const isDone = step < current
           const isClickable = isDone
           return (
-            <div key={step} className="flex items-center flex-1 last:flex-initial">
-              <button
-                type="button"
-                onClick={() => isClickable && onStepClick(step)}
-                disabled={!isClickable}
-                className={`relative flex flex-col items-center group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 ring-4 ring-blue-100' :
-                  isDone ? 'bg-green-500 text-white group-hover:bg-green-400 group-hover:shadow-md' :
-                  'bg-slate-100 text-slate-300'
-                }`}>
-                  {isDone ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                  ) : icons[i]}
-                </div>
-                <span className={`text-[10px] font-bold mt-2 transition-colors whitespace-nowrap ${
-                  isActive ? 'text-blue-600' : isDone ? 'text-green-600' : 'text-slate-300'
-                }`}>
-                  {labels[i]}
-                </span>
-              </button>
-              {i < total - 1 && (
-                <div className="flex-1 mx-3 mt-[-16px]">
-                  <div className={`h-[3px] rounded-full transition-all duration-500 ${isDone ? 'bg-green-400' : 'bg-slate-100'}`} />
-                </div>
-              )}
-            </div>
+            <button
+              key={step}
+              type="button"
+              onClick={() => isClickable && onStepClick(step)}
+              disabled={!isClickable}
+              className={`flex items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-default'} group`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200' :
+                isDone ? 'bg-emerald-500 text-white group-hover:bg-emerald-400' :
+                'bg-slate-100 text-slate-300'
+              }`}>
+                {isDone ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                ) : icons[i]}
+              </div>
+              <span className={`text-[11px] font-bold transition-colors hidden sm:inline ${
+                isActive ? 'text-blue-600' : isDone ? 'text-emerald-600' : 'text-slate-300'
+              }`}>
+                {labels[i]}
+              </span>
+            </button>
           )
         })}
       </div>
@@ -124,7 +125,7 @@ function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: str
       </div>
       <div>
         <h3 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{title}</h3>
-        <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>
+        <p className="text-sm text-slate-600 mt-0.5">{subtitle}</p>
       </div>
     </div>
   )
@@ -152,7 +153,7 @@ function ToggleSwitch({ label, description, enabled, onToggle, recommended, chil
               <span className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Recommended</span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{description}</p>
         </div>
         <div aria-hidden="true" className={`relative w-12 h-7 rounded-full transition-colors flex-shrink-0 ml-4 ${enabled ? 'bg-blue-600' : 'bg-slate-200'}`}>
           <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-200 ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
@@ -195,10 +196,10 @@ function PillGroup({ options, value, onChange, name }: {
 // ===== LABEL =====
 function Label({ children, required, optional }: { children: React.ReactNode; required?: boolean; optional?: boolean }) {
   return (
-    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
       {children}
       {required && <span className="text-red-400 ml-0.5">*</span>}
-      {optional && <span className="text-slate-300 normal-case font-normal ml-1">(optional)</span>}
+      {optional && <span className="text-slate-400 normal-case font-normal ml-1">(optional)</span>}
     </label>
   )
 }
@@ -266,7 +267,7 @@ function ReviewRow({ label, value, tags, onEdit }: {
   return (
     <div className="flex items-start justify-between gap-3 py-4 first:pt-0 last:pb-0">
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{label}</p>
         {value && <p className="text-sm font-semibold text-slate-900 leading-snug">{value}</p>}
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -319,9 +320,15 @@ export default function CreateWatchForm() {
   const [newItemPhoto, setNewItemPhoto] = useState(false)
   const [smsEnabled, setSmsEnabled] = useState(false)
   const [smsConsent, setSmsConsent] = useState(false)
+  const [escalationSmsEnabled, setEscalationSmsEnabled] = useState(false)
+  const [escalationSmsConsent, setEscalationSmsConsent] = useState(false)
   const [permitPhotoFile, setPermitPhotoFile] = useState<File | null>(null)
   const [permitPhotoPreview, setPermitPhotoPreview] = useState<string | null>(null)
   const permitFileRef = useRef<HTMLInputElement>(null)
+  const [recentWatchers, setRecentWatchers] = useState<{ name: string; phone: string }[]>([])
+  const [showWatcherSuggestions, setShowWatcherSuggestions] = useState(false)
+  const [recentSupervisors, setRecentSupervisors] = useState<string[]>([])
+  const [showSupervisorSuggestions, setShowSupervisorSuggestions] = useState(false)
   const [geofenceEnabled, setGeofenceEnabled] = useState(false)
   const [watchLatitude, setWatchLatitude] = useState<number | null>(null)
   const [watchLongitude, setWatchLongitude] = useState<number | null>(null)
@@ -334,6 +341,34 @@ export default function CreateWatchForm() {
     supabase.from('facilities').select('*').order('name').then(({ data, error }) => {
       if (error) toast.error('Failed to load job sites. Please refresh.')
       else if (data) setFacilities(data)
+    })
+    // Load recent watchers & supervisors for autocomplete
+    supabase.from('watches').select('assigned_name, assigned_phone, escalation_phone, secondary_escalation_phone').order('created_at', { ascending: false }).limit(50).then(({ data }) => {
+      if (data) {
+        const seen = new Set<string>()
+        const unique: { name: string; phone: string }[] = []
+        for (const w of data) {
+          const key = w.assigned_name.toLowerCase()
+          if (!seen.has(key) && w.assigned_name.trim()) {
+            seen.add(key)
+            unique.push({ name: w.assigned_name, phone: w.assigned_phone || '' })
+          }
+        }
+        setRecentWatchers(unique.slice(0, 10))
+
+        // Unique supervisor phones
+        const phoneSeen = new Set<string>()
+        const phones: string[] = []
+        for (const w of data) {
+          for (const p of [w.escalation_phone, w.secondary_escalation_phone]) {
+            if (p && p.trim() && !phoneSeen.has(p)) {
+              phoneSeen.add(p)
+              phones.push(p)
+            }
+          }
+        }
+        setRecentSupervisors(phones.slice(0, 8))
+      }
     })
   }, [])
 
@@ -411,8 +446,8 @@ export default function CreateWatchForm() {
     if (s === 2) {
       if (!form.assigned_name.trim()) { toast.error('Please enter the fire watcher name'); return false }
       if (smsEnabled && !isValidPhone(form.assigned_phone)) { toast.error('Please enter a valid watcher phone number'); return false }
-      if (!isValidPhone(form.escalation_phone)) { toast.error('Supervisor phone number is required — someone needs to be notified when a check-in is missed'); return false }
-      if (form.secondary_escalation_phone.trim() && !isValidPhone(form.secondary_escalation_phone)) { toast.error('Please enter a valid backup phone number'); return false }
+      if (escalationSmsEnabled && !isValidPhone(form.escalation_phone)) { toast.error('Please enter a valid supervisor phone number'); return false }
+      if (escalationSmsEnabled && form.secondary_escalation_phone.trim() && !isValidPhone(form.secondary_escalation_phone)) { toast.error('Please enter a valid backup phone number'); return false }
       return true
     }
     if (s === 3) {
@@ -436,9 +471,11 @@ export default function CreateWatchForm() {
 
   // ===== SUBMIT =====
   async function handleSubmit() {
+    if (loading) return
     if (!canAdvance(1) || !canAdvance(2) || !canAdvance(3)) return
     if (checklistEnabled && checklistItems.length === 0) { toast.error('Add at least one checklist item, or disable the checklist'); return }
-    if (smsEnabled && !smsConsent) { toast.error('Please confirm SMS consent'); return }
+    if (smsEnabled && !smsConsent) { toast.error('Please confirm SMS consent for watcher'); return }
+    if (escalationSmsEnabled && !escalationSmsConsent) { toast.error('Please confirm SMS consent for supervisor escalation'); return }
 
     const resolvedInterval = form.check_interval_min === 'custom' ? parseInt(customInterval) : parseInt(form.check_interval_min)
     const resolvedPostWork = form.post_work_duration_min === 'custom' ? parseInt(customPostWork) : parseInt(form.post_work_duration_min)
@@ -466,9 +503,9 @@ export default function CreateWatchForm() {
           assigned_phone: smsEnabled ? form.assigned_phone : null,
           sms_enabled: smsEnabled,
           check_interval_min: resolvedInterval,
-          escalation_phone: form.escalation_phone,
-          secondary_escalation_phone: form.secondary_escalation_phone.trim() ? form.secondary_escalation_phone : null,
-          escalation_delay_min: parseInt(form.escalation_delay_min),
+          escalation_phone: escalationSmsEnabled ? form.escalation_phone : null,
+          secondary_escalation_phone: escalationSmsEnabled && form.secondary_escalation_phone.trim() ? form.secondary_escalation_phone : null,
+          escalation_delay_min: escalationSmsEnabled ? parseInt(form.escalation_delay_min) : 0,
           start_time: new Date(form.start_time).toISOString(),
           planned_end_time: form.planned_end_time ? new Date(form.planned_end_time).toISOString() : null,
           checklist_items: checklistEnabled ? checklistItems : [],
@@ -575,33 +612,48 @@ export default function CreateWatchForm() {
             <input type="text" value={form.reason} onChange={(e) => set('reason', e.target.value)} placeholder="e.g. Post-weld watch - pipe cutting Bay 3" className={inputClass} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label optional>Permit Number</Label>
-              <input type="text" value={form.permit_number} onChange={(e) => set('permit_number', e.target.value)} maxLength={100} placeholder="e.g. HWP-2026-0042" className={inputClass} />
-            </div>
-            <div>
-              <Label optional>Permit Photo</Label>
-              <input ref={permitFileRef} type="file" accept="image/*" onChange={handlePermitPhotoSelect} className="hidden" />
-              {permitPhotoPreview ? (
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={permitPhotoPreview} alt="Permit preview" className="w-14 h-14 object-cover rounded-xl border-2 border-slate-100" />
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => permitFileRef.current?.click()} className="text-xs text-blue-600 font-semibold hover:text-blue-500">Change</button>
-                    <button type="button" onClick={() => { setPermitPhotoFile(null); if (permitPhotoPreview) URL.revokeObjectURL(permitPhotoPreview); setPermitPhotoPreview(null); if (permitFileRef.current) permitFileRef.current.value = '' }}
-                      className="text-xs text-red-500 font-semibold hover:text-red-400">Remove</button>
-                  </div>
+          {/* Permit section — collapsible to reduce noise */}
+          <details className="group border-2 border-slate-100 rounded-2xl overflow-hidden">
+            <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-50/50 transition-colors list-none">
+              <div className="flex items-center gap-2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span className="text-sm font-semibold text-slate-600">Permit Details</span>
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Optional</span>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+            <div className="px-5 pb-5 pt-2 border-t border-slate-100 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label optional>Permit Number</Label>
+                  <input type="text" value={form.permit_number} onChange={(e) => set('permit_number', e.target.value)} maxLength={100} placeholder="e.g. HWP-2026-0042" className={inputClass} />
                 </div>
-              ) : (
-                <button type="button" onClick={() => permitFileRef.current?.click()}
-                  className="w-full px-4 py-3.5 border-2 border-dashed border-slate-200 rounded-2xl text-sm text-slate-400 hover:border-blue-300 hover:text-blue-500 transition-all font-medium flex items-center justify-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-                  Upload Photo
-                </button>
-              )}
+                <div>
+                  <Label optional>Permit Photo</Label>
+                  <input ref={permitFileRef} type="file" accept="image/*" onChange={handlePermitPhotoSelect} className="hidden" />
+                  {permitPhotoPreview ? (
+                    <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={permitPhotoPreview} alt="Permit preview" className="w-14 h-14 object-cover rounded-xl border-2 border-slate-100" />
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => permitFileRef.current?.click()} className="text-xs text-blue-600 font-semibold hover:text-blue-500">Change</button>
+                        <button type="button" onClick={() => { setPermitPhotoFile(null); if (permitPhotoPreview) URL.revokeObjectURL(permitPhotoPreview); setPermitPhotoPreview(null); if (permitFileRef.current) permitFileRef.current.value = '' }}
+                          className="text-xs text-red-500 font-semibold hover:text-red-400">Remove</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => permitFileRef.current?.click()}
+                      className="w-full px-4 py-3.5 border-2 border-dashed border-slate-200 rounded-2xl text-sm text-slate-400 hover:border-blue-300 hover:text-blue-500 transition-all font-medium flex items-center justify-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                      Upload Photo
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </details>
 
           <NavButtons onBack={() => router.push('/dashboard')} onNext={nextStep} nextLabel="Continue" nextDisabled={facilities.length === 0} />
         </div>
@@ -614,11 +666,34 @@ export default function CreateWatchForm() {
         <div className="space-y-5">
           <SectionHeader title="Who's watching?" subtitle="Assign your fire watcher and set up notifications." icon={StepIcons.worker} />
 
-          <div>
+          <div className="relative">
             <Label required>Fire Watcher Name</Label>
             <Field value={form.assigned_name} valid={form.assigned_name.trim().length >= 2}>
-              <input type="text" value={form.assigned_name} onChange={(e) => set('assigned_name', e.target.value)} required placeholder="Full name of the fire watcher" className={inputClass} />
+              <input type="text" value={form.assigned_name}
+                onChange={(e) => { set('assigned_name', e.target.value); setShowWatcherSuggestions(true) }}
+                onFocus={() => setShowWatcherSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowWatcherSuggestions(false), 150)}
+                required placeholder="Full name of the fire watcher" className={inputClass} autoComplete="off" />
             </Field>
+            {/* Recent watcher suggestions */}
+            {showWatcherSuggestions && recentWatchers.length > 0 && form.assigned_name.length < 3 && (
+              <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border-2 border-slate-100 rounded-xl shadow-lg overflow-hidden">
+                <p className="px-3 pt-2.5 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Recent Watchers</p>
+                {recentWatchers.map((w, i) => (
+                  <button key={i} type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setForm((prev) => ({ ...prev, assigned_name: w.name, assigned_phone: w.phone || prev.assigned_phone }))
+                      setShowWatcherSuggestions(false)
+                    }}
+                    className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors flex items-center justify-between gap-2"
+                  >
+                    <span className="text-sm font-semibold text-slate-700">{w.name}</span>
+                    {w.phone && <span className="text-[11px] text-slate-400">{w.phone}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <ToggleSwitch label="SMS Check-in Reminders" description="Send check-in links and alerts via text message" enabled={smsEnabled}
@@ -629,24 +704,39 @@ export default function CreateWatchForm() {
                 <input type="tel" value={form.assigned_phone} onChange={(e) => set('assigned_phone', e.target.value)} onBlur={() => handlePhoneBlur('assigned_phone')}
                   required autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
               </Field>
-              <p className="text-xs text-slate-400 mt-1.5">Include country code. Check-in links go here.</p>
+              <p className="text-xs text-slate-500 mt-1.5">Include country code. Check-in links go here.</p>
             </div>
           </ToggleSwitch>
 
-          {/* Supervisor Escalation — always required */}
-          <div className="border-2 border-amber-200 bg-amber-50/30 rounded-2xl p-5 space-y-4">
-            <div className="flex items-center gap-2 mb-1">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span className="text-sm font-bold text-amber-800">Supervisor Escalation</span>
-              <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Required</span>
-            </div>
-            <p className="text-xs text-amber-700/70">When a check-in is missed, this person gets notified immediately.</p>
-            <div>
+          {/* Supervisor SMS Escalation — optional */}
+          <ToggleSwitch label="SMS Supervisor Escalation" description="Send missed check-in alerts to a supervisor via text message (optional)" enabled={escalationSmsEnabled} recommended
+            onToggle={() => { setEscalationSmsEnabled((prev) => { if (prev) { setForm((f) => ({ ...f, escalation_phone: '', secondary_escalation_phone: '' })); setEscalationSmsConsent(false) }; return !prev }) }}>
+            <div className="relative">
               <Label required>Supervisor Phone</Label>
               <Field value={form.escalation_phone} valid={isValidPhone(form.escalation_phone)}>
-                <input type="tel" value={form.escalation_phone} onChange={(e) => set('escalation_phone', e.target.value)} onBlur={() => handlePhoneBlur('escalation_phone')}
-                  required autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
+                <input type="tel" value={form.escalation_phone}
+                  onChange={(e) => { set('escalation_phone', e.target.value); setShowSupervisorSuggestions(true) }}
+                  onFocus={() => setShowSupervisorSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSupervisorSuggestions(false), 150)}
+                  autoComplete="off" placeholder="+1 (555) 000-0000" className={inputClass} />
               </Field>
+              {showSupervisorSuggestions && recentSupervisors.length > 0 && !form.escalation_phone.trim() && (
+                <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border-2 border-slate-100 rounded-xl shadow-lg overflow-hidden">
+                  <p className="px-3 pt-2.5 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Recent Supervisors</p>
+                  {recentSupervisors.map((phone, i) => (
+                    <button key={i} type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        setForm((prev) => ({ ...prev, escalation_phone: phone }))
+                        setShowSupervisorSuggestions(false)
+                      }}
+                      className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors"
+                    >
+                      <span className="text-sm font-semibold text-slate-700">{phone}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label optional>Backup Supervisor Phone</Label>
@@ -654,7 +744,7 @@ export default function CreateWatchForm() {
                 <input type="tel" value={form.secondary_escalation_phone} onChange={(e) => set('secondary_escalation_phone', e.target.value)} onBlur={() => handlePhoneBlur('secondary_escalation_phone')}
                   autoComplete="tel" placeholder="+1 (555) 000-0000" className={inputClass} />
               </Field>
-              <p className="text-xs text-slate-400 mt-1.5">Notified if primary doesn&apos;t respond within 3 min.</p>
+              <p className="text-xs text-slate-500 mt-1.5">Notified if primary doesn&apos;t respond within 3 min.</p>
             </div>
             <div>
               <Label>Alert Delay</Label>
@@ -669,8 +759,26 @@ export default function CreateWatchForm() {
                 ))}
               </div>
             </div>
-          </div>
+          </ToggleSwitch>
 
+          {/* Escalation SMS consent */}
+          {escalationSmsEnabled && (
+            <div className="border-2 border-amber-100 bg-amber-50/50 rounded-2xl px-5 py-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" checked={escalationSmsConsent} onChange={(e) => setEscalationSmsConsent(e.target.checked)} className="mt-1 rounded accent-amber-600 flex-shrink-0 w-4 h-4" />
+                <span className="text-sm text-slate-600 leading-relaxed">
+                  I consent to receive missed check-in alert SMS messages at the supervisor phone number provided above. Message &amp; data rates may apply. I can reply STOP to opt out at any time or HELP for assistance. SMS escalation is not required to use DutyProof.{' '}
+                  <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Terms</a>
+                  {' · '}
+                  <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">Privacy</a>
+                  {' · '}
+                  <a href="/sms-consent" target="_blank" className="text-blue-600 hover:text-blue-500 underline underline-offset-2">SMS Terms</a>
+                </span>
+              </label>
+            </div>
+          )}
+
+          {/* Watcher SMS consent */}
           {smsEnabled && (
             <div className="border-2 border-blue-100 bg-blue-50/50 rounded-2xl px-5 py-4">
               <label className="flex items-start gap-3 cursor-pointer">
@@ -866,62 +974,78 @@ export default function CreateWatchForm() {
           <SectionHeader title="Review & start" subtitle="Double-check everything before starting the watch." icon={StepIcons.review} />
 
           {/* Summary Card */}
-          <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100">
-            <div className="px-5 py-4">
-              <ReviewRow label="Location" onEdit={() => setStep(1)}
-                value={`${selectedFacility?.name || '—'}${form.location ? ` — ${form.location}` : ''}`}
-                tags={[
-                  { text: form.watch_type === 'hot_work' ? 'Hot Work' : 'Impairment', color: 'bg-blue-100 text-blue-700' },
-                  ...(geofenceEnabled ? [{ text: 'Geofence', color: 'bg-green-100 text-green-700' }] : []),
-                  ...(form.permit_number ? [{ text: `Permit: ${form.permit_number}`, color: 'bg-slate-100 text-slate-600' }] : []),
-                ]}
-              />
+          <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
+            {/* Hero summary header */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-white font-bold text-lg" style={{ fontFamily: 'var(--font-display)' }}>
+                    {selectedFacility?.name || '—'}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    {form.location && <span className="text-slate-400 text-xs">{form.location}</span>}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/80">
+                      {form.watch_type === 'hot_work' ? 'Hot Work' : 'Impairment'}
+                    </span>
+                    {geofenceEnabled && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Geofence</span>
+                    )}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setStep(1)}
+                  className="text-[10px] font-bold text-white/50 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg transition-colors">
+                  Edit
+                </button>
+              </div>
             </div>
-            <div className="px-5 py-4">
-              <ReviewRow label="Watcher" onEdit={() => setStep(2)}
-                value={form.assigned_name || '—'}
-                tags={[
-                  smsEnabled ? { text: `SMS: ${form.assigned_phone}`, color: 'bg-green-100 text-green-700' } : { text: 'No SMS', color: 'bg-slate-100 text-slate-400' },
-                  { text: `Escalation: ${form.escalation_phone}`, color: 'bg-amber-100 text-amber-700' },
-                ]}
-              />
-            </div>
-            <div className="px-5 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-2">Schedule</p>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    <div>
-                      <p className="text-[10px] text-slate-300 font-bold">Interval</p>
-                      <p className="text-sm font-bold text-slate-900">{getIntervalLabel()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-300 font-bold">Post-Work</p>
-                      <p className="text-sm font-bold text-slate-900">{getPostWorkLabel()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-300 font-bold">Starts</p>
-                      <p className="text-sm font-bold text-slate-900">{form.start_time ? new Date(form.start_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}</p>
-                    </div>
-                    {form.planned_end_time && (
+
+            <div className="divide-y divide-slate-100 bg-white">
+              <div className="px-6 py-4">
+                <ReviewRow label="Fire Watcher" onEdit={() => setStep(2)}
+                  value={form.assigned_name || '—'}
+                  tags={[
+                    smsEnabled ? { text: `SMS: ${form.assigned_phone}`, color: 'bg-emerald-50 text-emerald-700' } : { text: 'Link only', color: 'bg-slate-100 text-slate-400' },
+                    escalationSmsEnabled ? { text: `Escalation SMS: ${form.escalation_phone}`, color: 'bg-amber-50 text-amber-700' } : { text: 'Escalation: email only', color: 'bg-slate-100 text-slate-400' },
+                  ]}
+                />
+              </div>
+              <div className="px-6 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Schedule</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-[10px] text-slate-300 font-bold">Expected End</p>
-                        <p className="text-sm font-bold text-slate-900">{new Date(form.planned_end_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+                        <p className="text-[10px] text-slate-400 font-bold">Interval</p>
+                        <p className="text-sm font-bold text-slate-900">{getIntervalLabel()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold">Post-Work</p>
+                        <p className="text-sm font-bold text-slate-900">{getPostWorkLabel()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold">Starts</p>
+                        <p className="text-sm font-bold text-slate-900">{form.start_time ? new Date(form.start_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}</p>
+                      </div>
+                      {form.planned_end_time && (
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-bold">End</p>
+                          <p className="text-sm font-bold text-slate-900">{new Date(form.planned_end_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+                        </div>
+                      )}
+                    </div>
+                    {checklistEnabled && checklistItems.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                          Checklist: {checklistItems.length} item{checklistItems.length !== 1 ? 's' : ''}
+                        </span>
                       </div>
                     )}
                   </div>
-                  {checklistEnabled && checklistItems.length > 0 && (
-                    <div className="mt-3">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                        Checklist: {checklistItems.length} item{checklistItems.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  )}
+                  <button type="button" onClick={() => setStep(3)}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 mt-0.5">
+                    Edit
+                  </button>
                 </div>
-                <button type="button" onClick={() => setStep(3)}
-                  className="text-[10px] font-bold text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 mt-0.5">
-                  Edit
-                </button>
               </div>
             </div>
           </div>

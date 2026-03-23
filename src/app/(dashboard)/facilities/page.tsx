@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, forwardRef } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { Facility } from '@/types/database'
@@ -71,7 +72,7 @@ const TZ_LABELS: Record<string, string> = Object.fromEntries(
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-1.5">
+    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.12em] mb-1.5">
       {children}
     </label>
   )
@@ -199,6 +200,7 @@ function IconFire({ className }: { className?: string }) {
 export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [activeWatchCounts, setActiveWatchCounts] = useState<Record<string, number>>({})
+  const [completedWatchCounts, setCompletedWatchCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: '', address: '', timezone: 'America/New_York' })
@@ -211,18 +213,24 @@ export default function FacilitiesPage() {
 
   async function loadFacilities() {
     const supabase = createClient()
-    const [{ data, error }, { data: watchData }] = await Promise.all([
+    const [{ data, error }, { data: activeData }, { data: completedData }] = await Promise.all([
       supabase.from('facilities').select('*').order('name'),
       supabase.from('watches').select('facility_id').eq('status', 'active'),
+      supabase.from('watches').select('facility_id').eq('status', 'completed'),
     ])
     if (error) toast.error('Failed to load facilities')
     else {
       setFacilities((data ?? []) as Facility[])
-      const counts: Record<string, number> = {}
-      for (const w of watchData ?? []) {
-        counts[w.facility_id] = (counts[w.facility_id] ?? 0) + 1
+      const active: Record<string, number> = {}
+      for (const w of activeData ?? []) {
+        active[w.facility_id] = (active[w.facility_id] ?? 0) + 1
       }
-      setActiveWatchCounts(counts)
+      setActiveWatchCounts(active)
+      const completed: Record<string, number> = {}
+      for (const w of completedData ?? []) {
+        completed[w.facility_id] = (completed[w.facility_id] ?? 0) + 1
+      }
+      setCompletedWatchCounts(completed)
     }
     setLoading(false)
   }
@@ -312,7 +320,7 @@ export default function FacilitiesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-10">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
 
         {/* ── Header ────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-8">
@@ -329,7 +337,7 @@ export default function FacilitiesPage() {
                   Job Sites
                 </h2>
                 {!loading && facilities.length > 0 && (
-                  <p className="text-slate-400 text-xs mt-0.5">
+                  <p className="text-slate-500 text-xs mt-0.5">
                     {facilities.length} site{facilities.length !== 1 ? 's' : ''}
                     {Object.values(activeWatchCounts).reduce((a, b) => a + b, 0) > 0 && (
                       <span className="text-green-500 ml-1.5">
@@ -398,7 +406,7 @@ export default function FacilitiesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>
-                    Address <span className="text-slate-300 normal-case font-normal">(optional)</span>
+                    Address <span className="text-slate-400 normal-case font-normal">(optional)</span>
                   </Label>
                   <AddressSearch
                     placeholder="Search address..."
@@ -472,7 +480,7 @@ export default function FacilitiesPage() {
             >
               No job sites yet
             </h3>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs mx-auto">
+            <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
               Add your first job site to start creating fire watches and tracking compliance.
             </p>
             <button
@@ -485,23 +493,30 @@ export default function FacilitiesPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {facilities.map((f) => {
               const activeCount = activeWatchCounts[f.id] ?? 0
+              const completedCount = completedWatchCounts[f.id] ?? 0
+              const totalWatches = activeCount + completedCount
               const isEditing = editingId === f.id
               const isConfirmingDelete = confirmDeleteId === f.id
 
               return (
                 <div
                   key={f.id}
-                  className={`bg-white rounded-2xl border-2 transition-all duration-200 ${
+                  className={`bg-white rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
                     isEditing
-                      ? 'border-blue-200 shadow-lg shadow-blue-50 ring-4 ring-blue-50'
+                      ? 'border-blue-200 shadow-lg shadow-blue-50 ring-4 ring-blue-50 md:col-span-2'
                       : isConfirmingDelete
-                        ? 'border-red-200 shadow-lg shadow-red-50 ring-4 ring-red-50'
-                        : 'border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md'
+                        ? 'border-red-200 shadow-lg shadow-red-50 ring-4 ring-red-50 md:col-span-2'
+                        : 'border-slate-100 hover:border-slate-200 hover:shadow-md'
                   }`}
                 >
+                  {/* Active indicator bar */}
+                  {activeCount > 0 && !isEditing && !isConfirmingDelete && (
+                    <div className="h-1 bg-gradient-to-r from-emerald-400 to-green-400" />
+                  )}
+
                   {/* ── Edit Mode ── */}
                   {isEditing ? (
                     <form onSubmit={handleSaveEdit} className="p-5 sm:p-6">
@@ -593,53 +608,61 @@ export default function FacilitiesPage() {
                         </div>
                       )}
 
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3.5">
                         {/* Icon */}
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                           activeCount > 0
-                            ? 'bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100'
-                            : 'bg-slate-50 border border-slate-100'
+                            ? 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50'
+                            : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-200/40'
                         }`}>
                           {activeCount > 0 ? (
-                            <IconFire className="w-5 h-5 text-green-500" />
+                            <IconFire className="w-5 h-5 text-white" />
                           ) : (
-                            <IconBuilding className="w-5 h-5 text-slate-300" />
+                            <IconBuilding className="w-5 h-5 text-white" />
                           )}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2.5 flex-wrap">
-                            <h3 className="font-bold text-slate-800 text-[15px] leading-snug">{f.name}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-slate-900 text-[15px] leading-snug truncate">{f.name}</h3>
                             {activeCount > 0 && (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-600 text-[11px] font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                {activeCount} active
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-extrabold uppercase tracking-wide">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                {activeCount} live
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1.5">
+                          <div className="flex flex-col gap-0.5 mt-1.5">
                             {f.address && (
-                              <span className="flex items-center gap-1.5 text-slate-400 text-sm">
-                                <IconMapPin className="w-3.5 h-3.5 shrink-0" />
+                              <span className="flex items-center gap-1.5 text-[12px] text-slate-500">
+                                <IconMapPin className="w-3 h-3 text-slate-400 shrink-0" />
                                 <span className="truncate">{f.address}</span>
                               </span>
                             )}
-                            <span className="flex items-center gap-1.5 text-slate-400 text-sm">
-                              <IconClock className="w-3.5 h-3.5 shrink-0" />
-                              {TZ_LABELS[f.timezone] ?? f.timezone}
-                            </span>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <IconClock className="w-3 h-3 shrink-0" />
+                                {TZ_LABELS[f.timezone] ?? f.timezone}
+                              </span>
+                              {totalWatches > 0 && (
+                                <>
+                                  <span className="text-slate-200">&middot;</span>
+                                  <span>{totalWatches} watch{totalWatches !== 1 ? 'es' : ''}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-0.5 shrink-0">
                           <button
                             onClick={() => startEdit(f)}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200"
                             title="Edit"
                           >
-                            <IconPencil className="w-4 h-4" />
+                            <IconPencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => {
@@ -647,16 +670,35 @@ export default function FacilitiesPage() {
                               handleDeleteRequest(f.id, f.name)
                             }}
                             disabled={deletingId === f.id}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 disabled:text-slate-200 transition-all duration-200"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 disabled:text-slate-200 transition-all duration-200"
                             title="Delete"
                           >
                             {deletingId === f.id ? (
-                              <span className="w-4 h-4 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
+                              <span className="w-3.5 h-3.5 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
                             ) : (
-                              <IconTrash className="w-4 h-4" />
+                              <IconTrash className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </div>
+                      </div>
+
+                      {/* Quick action footer */}
+                      <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <Link
+                          href={`/watches/new?facility=${f.id}`}
+                          className="inline-flex items-center gap-1.5 text-[12px] font-bold text-blue-600 hover:text-blue-500 transition-colors group"
+                        >
+                          <IconFire className="w-3.5 h-3.5" />
+                          Start Watch
+                          <svg className="w-3 h-3 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                          </svg>
+                        </Link>
+                        {totalWatches > 0 && (
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            {completedCount} completed
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}

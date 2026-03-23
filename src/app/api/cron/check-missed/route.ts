@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateToken } from '@/lib/tokens'
 import { sendCheckInSMS, sendAlertSMS, sendWatchSummarySMS, sendOfflineAlertSMS } from '@/lib/sms'
+import { sendEscalationEmail, sendOfflineAlertEmail, sendWatchSummaryEmail } from '@/lib/email'
 import { addMinutes, formatDuration, intervalToDuration } from 'date-fns'
 
 export async function GET(req: NextRequest) {
@@ -33,6 +34,16 @@ export async function GET(req: NextRequest) {
   let missedCount = 0
   const errors: string[] = []
   const pushError = (msg: string) => { if (errors.length < 100) errors.push(msg) }
+
+  // Cache owner emails to avoid repeated lookups
+  const ownerEmailCache: Record<string, string | null> = {}
+  async function getOwnerEmail(ownerId: string): Promise<string | null> {
+    if (ownerId in ownerEmailCache) return ownerEmailCache[ownerId]
+    const { data } = await admin.auth.admin.getUserById(ownerId)
+    const email = data?.user?.email ?? null
+    ownerEmailCache[ownerId] = email
+    return email
+  }
 
   try {
     // ── Auto-stop pass ────────────────────────────────────────────────────
@@ -86,6 +97,12 @@ export async function GET(req: NextRequest) {
         }
         if (watch.escalation_phone && watch.escalation_phone !== watch.assigned_phone) {
           await sendWatchSummarySMS(watch.escalation_phone, facility.name, durationStr, total, completed, missed, reportUrl)
+        } else if (!watch.escalation_phone) {
+          // No SMS escalation — send summary email to account owner
+          const ownerEmail = await getOwnerEmail(watch.owner_id)
+          if (ownerEmail) {
+            await sendWatchSummaryEmail(ownerEmail, facility.name, durationStr, total, completed, missed, reportUrl)
+          }
         }
 
         const { error: alertErr } = await admin.from('alerts').insert({
@@ -144,7 +161,7 @@ export async function GET(req: NextRequest) {
         if (missCountErr) pushError(`Failed to update miss count for watch ${watch.id}: ${missCountErr.message}`)
 
         // ── Session-token watches: determine if watcher is offline or genuinely missed ──
-        if (watch.session_token && watch.escalation_phone) {
+        if (watch.session_token && (watch.escalation_phone || watch.owner_id)) {
           // Check if the watcher has synced recently (within 5 minutes)
           // If yes → they're online and genuinely missed → escalate normally
           // If no → they're likely offline → send one-time offline alert
@@ -153,80 +170,130 @@ export async function GET(req: NextRequest) {
           const isRecentlyOnline = lastSync > 0 && (Date.now() - lastSync) < syncGraceMs
 
           if (isRecentlyOnline) {
-            // Watcher is ONLINE but genuinely missed — escalate like a legacy watch
-            const ackToken = generateToken()
-            const ackUrl = `${appUrl}/ack/${ackToken}`
+            // Watcher is ONLINE but genuinely missed — escalate
+            if (watch.escalation_phone) {
+              const ackToken = generateToken()
+              const ackUrl = `${appUrl}/ack/${ackToken}`
 
-            const alertSid = await sendAlertSMS(
-              watch.escalation_phone,
-              checkIn.assigned_name,
-              displayName,
-              new Date(checkIn.scheduled_time),
-              ackUrl
-            )
+              const alertSid = await sendAlertSMS(
+                watch.escalation_phone,
+                checkIn.assigned_name,
+                displayName,
+                new Date(checkIn.scheduled_time),
+                ackUrl
+              )
 
-            const { error: escAlertErr } = await admin.from('alerts').insert({
-              watch_id: watch.id,
-              check_in_id: checkIn.id,
-              alert_type: 'missed_checkin',
-              recipient_phone: watch.escalation_phone,
-              recipient_name: 'Supervisor',
-              message: `${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time} (watcher is online)`,
-              delivery_status: alertSid ? 'sent' : 'failed',
-              twilio_sid: alertSid,
-            })
-            if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
+              const { error: escAlertErr } = await admin.from('alerts').insert({
+                watch_id: watch.id,
+                check_in_id: checkIn.id,
+                alert_type: 'missed_checkin',
+                recipient_phone: watch.escalation_phone,
+                recipient_name: 'Supervisor',
+                message: `${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time} (watcher is online)`,
+                delivery_status: alertSid ? 'sent' : 'failed',
+                twilio_sid: alertSid,
+              })
+              if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
-            const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
-              p_checkin_id: checkIn.id,
-              p_escalation_sent_at: new Date().toISOString(),
-              p_ack_token: ackToken,
-            })
-            if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
+              if (alertSid) {
+                const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+                  p_checkin_id: checkIn.id,
+                  p_escalation_sent_at: new Date().toISOString(),
+                  p_ack_token: ackToken,
+                })
+                if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
+              } else {
+                pushError(`Escalation SMS failed for ${checkIn.id} — will retry next cron run`)
+              }
+            } else {
+              // No SMS — send email to account owner
+              const ownerEmail = await getOwnerEmail(watch.owner_id)
+              if (ownerEmail) {
+                const watchUrl = `${appUrl}/watches/${watch.id}`
+                const emailId = await sendEscalationEmail(ownerEmail, checkIn.assigned_name, displayName, new Date(checkIn.scheduled_time), watchUrl)
+                const { error: emailAlertErr } = await admin.from('alerts').insert({
+                  watch_id: watch.id,
+                  check_in_id: checkIn.id,
+                  alert_type: 'missed_checkin',
+                  recipient_phone: null,
+                  recipient_name: 'Owner (email)',
+                  message: `Email escalation: ${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time}`,
+                  delivery_status: emailId ? 'sent' : 'failed',
+                })
+                if (emailAlertErr) pushError(`Failed to log email escalation for ${checkIn.id}: ${emailAlertErr.message}`)
+                if (emailId) {
+                  const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+                    p_checkin_id: checkIn.id,
+                    p_escalation_sent_at: new Date().toISOString(),
+                    p_ack_token: null,
+                  })
+                  if (escUpdateErr) pushError(`Failed to mark email escalation for ${checkIn.id}: ${escUpdateErr.message}`)
+                }
+              }
+            }
           } else {
             // Watcher is OFFLINE — send one-time offline alert on first miss only
             if ((watch.consecutive_misses ?? 0) === 0) {
-              const offlineSid = await sendOfflineAlertSMS(
-                watch.escalation_phone,
-                checkIn.assigned_name,
-                displayName
-              )
-
-              const { error: offlineAlertErr } = await admin.from('alerts').insert({
-                watch_id: watch.id,
-                check_in_id: checkIn.id,
-                alert_type: 'watcher_offline',
-                recipient_phone: watch.escalation_phone,
-                recipient_name: 'Supervisor',
-                message: `${checkIn.assigned_name} appears offline at ${displayName}. Check-ins will sync when connectivity returns.`,
-                delivery_status: offlineSid ? 'sent' : 'failed',
-                twilio_sid: offlineSid,
-              })
-              if (offlineAlertErr) pushError(`Failed to log offline alert for ${checkIn.id}: ${offlineAlertErr.message}`)
-
-              if (watch.secondary_escalation_phone) {
-                const secOfflineSid = await sendOfflineAlertSMS(
-                  watch.secondary_escalation_phone,
+              if (watch.escalation_phone) {
+                const offlineSid = await sendOfflineAlertSMS(
+                  watch.escalation_phone,
                   checkIn.assigned_name,
                   displayName
                 )
-                const { error: secOfflineErr } = await admin.from('alerts').insert({
+
+                const { error: offlineAlertErr } = await admin.from('alerts').insert({
                   watch_id: watch.id,
                   check_in_id: checkIn.id,
                   alert_type: 'watcher_offline',
-                  recipient_phone: watch.secondary_escalation_phone,
-                  recipient_name: 'Backup Supervisor',
+                  recipient_phone: watch.escalation_phone,
+                  recipient_name: 'Supervisor',
                   message: `${checkIn.assigned_name} appears offline at ${displayName}. Check-ins will sync when connectivity returns.`,
-                  delivery_status: secOfflineSid ? 'sent' : 'failed',
-                  twilio_sid: secOfflineSid,
+                  delivery_status: offlineSid ? 'sent' : 'failed',
+                  twilio_sid: offlineSid,
                 })
-                if (secOfflineErr) pushError(`Failed to log secondary offline alert for ${checkIn.id}: ${secOfflineErr.message}`)
+                if (offlineAlertErr) pushError(`Failed to log offline alert for ${checkIn.id}: ${offlineAlertErr.message}`)
+
+                if (watch.secondary_escalation_phone) {
+                  const secOfflineSid = await sendOfflineAlertSMS(
+                    watch.secondary_escalation_phone,
+                    checkIn.assigned_name,
+                    displayName
+                  )
+                  const { error: secOfflineErr } = await admin.from('alerts').insert({
+                    watch_id: watch.id,
+                    check_in_id: checkIn.id,
+                    alert_type: 'watcher_offline',
+                    recipient_phone: watch.secondary_escalation_phone,
+                    recipient_name: 'Backup Supervisor',
+                    message: `${checkIn.assigned_name} appears offline at ${displayName}. Check-ins will sync when connectivity returns.`,
+                    delivery_status: secOfflineSid ? 'sent' : 'failed',
+                    twilio_sid: secOfflineSid,
+                  })
+                  if (secOfflineErr) pushError(`Failed to log secondary offline alert for ${checkIn.id}: ${secOfflineErr.message}`)
+                }
+              } else {
+                // No SMS — send offline alert email to owner
+                const ownerEmail = await getOwnerEmail(watch.owner_id)
+                if (ownerEmail) {
+                  const watchUrl = `${appUrl}/watches/${watch.id}`
+                  const emailId = await sendOfflineAlertEmail(ownerEmail, checkIn.assigned_name, displayName, watchUrl)
+                  const { error: offlineEmailErr } = await admin.from('alerts').insert({
+                    watch_id: watch.id,
+                    check_in_id: checkIn.id,
+                    alert_type: 'watcher_offline',
+                    recipient_phone: null,
+                    recipient_name: 'Owner (email)',
+                    message: `Email: ${checkIn.assigned_name} appears offline at ${displayName}`,
+                    delivery_status: emailId ? 'sent' : 'failed',
+                  })
+                  if (offlineEmailErr) pushError(`Failed to log offline email for ${checkIn.id}: ${offlineEmailErr.message}`)
+                }
               }
             }
             // Subsequent offline misses — stay quiet, supervisor already knows
           }
         } else if (watch.escalation_phone && (watch.escalation_delay_min ?? 0) === 0) {
-          // ── Legacy watches: per-miss escalation as before ──
+          // ── Legacy watches with SMS: per-miss escalation ──
           const ackToken = generateToken()
           const ackUrl = `${appUrl}/ack/${ackToken}`
 
@@ -250,12 +317,40 @@ export async function GET(req: NextRequest) {
           })
           if (escAlertErr) pushError(`Failed to log escalation alert for ${checkIn.id}: ${escAlertErr.message}`)
 
-          const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+          if (!alertSid) {
+            pushError(`Escalation SMS failed for ${checkIn.id} — will retry next cron run`)
+          }
+          const { error: escUpdateErr } = alertSid ? await admin.rpc('escalate_checkin', {
             p_checkin_id: checkIn.id,
             p_escalation_sent_at: new Date().toISOString(),
             p_ack_token: ackToken,
-          })
+          }) : { error: null }
           if (escUpdateErr) pushError(`Failed to mark escalation sent for ${checkIn.id}: ${escUpdateErr.message}`)
+        } else if (!watch.escalation_phone && !watch.session_token) {
+          // ── Legacy watches without SMS: email fallback ──
+          const ownerEmail = await getOwnerEmail(watch.owner_id)
+          if (ownerEmail) {
+            const watchUrl = `${appUrl}/watches/${watch.id}`
+            const emailId = await sendEscalationEmail(ownerEmail, checkIn.assigned_name, displayName, new Date(checkIn.scheduled_time), watchUrl)
+            const { error: emailAlertErr } = await admin.from('alerts').insert({
+              watch_id: watch.id,
+              check_in_id: checkIn.id,
+              alert_type: 'missed_checkin',
+              recipient_phone: null,
+              recipient_name: 'Owner (email)',
+              message: `Email escalation: ${checkIn.assigned_name} missed check-in at ${checkIn.scheduled_time}`,
+              delivery_status: emailId ? 'sent' : 'failed',
+            })
+            if (emailAlertErr) pushError(`Failed to log email escalation for ${checkIn.id}: ${emailAlertErr.message}`)
+            if (emailId) {
+              const { error: escUpdateErr } = await admin.rpc('escalate_checkin', {
+                p_checkin_id: checkIn.id,
+                p_escalation_sent_at: new Date().toISOString(),
+                p_ack_token: null,
+              })
+              if (escUpdateErr) pushError(`Failed to mark email escalation for ${checkIn.id}: ${escUpdateErr.message}`)
+            }
+          }
         }
 
         // Schedule next check-in — use max(now, scheduled+interval) to prevent cascading misses
@@ -346,12 +441,17 @@ export async function GET(req: NextRequest) {
           ackUrl
         )
 
-        const { error: escPassUpdateErr } = await admin.rpc('escalate_checkin', {
-          p_checkin_id: ci.id,
-          p_escalation_sent_at: new Date().toISOString(),
-          p_ack_token: ackToken,
-        })
-        if (escPassUpdateErr) pushError(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
+        // Only mark as escalated if SMS actually sent
+        if (escalationSid) {
+          const { error: escPassUpdateErr } = await admin.rpc('escalate_checkin', {
+            p_checkin_id: ci.id,
+            p_escalation_sent_at: new Date().toISOString(),
+            p_ack_token: ackToken,
+          })
+          if (escPassUpdateErr) pushError(`Failed to mark escalation sent for ${ci.id}: ${escPassUpdateErr.message}`)
+        } else {
+          pushError(`Escalation SMS failed for ${ci.id} — will retry next cron run`)
+        }
 
         const { error: escPassAlertErr } = await admin.from('alerts').insert({
           watch_id: watch.id,

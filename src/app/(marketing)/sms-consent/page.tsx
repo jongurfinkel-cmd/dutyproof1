@@ -36,9 +36,9 @@ export default function SmsConsentPage() {
             </div>
 
             <div>
-              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>How SMS Opt-In Works (Double Opt-In)</h2>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>How Worker SMS Opt-In Works (Double Opt-In)</h2>
               <p className="mb-3">
-                DutyProof uses a <strong>double opt-in</strong> process to ensure the actual message recipient (the fire watcher) directly consents to receiving SMS messages. SMS is an optional feature — users can create and manage fire watches without enabling SMS. Below is the complete flow:
+                DutyProof uses a <strong>double opt-in</strong> process to ensure the actual message recipient (the fire watcher) directly consents to receiving SMS messages. SMS is an optional feature — users can create and manage fire watches without enabling any SMS. No phone numbers are required at any point. Below is the complete worker opt-in flow:
               </p>
 
               {/* ── Step 1: SMS OFF (default) ── */}
@@ -150,6 +150,72 @@ export default function SmsConsentPage() {
                   </div>
                   <p className="text-xs text-slate-500">After tapping &ldquo;I Agree,&rdquo; operational SMS messages begin. If the worker does not confirm, no further messages are sent — the watch continues without SMS.</p>
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>Supervisor Escalation SMS (Optional)</h2>
+              <p className="mb-3">
+                Separately from worker check-in reminders, DutyProof can send missed check-in alerts to a designated supervisor via SMS. <strong>Supervisor SMS escalation is entirely optional</strong> — it is off by default and not required to create or manage fire watches. When supervisor SMS is not enabled, missed check-in notifications are sent to the account holder&apos;s email instead.
+              </p>
+
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-xs font-bold flex-shrink-0">1</span>
+                  <p className="font-semibold text-slate-900">Default State — Supervisor SMS Off</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">When creating a fire watch, the &ldquo;SMS Supervisor Escalation&rdquo; toggle is off by default. No supervisor phone number field is shown. Missed check-in alerts go to the account email.</p>
+                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">SMS Supervisor Escalation</p>
+                      <p className="text-xs text-slate-500">Send missed check-in alerts to a supervisor via text message (optional)</p>
+                    </div>
+                    <div className="relative w-11 h-6 rounded-full bg-slate-200 flex-shrink-0 ml-4">
+                      <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex-shrink-0">2</span>
+                  <p className="font-semibold text-slate-900">Supervisor Enables SMS Escalation &amp; Enters Their Phone</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">The supervisor (account holder) chooses to enable SMS escalation and enters their own phone number. This is voluntary — they are providing their own number for their own use.</p>
+                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">SMS Supervisor Escalation</p>
+                      <p className="text-xs text-slate-500">Send missed check-in alerts to a supervisor via text message (optional)</p>
+                    </div>
+                    <div className="relative w-11 h-6 rounded-full bg-blue-600 flex-shrink-0 ml-4">
+                      <span className="absolute top-0.5 left-5 w-5 h-5 bg-white rounded-full shadow" />
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-200 px-4 py-3 bg-slate-50">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Supervisor Phone *</p>
+                    <div className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-400 bg-white">+1 (555) 000-0000</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 bg-slate-50 rounded-xl p-5 text-slate-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex-shrink-0">3</span>
+                  <p className="font-semibold text-slate-900">Supervisor Provides Direct Consent</p>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">Before SMS escalation can be activated, the supervisor must check a consent checkbox directly in the app. This constitutes explicit, affirmative consent from the actual phone number owner.</p>
+                <div className="bg-white border border-amber-200 rounded-lg p-4">
+                  <label className="flex items-start gap-3 cursor-default">
+                    <input type="checkbox" disabled className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-600" />
+                    <span className="text-sm text-slate-800 leading-relaxed">
+                      I consent to receive missed check-in alert SMS messages at the supervisor phone number provided above. Msg &amp; data rates may apply. Reply STOP to opt out at any time. Reply HELP for assistance. SMS escalation is not required to use DutyProof. See <span className="text-blue-600">Terms</span> and <span className="text-blue-600">Privacy Policy</span>.
+                    </span>
+                  </label>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">If the supervisor does not check this box, SMS escalation is not enabled and missed check-in alerts are sent via email only. The watch proceeds normally without any SMS to the supervisor.</p>
               </div>
             </div>
 

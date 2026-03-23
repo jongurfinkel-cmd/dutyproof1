@@ -90,17 +90,6 @@ function IconBuilding({ className }: { className?: string }) {
   )
 }
 
-function IconRocket({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-      <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-    </svg>
-  )
-}
-
 function IconFileText({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -127,40 +116,6 @@ function IconLayers({ className }: { className?: string }) {
       <polygon points="12 2 2 7 12 12 22 7 12 2" />
       <polyline points="2 17 12 22 22 17" />
       <polyline points="2 12 12 17 22 12" />
-    </svg>
-  )
-}
-
-function IconCheck({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-
-function IconLink({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  )
-}
-
-function IconShield({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  )
-}
-
-function IconMapPin({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
     </svg>
   )
 }
@@ -317,8 +272,6 @@ export default function DashboardPage() {
 
   // Onboarding progress
   const hasSites = facilityCount !== null && facilityCount > 0
-  const hasCompletedWatches = completedWatchCount !== null && completedWatchCount > 0
-  const stepsCompleted = (hasSites ? 1 : 0) + (hasCompletedWatches ? 1 : 0)
 
   return (
     <div className="p-4 sm:p-6 lg:p-10">
@@ -383,7 +336,7 @@ export default function DashboardPage() {
                       ? 'No active watches'
                       : `${watches.length} watch${watches.length !== 1 ? 'es' : ''} in progress`}
                   {lastUpdated && !loading && (
-                    <span className="text-slate-400 ml-1.5">
+                    <span className="text-slate-500 ml-1.5">
                       &bull; {format(lastUpdated, 'h:mm a')}
                     </span>
                   )}
@@ -487,159 +440,108 @@ export default function DashboardPage() {
         ) : watches.length === 0 ? (
           /* ── Empty State ──────────────────────────────── */
           <div>
-            {/* Welcome Hero */}
-            <div className="relative rounded-2xl border-2 border-slate-100 overflow-hidden mb-6"
-              style={{ background: 'linear-gradient(135deg, #fefefe 0%, #f8fafc 50%, #f1f5f9 100%)' }}
-            >
-              {/* Decorative background elements */}
-              <div className="absolute top-0 right-0 w-80 h-80 opacity-[0.03] pointer-events-none">
-                <svg viewBox="0 0 200 200" fill="none">
-                  <path d="M100 180c-20-12-40-30-50-55-10-25-8-50 0-70 5-13 10-25 14-38 2 9 6 20 12 30 5-12 8-25 7-38 14 15 24 35 19 55 3-7 5-15 4-22 10 12 13 28 5 45-8 17-14 28-20 35-6 7-12 14-18 20l17-37z" fill="currentColor" className="text-orange-500"/>
-                </svg>
-              </div>
-
-              <div className="relative px-8 py-12 sm:py-14 text-center">
-                <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-xl shadow-orange-200/50">
-                  <IconFire className="w-8 h-8 text-white" />
-                </div>
-
-                {userName && (
-                  <p className="text-sm font-semibold text-slate-400 mb-1">{getGreeting()}, {userName}</p>
-                )}
-                <h3
-                  className="text-2xl text-slate-800 mb-3"
-                  style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-                >
-                  Ready to start a fire watch?
-                </h3>
-                <p className="text-slate-500 text-sm max-w-lg mx-auto leading-relaxed mb-8">
-                  Your fire watch gets a check-in link on their phone — no app needed.
-                  Every check-in is timestamped, GPS-verified, and audit-ready.
-                </p>
-
-                {/* Feature pills */}
-                <div className="flex flex-wrap justify-center gap-2.5 mb-8">
-                  {[
-                    { icon: IconLink, text: 'Link-based check-ins' },
-                    { icon: IconMapPin, text: 'GPS verification' },
-                    { icon: IconShield, text: 'Tamper-proof records' },
-                    { icon: IconFileText, text: 'One-click PDF reports' },
-                  ].map(({ icon: Icon, text }) => (
-                    <span
-                      key={text}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold shadow-sm"
-                    >
-                      <Icon className="w-3.5 h-3.5 text-orange-400" />
-                      {text}
-                    </span>
-                  ))}
-                </div>
-
-                <Link
-                  href="/watches/new"
-                  className="inline-flex items-center gap-2.5 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm
-                    transition-all duration-200 shadow-lg shadow-blue-200/60
-                    hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/80"
-                >
-                  <IconPlus className="w-4 h-4" />
-                  Start a Watch
-                  <IconArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Getting Started Steps */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-4 px-1">
-                <h4 className="text-sm font-bold text-slate-700" style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-                  Getting Started
-                </h4>
-                {facilityCount !== null && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className={`w-8 h-1.5 rounded-full transition-colors ${
-                            i < stepsCompleted ? 'bg-emerald-400' : i === stepsCompleted ? 'bg-blue-400' : 'bg-slate-200'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-400">{stepsCompleted}/3</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    step: '1',
-                    icon: IconBuilding,
-                    title: 'Add a job site',
-                    desc: 'Add the location where hot work will be performed.',
-                    href: '/facilities',
-                    cta: hasSites ? `${facilityCount} site${facilityCount !== 1 ? 's' : ''} added` : 'Add Job Site',
-                    gradient: 'from-blue-500 to-blue-600',
-                    shadow: 'shadow-blue-200',
-                    done: hasSites,
-                  },
-                  {
-                    step: '2',
-                    icon: IconRocket,
-                    title: 'Start a watch',
-                    desc: 'Assign a fire watch, set the check-in interval, and launch.',
-                    href: '/watches/new',
-                    cta: 'Start a Watch',
-                    gradient: 'from-violet-500 to-violet-600',
-                    shadow: 'shadow-violet-200',
-                    done: false,
-                  },
-                  {
-                    step: '3',
-                    icon: IconFileText,
-                    title: 'Download your report',
-                    desc: 'Once the watch ends, download a compliance PDF.',
-                    href: '/history',
-                    cta: hasCompletedWatches ? `${completedWatchCount} report${completedWatchCount !== 1 ? 's' : ''} ready` : 'View History',
-                    gradient: 'from-emerald-500 to-emerald-600',
-                    shadow: 'shadow-emerald-200',
-                    done: hasCompletedWatches,
-                  },
-                ].map(({ step, icon: Icon, title, desc, href, cta, gradient, shadow, done }) => (
-                  <Link
-                    key={step}
-                    href={href}
-                    className={`block bg-white rounded-2xl border-2 p-6 transition-all duration-200 group relative overflow-hidden ${
-                      done
-                        ? 'border-emerald-100 hover:border-emerald-200 hover:shadow-md'
-                        : 'border-slate-100 hover:border-slate-200 hover:shadow-md'
-                    }`}
+            {hasSites ? (
+              /* ── Returning user: clean & confident ──── */
+              <div className="relative rounded-2xl border-2 border-slate-100 overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, #fefefe 0%, #f8fafc 50%, #fff7ed 100%)' }}
+              >
+                <div className="relative px-8 py-16 sm:py-20 text-center">
+                  {userName && (
+                    <p className="text-sm font-semibold text-slate-500 mb-4">{getGreeting()}, {userName}</p>
+                  )}
+                  <h3
+                    className="text-3xl sm:text-4xl text-slate-900 mb-3 tracking-tight"
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
                   >
-                    {done && (
-                      <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <IconCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg ${shadow}`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Step {step}</span>
-                    </div>
-                    <h4 className="font-bold text-slate-800 text-[15px] mb-1.5">{title}</h4>
-                    <p className="text-slate-500 text-xs leading-relaxed mb-4">{desc}</p>
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all ${
-                      done ? 'text-emerald-500' : 'text-blue-600 group-hover:gap-2.5'
-                    }`}>
-                      {done && <IconCheck className="w-3 h-3" />}
-                      {cta}
-                      {!done && <IconArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />}
-                    </span>
+                    No active watches
+                  </h3>
+                  <p className="text-slate-600 text-base max-w-md mx-auto leading-relaxed mb-10">
+                    All clear. Start a new watch when you&apos;re ready.
+                  </p>
+
+                  <Link
+                    href="/watches/new"
+                    className="inline-flex items-center gap-2.5 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm
+                      transition-all duration-200 shadow-lg shadow-blue-200/60
+                      hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/80"
+                  >
+                    <IconPlus className="w-4 h-4" />
+                    Start a Watch
+                    <IconArrowRight className="w-4 h-4" />
                   </Link>
-                ))}
+                </div>
+
+                {/* Quick stats */}
+                <div className="border-t border-slate-100 bg-white/60 backdrop-blur-sm">
+                  <div className="grid grid-cols-3 divide-x divide-slate-100">
+                    <Link href="/facilities" className="group px-6 py-5 text-center hover:bg-white/80 transition-colors">
+                      <p className="text-2xl font-extrabold text-slate-800 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>{facilityCount}</p>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Job Sites</p>
+                    </Link>
+                    <Link href="/history" className="group px-6 py-5 text-center hover:bg-white/80 transition-colors">
+                      <p className="text-2xl font-extrabold text-slate-800 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>{completedWatchCount}</p>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider group-hover:text-blue-500 transition-colors">Reports</p>
+                    </Link>
+                    <div className="px-6 py-5 text-center">
+                      <p className="text-2xl font-extrabold text-emerald-500 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>0</p>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Missed</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* ── Brand new user: focused onboarding ──── */
+              <div className="relative rounded-2xl border-2 border-slate-100 overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, #fefefe 0%, #f8fafc 50%, #f1f5f9 100%)' }}
+              >
+                <div className="relative px-8 py-16 sm:py-20 text-center">
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-xl shadow-orange-200/50">
+                    <IconFire className="w-8 h-8 text-white" />
+                  </div>
+
+                  {userName && (
+                    <p className="text-sm font-semibold text-slate-500 mb-2">{getGreeting()}, {userName}</p>
+                  )}
+                  <h3
+                    className="text-3xl sm:text-4xl text-slate-900 mb-3 tracking-tight"
+                    style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+                  >
+                    Let&apos;s set up your first watch
+                  </h3>
+                  <p className="text-slate-600 text-base max-w-md mx-auto leading-relaxed mb-10">
+                    Add a job site, then start a watch. Your fire watch gets a check-in
+                    link on their phone — every check-in is GPS&#8209;verified and audit&#8209;ready.
+                  </p>
+
+                  <Link
+                    href="/facilities"
+                    className="inline-flex items-center gap-2.5 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm
+                      transition-all duration-200 shadow-lg shadow-blue-200/60
+                      hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/80"
+                  >
+                    <IconBuilding className="w-4 h-4" />
+                    Add Your First Job Site
+                    <IconArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+
+                {/* How it works — minimal */}
+                <div className="border-t border-slate-100 bg-white/60 backdrop-blur-sm">
+                  <div className="grid grid-cols-3 divide-x divide-slate-100">
+                    {[
+                      { num: '1', label: 'Add a job site' },
+                      { num: '2', label: 'Start a watch' },
+                      { num: '3', label: 'Get your report' },
+                    ].map(({ num, label }) => (
+                      <div key={num} className="px-6 py-5 text-center">
+                        <p className="text-2xl font-extrabold text-slate-400 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>{num}</p>
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* ── Watch Cards Grid ─────────────────────────── */
