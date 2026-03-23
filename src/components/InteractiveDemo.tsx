@@ -381,7 +381,7 @@ export default function InteractiveDemo() {
             </span>
             <span className="flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
-              No app to install
+              Audit&#8209;ready reports
             </span>
           </div>
 
