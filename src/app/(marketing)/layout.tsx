@@ -189,7 +189,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all"
               >
-                Get Started — $199/mo →
+                Get Started Free →
               </Link>
             </div>
           </div>

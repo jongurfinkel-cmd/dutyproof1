@@ -424,7 +424,7 @@ export default function InteractiveDemo() {
               Try It on Your Next Watch →
             </Link>
             <p className="text-slate-600 text-xs mt-2.5">
-              <span className="text-slate-400 font-semibold">$199/mo flat</span> · all your sites · money-back guarantee
+              <span className="text-slate-400 font-semibold">From $199/mo</span> · first watch free · money-back guarantee
             </p>
           </div>
 

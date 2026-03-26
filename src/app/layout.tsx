@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     template: '%s | DutyProof',
   },
   description:
-    'Fire watch verification software for welding, pipefitting, and mechanical contractors. Automated check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
+    'Fire watch verification software for welding, pipefitting, and mechanical contractors. Automated check-ins every 15–30 minutes, tamper-proof audit logs, and one-click OSHA-ready PDF reports. Plans from $199/mo.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',

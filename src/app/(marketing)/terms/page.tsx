@@ -44,7 +44,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-slate-900 font-bold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>3. Subscription and Billing</h2>
               <p className="mb-3">
-                Subscriptions are billed at a flat rate of $199 per month. The plan includes unlimited job sites and unlimited watches. There are no per-user fees or setup costs.
+                DutyProof offers multiple subscription tiers: Contractor ($199/month — up to 10 watches per month and 3 job sites), Professional ($499/month — unlimited watches and job sites), and Enterprise (custom pricing). There are no per-user fees or setup costs. Your first watch is free with all features.
               </p>
               <p className="mb-3">
                 All fees are in U.S. dollars and are non-refundable except as required by law. Billing occurs on a recurring basis from the date your subscription begins. Prices may change with 30 days&apos; notice.

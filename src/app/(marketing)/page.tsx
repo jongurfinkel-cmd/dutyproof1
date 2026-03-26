@@ -8,7 +8,7 @@ import InteractiveDemo from '@/components/InteractiveDemo'
 export const metadata = {
   title: 'Fire Watch Compliance Software for Contractors',
   description:
-    'Stop pencil-whipping your fire watch logs. DutyProof automates check-in verification every 15–30 min, alerts supervisors in under 60 seconds on a miss, and generates one-click OSHA-ready PDF audit reports. $199/mo flat rate — unlimited sites.',
+    'Stop pencil-whipping your fire watch logs. DutyProof automates check-in verification every 15–30 min, alerts supervisors in under 60 seconds on a miss, and generates one-click OSHA-ready PDF audit reports. Plans from $199/mo.',
   keywords: [
     'fire watch verification software',
     'hot work fire watch software',
@@ -24,7 +24,7 @@ export const metadata = {
   openGraph: {
     title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate for hot work contractors.',
+      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. Plans from $199/mo for hot work contractors.',
     url: 'https://dutyproof.com',
     siteName: 'DutyProof',
     type: 'website',
@@ -41,19 +41,60 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'DutyProof — Stop Pencil-Whipping Your Fire Watch Logs',
     description:
-      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. $199/mo flat rate.',
+      'Automated check-in verification, missed-check-in alerts in under 60 seconds, and one-click OSHA-ready PDF reports. Plans from $199/mo.',
   },
 }
 
 
-const includedFeatures = [
-  'Unlimited job sites and active watches',
-  'GPS-verified check-ins with every round',
-  'Missed check-in alerts in under 60 seconds',
-  'Works offline — no cell service required',
-  'Tamper-proof records that can\'t be edited or deleted',
-  'One-click OSHA-ready PDF compliance reports',
-  'Hot work and impairment watches',
+const pricingPlans = [
+  {
+    name: 'Contractor',
+    price: '$199',
+    description: 'For crews running a few jobs a month.',
+    features: [
+      'Up to 10 watches per month',
+      '3 job sites',
+      'SMS check-ins & missed alerts',
+      'Safety checklists with photos',
+      'GPS-verified check-ins',
+      'OSHA-ready PDF reports',
+      'Full audit trail',
+    ],
+    cta: 'Get Started',
+    color: 'slate',
+  },
+  {
+    name: 'Professional',
+    price: '$499',
+    description: 'For busy sites running watches every day.',
+    features: [
+      'Unlimited watches',
+      'Unlimited job sites',
+      'SMS check-ins & missed alerts',
+      'Safety checklists with photos',
+      'GPS-verified check-ins',
+      'OSHA-ready PDF reports',
+      'Full audit trail',
+      'Searchable watch history',
+    ],
+    cta: 'Get Started',
+    highlight: true,
+    color: 'blue',
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    description: 'For large operations that need a tailored setup.',
+    features: [
+      'Everything in Professional',
+      'Dedicated account manager',
+      'Custom onboarding for your crews',
+      'Phone & email support',
+      'Volume pricing',
+    ],
+    cta: 'Contact Us',
+    color: 'slate',
+  },
 ]
 
 const jsonLd = [
@@ -66,17 +107,32 @@ const jsonLd = [
     url: 'https://dutyproof.com',
     description:
       'Fire watch verification platform for hot work contractors. Automated check-in links, tamper-proof audit logs, and OSHA-ready PDF reports for welding, pipefitting, and mechanical contractors.',
-    offers: {
-      '@type': 'Offer',
-      price: '199',
-      priceCurrency: 'USD',
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Contractor',
         price: '199',
         priceCurrency: 'USD',
-        unitText: 'per month',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '199',
+          priceCurrency: 'USD',
+          unitText: 'per month',
+        },
       },
-    },
+      {
+        '@type': 'Offer',
+        name: 'Professional',
+        price: '499',
+        priceCurrency: 'USD',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '499',
+          priceCurrency: 'USD',
+          unitText: 'per month',
+        },
+      },
+    ],
     featureList: [
       'Automated fire watch check-in verification',
       'Offline check-ins — works without signal',
@@ -106,7 +162,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'How much does DutyProof cost?',
-        acceptedAnswer: { '@type': 'Answer', text: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Contractor plan is $199/month (10 watches/mo, 3 job sites). Professional is $499/month (unlimited everything). Enterprise pricing available for large operations. No per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.' },
       },
       {
         '@type': 'Question',
@@ -146,7 +202,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'Is there a contract or long-term commitment?',
-        acceptedAnswer: { '@type': 'Answer', text: 'No contracts. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Records retained for the life of your account.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'No contracts. Plans start at $199/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Records retained for the life of your account.' },
       },
     ],
   },
@@ -188,7 +244,7 @@ export default function LandingPage() {
       <div className="bg-slate-900 border-b border-slate-800 py-3 overflow-hidden">
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 px-6">
           {([
-            'All your sites, one price',
+            'Plans from $199/mo',
             'Meets OSHA fire watch requirements',
             'NFPA 51B ready',
             'Works without cell service',
@@ -386,44 +442,78 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-6">
           <RevealOnScroll className="text-center mb-14">
             <h2 className="text-2xl sm:text-4xl text-slate-900 mb-4" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
-              One price. Every feature. Every site.
+              Pick the plan that fits your operation.
             </h2>
-            <p className="text-slate-500 text-lg">No per-user fees. No setup costs. Cancel any time.</p>
+            <p className="text-slate-500 text-lg">No per-user fees. No setup costs. Your first watch is free.</p>
           </RevealOnScroll>
 
-          {/* Pricing card — single plan */}
-          <div className="max-w-lg mx-auto mb-8">
-            <RevealOnScroll className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100 relative">
-              <div className="bg-blue-700 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 text-center relative">
-                <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Flat Rate — Unlimited Sites</div>
-                <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>$199</span>
-                  <div className="text-blue-200 text-base mb-3 text-left leading-snug">/month</div>
-                </div>
-                <p className="text-blue-200 text-sm max-w-xs mx-auto">
-                  Cover all your job sites. Run as many watches as you need. No surprises on the bill.
-                </p>
-              </div>
-              <div className="px-4 py-6 sm:px-8 sm:py-8">
-                <div className="grid grid-cols-1 gap-y-2.5 mb-8">
-                  {includedFeatures.map((f) => (
-                    <div key={f} className="flex items-center gap-3">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
-                      <span className="text-slate-700 text-sm">{f}</span>
+          {/* 3-tier pricing grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {pricingPlans.map((plan) => {
+              const isHighlight = 'highlight' in plan && plan.highlight
+              const isEnterprise = plan.name === 'Enterprise'
+              return (
+                <RevealOnScroll key={plan.name} className={`rounded-3xl border-2 overflow-hidden flex flex-col ${
+                  isHighlight
+                    ? 'border-blue-300 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-100 md:-translate-y-2'
+                    : 'border-slate-200 bg-gradient-to-b from-slate-50 to-white shadow-xl'
+                }`}>
+                  <div className={`px-5 py-6 sm:px-6 sm:py-7 text-center ${
+                    isHighlight ? 'bg-blue-700' : isEnterprise ? 'bg-slate-800' : 'bg-slate-700'
+                  }`}>
+                    {isHighlight && (
+                      <div className="inline-block px-3 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold tracking-widest uppercase mb-3">
+                        Most Popular
+                      </div>
+                    )}
+                    <div className="text-white/70 text-xs font-bold tracking-widest uppercase mb-2">{plan.name}</div>
+                    <div className="flex items-end justify-center gap-1 mb-1">
+                      <span className={`font-extrabold text-white ${plan.price === 'Custom' ? 'text-3xl sm:text-4xl' : 'text-4xl sm:text-5xl'}`} style={{ fontFamily: 'var(--font-display)' }}>
+                        {plan.price}
+                      </span>
+                      {plan.price !== 'Custom' && <span className="text-white/60 text-base mb-1">/mo</span>}
                     </div>
-                  ))}
-                </div>
-                <Link
-                  href="/signup"
-                  className="block text-center py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
-                >
-                  Start Your First Watch →
-                </Link>
-                <p className="text-center text-slate-500 text-xs mt-3">
-                  30-day money-back guarantee · No setup fees · Cancel any time
-                </p>
-              </div>
-            </RevealOnScroll>
+                    <p className="text-white/60 text-sm mt-1">{plan.description}</p>
+                  </div>
+
+                  <div className="px-5 py-6 sm:px-6 flex-1">
+                    <div className="space-y-2.5">
+                      {plan.features.map((f) => (
+                        <div key={f} className="flex items-start gap-2.5">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isHighlight ? '#2563eb' : '#475569'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12" /></svg>
+                          <span className="text-slate-700 text-sm">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="px-5 pb-6 sm:px-6">
+                    {isEnterprise ? (
+                      <a
+                        href="mailto:sales@dutyproof.com?subject=Enterprise%20Plan%20Inquiry"
+                        className="block text-center py-3.5 px-6 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-[0.97] bg-slate-800 hover:bg-slate-700 text-white shadow-lg"
+                      >
+                        Contact Us →
+                      </a>
+                    ) : (
+                      <Link
+                        href="/signup"
+                        className={`block text-center py-3.5 px-6 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-[0.97] shadow-lg ${
+                          isHighlight
+                            ? 'bg-blue-700 hover:bg-blue-600 text-white shadow-blue-200'
+                            : 'bg-slate-700 hover:bg-slate-600 text-white'
+                        }`}
+                      >
+                        {plan.cta} — {plan.price}/mo →
+                      </Link>
+                    )}
+                    <p className="text-center text-slate-400 text-xs mt-2.5">
+                      {isEnterprise ? 'We\'ll get back to you within 24 hours.' : '30-day money-back guarantee · Cancel any time'}
+                    </p>
+                  </div>
+                </RevealOnScroll>
+              )
+            })}
           </div>
 
           {/* PDF report preview card */}
@@ -487,7 +577,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center px-8 py-3.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-sm shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5"
             >
-              Get Started — $199/mo →
+              Get Started — Plans from $199/mo →
             </Link>
           </RevealOnScroll>
         </div>
@@ -546,11 +636,11 @@ export default function LandingPage() {
               href="/signup"
               className="cta-pulse inline-flex items-center justify-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
             >
-              Get Started — $199/mo →
+              Start Your First Watch Free →
             </Link>
           </div>
           <p className="mt-4 text-slate-400 text-sm">
-            $199/mo, unlimited sites · 30-day money-back guarantee · Cancel any time
+            Plans from $199/mo · 30-day money-back guarantee · Cancel any time
           </p>
           <p className="mt-3 text-slate-500 text-xs">
             Dedicated onboarding included.{' '}

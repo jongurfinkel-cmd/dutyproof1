@@ -115,7 +115,7 @@ export default function IndustriesPage() {
               href="/signup"
               className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5"
             >
-              Get Started — $199/mo →
+              Get Started Free →
             </Link>
             <Link
               href="/"
@@ -233,10 +233,10 @@ export default function IndustriesPage() {
             href="/signup"
             className="inline-flex items-center gap-2 px-9 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg shadow-2xl shadow-blue-900/60 transition-all hover:-translate-y-0.5"
           >
-            Get Started — $199/mo →
+            Get Started Free →
           </Link>
           <p className="mt-4 text-slate-500 text-xs">
-            $199/month flat rate · Unlimited sites · Cancel any time
+            Plans from $199/mo · Cancel any time · First watch free
           </p>
         </RevealOnScroll>
       </section>

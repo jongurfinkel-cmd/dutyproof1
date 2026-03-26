@@ -5,8 +5,8 @@ import { useState } from 'react'
 const FAQS: { q: string; a: string; bold: string }[] = [
   {
     q: 'How much does DutyProof cost?',
-    a: '$199 per month, flat rate. Unlimited job sites. No per-watch fees, no per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.',
-    bold: '$199 per month, flat rate',
+    a: 'Contractor plan is $199/month — 10 watches per month and 3 job sites. Professional is $499/month for unlimited watches and sites. Enterprise pricing available for large operations. No per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.',
+    bold: 'Contractor plan is $199/month',
   },
   {
     q: 'Does DutyProof meet OSHA hot work fire watch requirements?',
@@ -45,7 +45,7 @@ const FAQS: { q: string; a: string; bold: string }[] = [
   },
   {
     q: 'Is there a contract or long-term commitment?',
-    a: 'No contracts. $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
+    a: 'No contracts. Plans start at $199/month, cancel any time from your account settings — no questions asked, no cancellation fee. Your records are retained for the life of your account, and compliance reports remain downloadable for 12 months after cancellation.',
     bold: 'No contracts',
   },
 ]

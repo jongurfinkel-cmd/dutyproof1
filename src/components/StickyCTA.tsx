@@ -26,8 +26,8 @@ export default function StickyCTA() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         <div className="text-sm text-slate-500 font-medium">
-          <span className="text-slate-900 font-bold">$199/mo</span>
-          <span className="hidden sm:inline"> · Unlimited sites · 30-day money-back guarantee</span>
+          <span className="text-slate-900 font-bold">From $199/mo</span>
+          <span className="hidden sm:inline"> · First watch free · 30-day money-back guarantee</span>
         </div>
         <div className="flex items-center gap-3">
           <Link
