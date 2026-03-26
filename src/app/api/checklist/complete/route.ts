@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
+import { sendCheckInSMS } from '@/lib/sms'
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     // Find the watch and its items
     const { data: watch, error } = await admin
       .from('watches')
-      .select('id, status, checklist_completed_at')
+      .select('id, status, checklist_completed_at, assigned_phone, assigned_name, facility_id, session_token, sms_consent_confirmed_at')
       .eq('checklist_token', token)
       .single()
 
@@ -118,6 +119,39 @@ export async function POST(req: NextRequest) {
       // Completions were inserted but the watch wasn't stamped — return error so
       // the worker knows to retry rather than thinking they're done
       return NextResponse.json({ error: 'Failed to finalize checklist. Please try submitting again.' }, { status: 500 })
+    }
+
+    // Send the first check-in SMS now that the checklist is done
+    if (watch.assigned_phone && watch.sms_consent_confirmed_at) {
+      const { data: facility } = await admin
+        .from('facilities')
+        .select('name, timezone')
+        .eq('id', watch.facility_id)
+        .single()
+
+      const { data: pendingCheckIn } = await admin
+        .from('check_ins')
+        .select('id, token, scheduled_time')
+        .eq('watch_id', watch.id)
+        .eq('status', 'pending')
+        .order('scheduled_time', { ascending: true })
+        .limit(1)
+        .single()
+
+      if (pendingCheckIn && facility) {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dutyproof.com'
+        const checkInUrl = watch.session_token
+          ? `${baseUrl}/checkin/${watch.session_token}`
+          : `${baseUrl}/checkin/${pendingCheckIn.token}`
+        await sendCheckInSMS(
+          watch.assigned_phone,
+          facility.name,
+          watch.assigned_name,
+          checkInUrl,
+          new Date(pendingCheckIn.scheduled_time),
+          facility.timezone ?? 'America/New_York'
+        )
+      }
     }
 
     return NextResponse.json({ success: true, completedAt: now })

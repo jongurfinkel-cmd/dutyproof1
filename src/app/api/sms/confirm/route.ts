@@ -71,34 +71,35 @@ export async function POST(req: NextRequest) {
 
   // Now send the first operational SMS (checklist or check-in)
   if (watch.assigned_phone) {
-    // If there's a checklist, send that first
     if (watch.checklist_token) {
+      // Has a checklist — send only the checklist SMS now.
+      // The check-in SMS will be sent after checklist completion.
       const checklistUrl = `${baseUrl}/checklist/${watch.checklist_token}`
       await sendChecklistSMS(watch.assigned_phone, watch.assigned_name, facilityName, checklistUrl)
-    }
+    } else {
+      // No checklist — send the first check-in SMS immediately
+      const { data: pendingCheckIn } = await admin
+        .from('check_ins')
+        .select('id, token, scheduled_time')
+        .eq('watch_id', watch.id)
+        .eq('status', 'pending')
+        .order('scheduled_time', { ascending: true })
+        .limit(1)
+        .single()
 
-    // Find the current pending check-in and send the check-in SMS
-    const { data: pendingCheckIn } = await admin
-      .from('check_ins')
-      .select('id, token, scheduled_time')
-      .eq('watch_id', watch.id)
-      .eq('status', 'pending')
-      .order('scheduled_time', { ascending: true })
-      .limit(1)
-      .single()
-
-    if (pendingCheckIn) {
-      const checkInUrl = watch.session_token
-        ? `${baseUrl}/checkin/${watch.session_token}`
-        : `${baseUrl}/checkin/${pendingCheckIn.token}`
-      await sendCheckInSMS(
-        watch.assigned_phone,
-        facilityName,
-        watch.assigned_name,
-        checkInUrl,
-        new Date(pendingCheckIn.scheduled_time),
-        tz
-      )
+      if (pendingCheckIn) {
+        const checkInUrl = watch.session_token
+          ? `${baseUrl}/checkin/${watch.session_token}`
+          : `${baseUrl}/checkin/${pendingCheckIn.token}`
+        await sendCheckInSMS(
+          watch.assigned_phone,
+          facilityName,
+          watch.assigned_name,
+          checkInUrl,
+          new Date(pendingCheckIn.scheduled_time),
+          tz
+        )
+      }
     }
   }
 
