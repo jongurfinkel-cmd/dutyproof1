@@ -304,6 +304,36 @@ async function syncAllPending() {
         await markBatchSynced(items.map((i) => i.id))
       } else if (res.status === 410 || res.status === 404) {
         for (const item of items) await markRecord(item.id, 'sync_failed')
+      } else if (res.status === 400 || res.status === 409) {
+        // Partial failure — sync items one at a time
+        for (const item of items) {
+          try {
+            const singleRes = await fetch('/api/checkin/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_token: sessionToken,
+                check_ins: [{
+                  device_time: item.device_time,
+                  scheduled_time: item.scheduled_time,
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  gps_accuracy: item.gps_accuracy,
+                  notes: item.notes,
+                }],
+              }),
+            })
+            if (singleRes.ok) {
+              const singleData = await singleRes.json()
+              syncedCount += (singleData.created || 0) + (singleData.reconciled || 0)
+              await markRecord(item.id, 'synced')
+            } else if (singleRes.status === 410 || singleRes.status === 404 || singleRes.status === 409) {
+              await markRecord(item.id, 'sync_failed')
+            }
+          } catch {
+            break // Network down — stop trying
+          }
+        }
       }
     } catch {
       // Still offline

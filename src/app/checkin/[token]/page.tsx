@@ -261,6 +261,7 @@ export default function CheckInPage() {
   const { token } = useParams<{ token: string }>()
   const [state, setState] = useState<CheckInState>({ phase: 'loading' })
   const submittingRef = useRef(false)
+  const lastSubmitTime = useRef(0)
   const watchMetaRef = useRef<WatchMeta | null>(null)
   const alarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null)
@@ -857,6 +858,10 @@ export default function CheckInPage() {
 
   const handleCheckIn = useCallback(async (overrideToken?: string) => {
     if (submittingRef.current) return
+    // Debounce: ignore taps within 2 seconds of last submit
+    const now = Date.now()
+    if (now - lastSubmitTime.current < 2000) return
+    lastSubmitTime.current = now
     submittingRef.current = true
 
     // Capture watch info before we change state
@@ -909,8 +914,38 @@ export default function CheckInPage() {
         })
         // Only advance schedule after queue succeeds
         config.lastCompletedAt = scheduledTime
-      } catch {
-        // IDB failed — still show confirmed (data is in memory)
+      } catch (idbErr) {
+        // IDB failed — try server directly instead of silently losing the check-in
+        console.error('IndexedDB write failed, falling back to server:', idbErr)
+        try {
+          const res = await fetch('/api/checkin/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_token: config.sessionToken,
+              check_ins: [{
+                device_time: deviceTime,
+                scheduled_time: scheduledTime,
+                latitude: location?.latitude ?? null,
+                longitude: location?.longitude ?? null,
+                gps_accuracy: location?.accuracy ?? null,
+                notes: trimmedNotes,
+              }],
+            }),
+          })
+          if (res.ok) {
+            config.lastCompletedAt = scheduledTime
+          } else {
+            // Server also failed — show error so worker knows
+            setState({ phase: 'error', message: 'Check-in could not be saved. Please try again.' })
+            submittingRef.current = false
+            return
+          }
+        } catch {
+          setState({ phase: 'error', message: 'No connection and local storage full. Please try again.' })
+          submittingRef.current = false
+          return
+        }
       }
       setLocalCheckInCount(c => c + 1)
 

@@ -258,6 +258,40 @@ export async function syncPendingCheckins(): Promise<{ synced: number; reconcile
         // Watch ended or invalid — mark all as failed
         for (const item of items) await markFailed(item.id!)
         failed += items.length
+      } else if (res.status === 400 || res.status === 409) {
+        // Partial failure — fall back to syncing items individually
+        for (const item of items) {
+          try {
+            const singleRes = await fetch('/api/checkin/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_token: sessionToken,
+                check_ins: [{
+                  device_time: item.device_time,
+                  scheduled_time: item.scheduled_time,
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  gps_accuracy: item.gps_accuracy,
+                  notes: item.notes,
+                }],
+              }),
+            })
+            if (singleRes.ok) {
+              const singleData = await singleRes.json()
+              synced += singleData.created ?? 0
+              reconciled += singleData.reconciled ?? 0
+              await markSynced(item.id!)
+            } else if (singleRes.status === 410 || singleRes.status === 404 || singleRes.status === 409) {
+              await markFailed(item.id!)
+              failed++
+            }
+            // Other errors — leave for retry
+          } catch {
+            // Network down mid-batch — leave remaining for retry
+            break
+          }
+        }
       }
       // Other errors (500) — leave for retry
     } catch {
