@@ -62,10 +62,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // Check subscription for dashboard routes (not /billing itself)
+  // Users get their first watch free — so we allow dashboard access
+  // and gate at the API level when they try to create watch #2+
   const requiresSubscription =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/watches') ||
-    pathname.startsWith('/facilities') ||
     pathname.startsWith('/history')
 
   if (requiresSubscription && user) {
@@ -77,9 +76,13 @@ export async function proxy(request: NextRequest) {
 
     const hasAccess = profile?.is_admin || ACTIVE_STATUSES.includes(profile?.subscription_status ?? '')
     if (!profile || !hasAccess) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/billing'
-      return NextResponse.redirect(url)
+      // Allow history access if they have any watches (completed their free watch)
+      const { count } = await supabase.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
+      if (!count || count === 0) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/billing'
+        return NextResponse.redirect(url)
+      }
     }
   }
 

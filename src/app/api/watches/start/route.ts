@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify active subscription before allowing watch creation
+    // Verify subscription or free first watch
     const { data: profile } = await supabase
       .from('profiles')
       .select('subscription_status, is_admin')
@@ -25,9 +25,16 @@ export async function POST(req: NextRequest) {
       .single()
 
     const activeStatuses = ['trialing', 'active']
-    const hasAccess = profile?.is_admin || activeStatuses.includes(profile?.subscription_status ?? '')
-    if (!profile || !hasAccess) {
-      return NextResponse.json({ error: 'Active subscription required to start a watch' }, { status: 403 })
+    const hasSubscription = profile?.is_admin || activeStatuses.includes(profile?.subscription_status ?? '')
+
+    if (!hasSubscription) {
+      // Check if this is their first watch (free)
+      const admin = createAdminClient()
+      const { count } = await admin.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
+      if ((count ?? 0) > 0) {
+        return NextResponse.json({ error: 'Subscribe to start more watches. Your first watch was free — upgrade to $199/mo for unlimited watches.' }, { status: 403 })
+      }
+      // First watch — allow without subscription
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

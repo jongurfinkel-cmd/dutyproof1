@@ -135,6 +135,7 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null)
   const [facilityCount, setFacilityCount] = useState<number | null>(null)
   const [completedWatchCount, setCompletedWatchCount] = useState<number | null>(null)
+  const [totalWatchCount, setTotalWatchCount] = useState<number | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000)
@@ -234,15 +235,17 @@ export default function DashboardPage() {
         setUserName(fullName.split(' ')[0])
       }
 
-      const [{ data: profile }, { count: fCount }, { count: wCount }] = await Promise.all([
+      const [{ data: profile }, { count: fCount }, { count: wCount }, { count: totalCount }] = await Promise.all([
         supabase.from('profiles').select('subscription_status, is_admin').eq('id', user.id).single(),
         supabase.from('facilities').select('id', { count: 'exact', head: true }),
         supabase.from('watches').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+        supabase.from('watches').select('id', { count: 'exact', head: true }),
       ])
       setSubscriptionStatus(profile?.subscription_status ?? null)
       setIsAdmin(profile?.is_admin ?? false)
       setFacilityCount(fCount ?? 0)
       setCompletedWatchCount(wCount ?? 0)
+      setTotalWatchCount(totalCount ?? 0)
     }
     loadUserData()
   }, [])
@@ -267,7 +270,10 @@ export default function DashboardPage() {
   }
 
   const criticalWatches = watches.filter(isCritical)
-  const showTrialBanner = subscriptionStatus === null && !isAdmin
+  const noSubscription = subscriptionStatus === null && !isAdmin
+  const hasUsedFreeWatch = (totalWatchCount ?? 0) > 0
+  const showFreeWatchBanner = noSubscription && !hasUsedFreeWatch
+  const showUpgradeBanner = noSubscription && hasUsedFreeWatch
   const showPastDueBanner = subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid'
 
   // Onboarding progress
@@ -278,18 +284,29 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto">
 
         {/* ── Billing banners ───────────────────────────── */}
-        {showTrialBanner && (
+        {showFreeWatchBanner && (
+          <div className="mb-6 flex items-center gap-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl px-5 py-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
+              <IconFire className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-emerald-900 text-sm">Your first watch is free</p>
+              <p className="text-emerald-600 text-xs mt-0.5">Run a complete watch with SMS, check-ins, and a PDF report — on us. No card required.</p>
+            </div>
+          </div>
+        )}
+        {showUpgradeBanner && (
           <div className="mb-6 flex items-center gap-4 bg-blue-50 border-2 border-blue-100 rounded-2xl px-5 py-4">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
               <IconLayers className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-blue-900 text-sm">Subscribe to activate DutyProof</p>
-              <p className="text-blue-600 text-xs mt-0.5">Set up billing to activate check-ins. $199/mo flat rate, unlimited sites.</p>
+              <p className="font-bold text-blue-900 text-sm">Subscribe to start more watches</p>
+              <p className="text-blue-600 text-xs mt-0.5">Your free watch is done. $199/mo flat rate for unlimited watches, sites, and reports.</p>
             </div>
             <Link
               href="/billing"
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-200/60 hover:-translate-y-0.5"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-200/60 hover:-translate-y-0.5 active:scale-[0.97]"
             >
               Subscribe
               <IconArrowRight className="w-3.5 h-3.5" />

@@ -335,9 +335,24 @@ export default function CreateWatchForm() {
   const [watchRadiusM, setWatchRadiusM] = useState(100)
   const [customRadius, setCustomRadius] = useState('300')
   const [showChecklistDetail, setShowChecklistDetail] = useState(false)
+  const [isFirstWatch, setIsFirstWatch] = useState<boolean | null>(null)
+  const [hasSubscription, setHasSubscription] = useState(true) // default true to avoid flash
 
   useEffect(() => {
     const supabase = createClient()
+    // Check subscription and watch count
+    Promise.all([
+      supabase.auth.getUser(),
+      supabase.from('watches').select('id', { count: 'exact', head: true }),
+    ]).then(([{ data: { user } }, { count }]) => {
+      if (user) {
+        supabase.from('profiles').select('subscription_status, is_admin').eq('id', user.id).single().then(({ data: profile }) => {
+          const active = profile?.is_admin || ['trialing', 'active'].includes(profile?.subscription_status ?? '')
+          setHasSubscription(active)
+          setIsFirstWatch((count ?? 0) === 0)
+        })
+      }
+    })
     supabase.from('facilities').select('*').order('name').then(({ data, error }) => {
       if (error) toast.error('Failed to load job sites. Please refresh.')
       else if (data) setFacilities(data)
@@ -538,8 +553,41 @@ export default function CreateWatchForm() {
   function getIntervalLabel(): string { return form.check_interval_min === 'custom' ? `${customInterval} min` : `${form.check_interval_min} min` }
   function getPostWorkLabel(): string { return form.post_work_duration_min === 'custom' ? `${customPostWork} min` : `${form.post_work_duration_min} min` }
 
+  // Block form if user needs subscription (used free watch already, no subscription)
+  if (isFirstWatch === false && !hasSubscription) {
+    return (
+      <div className="text-center py-12 px-4">
+        <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-xl shadow-blue-200/50">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-extrabold text-slate-900 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          Subscribe to start more watches
+        </h3>
+        <p className="text-slate-500 text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+          You&apos;ve used your free watch. Subscribe for $199/mo to run unlimited watches across all your job sites.
+        </p>
+        <a
+          href="/billing"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200/60 hover:-translate-y-0.5"
+        >
+          Subscribe Now
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div>
+      {/* Free first watch badge */}
+      {isFirstWatch && !hasSubscription && (
+        <div className="mb-5 flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
+          <span className="text-sm font-semibold text-emerald-800">Your first watch is on us — full features, no card required</span>
+        </div>
+      )}
       <StepIndicator current={step} total={TOTAL_STEPS} labels={stepLabels} onStepClick={goToStep} />
 
       {/* ================================================================ */}

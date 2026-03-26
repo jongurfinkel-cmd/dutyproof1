@@ -390,6 +390,16 @@ export default function BillingPage() {
         {/* ─── New subscription / canceled / loading state ─── */}
         {(!isActive && !isPastDue) && (
           <div className={`space-y-6 ${statusLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Free first watch note */}
+            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                <span className="text-emerald-600 text-sm font-bold">1</span>
+              </div>
+              <p className="text-emerald-800 text-sm font-medium">
+                Your first watch is <strong>free</strong> — run a complete watch with all features before subscribing.
+              </p>
+            </div>
+
             <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100">
               <div className="bg-blue-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
                 <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Flat Rate &mdash; Unlimited Sites</div>
