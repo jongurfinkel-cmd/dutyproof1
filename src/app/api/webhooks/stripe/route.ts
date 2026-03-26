@@ -60,11 +60,15 @@ export async function POST(req: NextRequest) {
 
       const isFirstSubscription = !existingProfile?.first_subscribed_at
 
+      // Derive plan tier from checkout metadata
+      const planTier = session.metadata?.plan_tier || subscription.metadata?.plan_tier || 'contractor'
+
       const { error: upsertError } = await admin.from('profiles').upsert({
         id: userId,
         stripe_customer_id: session.customer as string,
         stripe_subscription_id: session.subscription as string,
         subscription_status: subscription.status,
+        plan_tier: planTier,
         trial_ends_at: subscription.trial_end
           ? new Date(subscription.trial_end * 1000).toISOString()
           : null,
@@ -81,15 +85,20 @@ export async function POST(req: NextRequest) {
       const userId = subscription.metadata?.supabase_user_id
       if (!userId) break
 
+      const updateData: Record<string, unknown> = {
+        subscription_status: subscription.status,
+        trial_ends_at: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null,
+        current_period_end: getPeriodEnd(subscription),
+      }
+      // Update plan_tier if present in metadata (e.g. plan upgrade)
+      if (subscription.metadata?.plan_tier) {
+        updateData.plan_tier = subscription.metadata.plan_tier
+      }
       const { error: subUpdateError } = await admin
         .from('profiles')
-        .update({
-          subscription_status: subscription.status,
-          trial_ends_at: subscription.trial_end
-            ? new Date(subscription.trial_end * 1000).toISOString()
-            : null,
-          current_period_end: getPeriodEnd(subscription),
-        })
+        .update(updateData)
         .eq('id', userId)
       if (subUpdateError) console.error('Stripe subscription.updated error:', subUpdateError)
       break
@@ -102,7 +111,7 @@ export async function POST(req: NextRequest) {
 
       const { error: deleteError } = await admin
         .from('profiles')
-        .update({ subscription_status: 'canceled' })
+        .update({ subscription_status: 'canceled', plan_tier: null })
         .eq('id', userId)
       if (deleteError) console.error('Stripe subscription.deleted error:', deleteError)
 

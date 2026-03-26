@@ -16,7 +16,8 @@ create table if not exists public.profiles (
   trial_ends_at timestamptz,
   current_period_end timestamptz,
   first_subscribed_at timestamptz,        -- set once on first checkout, never overwritten
-  is_admin boolean default false not null -- bypasses all subscription checks
+  is_admin boolean default false not null, -- bypasses all subscription checks
+  plan_tier text default null              -- 'contractor' or 'professional'; null = no active plan
 );
 
 -- TRIGGER: auto-create a profile row when a new user signs up

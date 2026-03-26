@@ -3,6 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { getStripe } from '@/lib/stripe'
 
+const VALID_PLANS = ['contractor', 'professional'] as const
+type PlanId = typeof VALID_PLANS[number]
+
+function getPriceId(plan: PlanId): string | undefined {
+  if (plan === 'professional') return process.env.STRIPE_PROFESSIONAL_PRICE_ID
+  return process.env.STRIPE_PRICE_ID // contractor uses the original env var
+}
+
 export async function POST(req: NextRequest) {
   const limited = rateLimit(req, { limit: 5, windowSec: 60, prefix: 'stripe-checkout' })
   if (limited) return limited
@@ -15,21 +23,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}))
-    const isAnnual = body.annual === true
+    const plan: PlanId = VALID_PLANS.includes(body.plan) ? body.plan : 'contractor'
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    const monthlyPriceId = process.env.STRIPE_PRICE_ID
-    const annualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID
-    if (!appUrl || !monthlyPriceId) {
-      console.error('Missing NEXT_PUBLIC_APP_URL or STRIPE_PRICE_ID')
+    const priceId = getPriceId(plan)
+    if (!appUrl || !priceId) {
+      console.error(`Missing NEXT_PUBLIC_APP_URL or price ID for plan: ${plan}`)
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
-
-    if (isAnnual && !annualPriceId) {
-      return NextResponse.json({ error: 'Annual billing is not configured' }, { status: 400 })
-    }
-
-    const priceId = isAnnual ? annualPriceId! : monthlyPriceId
 
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',
@@ -41,12 +42,12 @@ export async function POST(req: NextRequest) {
         },
       ],
       subscription_data: {
-        metadata: { supabase_user_id: user.id },
+        metadata: { supabase_user_id: user.id, plan_tier: plan },
       },
       payment_method_collection: 'always',
       success_url: `${appUrl}/dashboard?checkout=success`,
       cancel_url: `${appUrl}/billing`,
-      metadata: { supabase_user_id: user.id },
+      metadata: { supabase_user_id: user.id, plan_tier: plan },
     })
 
     return NextResponse.json({ url: session.url })

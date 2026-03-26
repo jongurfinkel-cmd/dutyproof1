@@ -136,6 +136,7 @@ export default function DashboardPage() {
   const [facilityCount, setFacilityCount] = useState<number | null>(null)
   const [completedWatchCount, setCompletedWatchCount] = useState<number | null>(null)
   const [totalWatchCount, setTotalWatchCount] = useState<number | null>(null)
+  const [planTier, setPlanTier] = useState<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000)
@@ -236,13 +237,14 @@ export default function DashboardPage() {
       }
 
       const [{ data: profile }, { count: fCount }, { count: wCount }, { count: totalCount }] = await Promise.all([
-        supabase.from('profiles').select('subscription_status, is_admin').eq('id', user.id).single(),
+        supabase.from('profiles').select('subscription_status, is_admin, plan_tier').eq('id', user.id).single(),
         supabase.from('facilities').select('id', { count: 'exact', head: true }),
         supabase.from('watches').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
         supabase.from('watches').select('id', { count: 'exact', head: true }),
       ])
       setSubscriptionStatus(profile?.subscription_status ?? null)
       setIsAdmin(profile?.is_admin ?? false)
+      setPlanTier(profile?.plan_tier ?? null)
       setFacilityCount(fCount ?? 0)
       setCompletedWatchCount(wCount ?? 0)
       setTotalWatchCount(totalCount ?? 0)
@@ -301,8 +303,8 @@ export default function DashboardPage() {
               <IconLayers className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-blue-900 text-sm">Subscribe to start more watches</p>
-              <p className="text-blue-600 text-xs mt-0.5">Your free watch is done. $199/mo flat rate for unlimited watches, sites, and reports.</p>
+              <p className="font-bold text-blue-900 text-sm">Subscribe to keep going</p>
+              <p className="text-blue-600 text-xs mt-0.5">Your free watch is done. Plans start at $199/mo.</p>
             </div>
             <Link
               href="/billing"

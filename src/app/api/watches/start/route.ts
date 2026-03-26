@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     // Verify subscription or free first watch
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_status, is_admin')
+      .select('subscription_status, is_admin, plan_tier')
       .eq('id', user.id)
       .single()
 
@@ -29,12 +29,45 @@ export async function POST(req: NextRequest) {
 
     if (!hasSubscription) {
       // Check if this is their first watch (free)
-      const admin = createAdminClient()
-      const { count } = await admin.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
+      const adminCheck = createAdminClient()
+      const { count } = await adminCheck.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
       if ((count ?? 0) > 0) {
-        return NextResponse.json({ error: 'Subscribe to start more watches. Your first watch was free — upgrade to $199/mo for unlimited watches.' }, { status: 403 })
+        return NextResponse.json({ error: 'Subscribe to start more watches. Your first watch was free — pick a plan to keep going.' }, { status: 403 })
       }
       // First watch — allow without subscription
+    }
+
+    // Enforce Contractor plan limits (10 watches/month, 3 job sites)
+    if (hasSubscription && !profile?.is_admin && profile?.plan_tier === 'contractor') {
+      const adminCheck = createAdminClient()
+      const monthStart = new Date()
+      monthStart.setDate(1)
+      monthStart.setHours(0, 0, 0, 0)
+
+      const [{ count: monthlyCount }, { count: facilityCount }] = await Promise.all([
+        adminCheck
+          .from('watches')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .gte('created_at', monthStart.toISOString()),
+        adminCheck
+          .from('facilities')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id),
+      ])
+
+      if ((monthlyCount ?? 0) >= 10) {
+        return NextResponse.json(
+          { error: 'You\'ve hit your 10-watch monthly limit on the Contractor plan. Upgrade to Professional for unlimited watches.' },
+          { status: 403 }
+        )
+      }
+      if ((facilityCount ?? 0) > 3) {
+        return NextResponse.json(
+          { error: 'Contractor plan supports up to 3 job sites. Upgrade to Professional for unlimited sites.' },
+          { status: 403 }
+        )
+      }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

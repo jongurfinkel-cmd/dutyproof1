@@ -5,18 +5,11 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-const includedFeatures = [
-  'Unlimited job sites',
-  'Unlimited active watches',
-  'Automated check-in verification (any interval)',
-  'Missed check-in escalation in < 60 seconds',
-  'Tamper-proof immutable audit log',
-  'One-click OSHA-ready PDF reports',
-  'Searchable watch history',
-  'Direct email & phone support',
-]
-
 type SubStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | null
+type PlanTier = 'contractor' | 'professional' | null
+
+// Retention flow steps
+type RetentionStep = 'stats' | 'lose' | 'confirm'
 
 interface UsageStats {
   totalWatches: number
@@ -28,18 +21,80 @@ interface UsageStats {
   memberSince: string | null
 }
 
-// Retention flow steps
-type RetentionStep = 'stats' | 'lose' | 'confirm'
+const plans: {
+  id: 'contractor' | 'professional' | 'enterprise'
+  name: string
+  price: string
+  period: string
+  description: string
+  features: string[]
+  cta: string
+  highlight?: boolean
+}[] = [
+  {
+    id: 'contractor',
+    name: 'Contractor',
+    price: '$199',
+    period: '/mo',
+    description: 'For crews running a few jobs a month.',
+    features: [
+      'Up to 10 watches per month',
+      '3 job sites',
+      'SMS check-ins & missed alerts',
+      'Safety checklists with photos',
+      'GPS-verified check-ins',
+      'OSHA-ready PDF reports',
+      'Full audit trail',
+    ],
+    cta: 'Get Started',
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    price: '$499',
+    period: '/mo',
+    highlight: true,
+    description: 'For busy sites running watches every day.',
+    features: [
+      'Unlimited watches',
+      'Unlimited job sites',
+      'SMS check-ins & missed alerts',
+      'Safety checklists with photos',
+      'GPS-verified check-ins',
+      'OSHA-ready PDF reports',
+      'Full audit trail',
+      'Searchable watch history',
+    ],
+    cta: 'Get Started',
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 'Custom',
+    period: '',
+    description: 'For large operations that need a tailored setup.',
+    features: [
+      'Everything in Professional',
+      'Dedicated account manager',
+      'Custom onboarding for your crews',
+      'Phone & email support',
+      'Volume pricing',
+    ],
+    cta: 'Contact Us',
+  },
+]
 
 export default function BillingPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [subStatus, setSubStatus] = useState<SubStatus | undefined>()
+  const [planTier, setPlanTier] = useState<PlanTier>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [usage, setUsage] = useState<UsageStats | null>(null)
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
   const [firstSubscribedAt, setFirstSubscribedAt] = useState<string | null>(null)
+  const [totalWatchCount, setTotalWatchCount] = useState<number | null>(null)
   const [showRetention, setShowRetention] = useState(false)
   const [retentionStep, setRetentionStep] = useState<RetentionStep>('stats')
   const [retentionExiting, setRetentionExiting] = useState(false)
@@ -50,19 +105,24 @@ export default function BillingPage() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { setSubStatus(null); return }
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('subscription_status, is_admin, current_period_end, created_at, first_subscribed_at')
-          .eq('id', user.id)
-          .single()
+        const [{ data: profile, error }, { count }] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('subscription_status, is_admin, current_period_end, created_at, first_subscribed_at, plan_tier')
+            .eq('id', user.id)
+            .single(),
+          supabase.from('watches').select('id', { count: 'exact', head: true }),
+        ])
         if (error || !profile) {
           setSubStatus(null)
           return
         }
         setSubStatus((profile.subscription_status as SubStatus) ?? null)
         setIsAdmin(profile.is_admin ?? false)
+        setPlanTier((profile.plan_tier as PlanTier) ?? null)
         setCurrentPeriodEnd(profile.current_period_end ?? null)
         setFirstSubscribedAt(profile.first_subscribed_at ?? null)
+        setTotalWatchCount(count ?? 0)
 
         // Load usage stats for active subscribers
         const status = (profile.subscription_status as SubStatus) ?? null
@@ -96,29 +156,29 @@ export default function BillingPage() {
     loadStatus()
   }, [])
 
-  async function startCheckout() {
-    setLoading(true)
+  async function startCheckout(plan: 'contractor' | 'professional') {
+    setLoading(plan)
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ plan }),
       })
       const data = await res.json()
       if (!res.ok) {
         toast.error(data.error || 'Something went wrong. Please try again.')
-        setLoading(false)
+        setLoading(null)
         return
       }
       if (data.url) {
         window.location.href = data.url
       } else {
         toast.error('Something went wrong. Please try again.')
-        setLoading(false)
+        setLoading(null)
       }
     } catch {
       toast.error('Something went wrong. Please try again.')
-      setLoading(false)
+      setLoading(null)
     }
   }
 
@@ -167,6 +227,7 @@ export default function BillingPage() {
   const isActive = subStatus === 'trialing' || subStatus === 'active'
   const isPastDue = subStatus === 'past_due' || subStatus === 'unpaid'
   const statusLoading = subStatus === undefined
+  const hasUsedFreeWatch = (totalWatchCount ?? 0) > 0
 
   const complianceRate = usage && usage.totalCheckIns > 0
     ? Math.round((usage.completedCheckIns / usage.totalCheckIns) * 100)
@@ -180,9 +241,12 @@ export default function BillingPage() {
     ? new Date(usage.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null
 
+  const activePlanLabel = planTier === 'professional' ? 'Professional' : 'Contractor'
+  const activePlanPrice = planTier === 'professional' ? '$499' : '$199'
+
   // 30-day money-back guarantee only for first-time subscribers within 30 days
   const refundEligible = (() => {
-    if (!firstSubscribedAt) return true // first-timer, hasn't subscribed yet
+    if (!firstSubscribedAt) return true
     const daysSinceFirst = Math.floor((Date.now() - new Date(firstSubscribedAt).getTime()) / (1000 * 60 * 60 * 24))
     return daysSinceFirst <= 30
   })()
@@ -225,35 +289,39 @@ export default function BillingPage() {
 
   return (
     <>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <div className="text-center mb-10">
           <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 mb-2">
-            {isActive ? 'Your Plan' : 'Subscribe to DutyProof'}
+            {isActive ? 'Your Plan' : 'Pick Your Plan'}
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-500 max-w-lg mx-auto">
             {isActive
-              ? 'Full access to DutyProof. Manage or cancel any time.'
+              ? `You're on the ${activePlanLabel} plan. Manage or cancel any time.`
               : isPastDue
-              ? 'There\'s an issue with your payment — update to keep watches running.'
-              : 'Unlimited sites. Unlimited watches. One flat price.'}
+              ? 'There\'s an issue with your payment — update to keep your watches running.'
+              : 'Automated fire watch compliance. Pick the plan that fits your operation.'}
           </p>
         </div>
 
         {/* ─── Active subscriber view ─── */}
         {isActive && (
-          <div className="space-y-6">
+          <div className="max-w-2xl mx-auto space-y-6">
             {/* Plan card */}
             <div className="rounded-3xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white overflow-hidden shadow-xl shadow-green-100">
               <div className="bg-green-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs font-bold tracking-widest uppercase mb-3">
                   <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
-                  {subStatus === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
+                  {activePlanLabel} Plan Active
                 </div>
                 <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-5xl font-extrabold text-white">$199</span>
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white">{activePlanPrice}</span>
                   <span className="text-green-200 text-base mb-1">/month</span>
                 </div>
-                <p className="text-green-200 text-sm mt-1">Unlimited sites &middot; Unlimited watches &middot; No per-user fees</p>
+                <p className="text-green-200 text-sm mt-1">
+                  {planTier === 'professional'
+                    ? 'Unlimited job sites · Unlimited watches'
+                    : 'Up to 3 job sites · 10 watches per month'}
+                </p>
               </div>
 
               {/* Billing details */}
@@ -261,14 +329,10 @@ export default function BillingPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-slate-400 text-xs uppercase tracking-wide font-semibold">Status</span>
-                    <p className="text-slate-800 font-semibold mt-0.5">
-                      {subStatus === 'trialing' ? 'Free Trial' : 'Active'}
-                    </p>
+                    <p className="text-slate-800 font-semibold mt-0.5">Active</p>
                   </div>
                   <div>
-                    <span className="text-slate-400 text-xs uppercase tracking-wide font-semibold">
-                      {subStatus === 'trialing' ? 'Trial Ends' : 'Next Billing'}
-                    </span>
+                    <span className="text-slate-400 text-xs uppercase tracking-wide font-semibold">Next Billing</span>
                     <p className="text-slate-800 font-semibold mt-0.5">{nextBilling ?? '—'}</p>
                   </div>
                   <div>
@@ -277,7 +341,7 @@ export default function BillingPage() {
                   </div>
                   <div>
                     <span className="text-slate-400 text-xs uppercase tracking-wide font-semibold">Plan</span>
-                    <p className="text-slate-800 font-semibold mt-0.5">Unlimited</p>
+                    <p className="text-slate-800 font-semibold mt-0.5">{activePlanLabel}</p>
                   </div>
                 </div>
               </div>
@@ -323,18 +387,24 @@ export default function BillingPage() {
                 </div>
               )}
 
-              {/* What's included */}
-              <div className="px-4 py-5 sm:px-8 border-b border-green-100">
-                <h3 className="text-xs uppercase tracking-wide font-semibold text-slate-400 mb-3">What&apos;s Included</h3>
-                <div className="grid grid-cols-1 gap-y-2">
-                  {includedFeatures.map((f) => (
-                    <div key={f} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">&#10003;</div>
-                      <span className="text-slate-600 text-sm">{f}</span>
+              {/* Upgrade prompt for contractor plan */}
+              {planTier === 'contractor' && (
+                <div className="px-4 py-5 sm:px-8 border-b border-green-100">
+                  <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-blue-900 text-sm">Need more watches or sites?</p>
+                      <p className="text-blue-600 text-xs mt-0.5">Upgrade to Professional for unlimited everything — $499/mo.</p>
                     </div>
-                  ))}
+                    <button
+                      onClick={() => startCheckout('professional')}
+                      disabled={loading === 'professional'}
+                      className="shrink-0 px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-200/60 hover:-translate-y-0.5 active:scale-[0.97]"
+                    >
+                      {loading === 'professional' ? 'Loading…' : 'Upgrade'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Action buttons */}
               <div className="px-4 py-6 sm:px-8 space-y-3">
@@ -370,10 +440,10 @@ export default function BillingPage() {
 
         {/* ─── Past due state ─── */}
         {isPastDue && (
-          <div className="rounded-3xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 to-white overflow-hidden shadow-xl shadow-amber-100 mb-6">
+          <div className="max-w-2xl mx-auto rounded-3xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 to-white overflow-hidden shadow-xl shadow-amber-100 mb-6">
             <div className="bg-amber-600 px-4 py-6 sm:px-8 sm:py-8 text-center">
               <div className="text-white font-black text-xl mb-1">Payment Failed</div>
-              <p className="text-amber-100 text-sm">Watch features may be paused until resolved.</p>
+              <p className="text-amber-100 text-sm">Your watches may be paused until this is resolved.</p>
             </div>
             <div className="px-4 py-6 sm:px-8 sm:py-8 text-center">
               <button
@@ -387,57 +457,104 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* ─── New subscription / canceled / loading state ─── */}
+        {/* ─── New subscription / canceled — 3 tier cards ─── */}
         {(!isActive && !isPastDue) && (
-          <div className={`space-y-6 ${statusLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`space-y-8 ${statusLoading ? 'opacity-50 pointer-events-none' : ''}`}>
             {/* Free first watch note */}
-            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                <span className="text-emerald-600 text-sm font-bold">1</span>
-              </div>
-              <p className="text-emerald-800 text-sm font-medium">
-                Your first watch is <strong>free</strong> — run a complete watch with all features before subscribing.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-2xl shadow-blue-100">
-              <div className="bg-blue-700 px-4 py-6 sm:px-8 sm:py-8 text-center">
-                <div className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-3">Flat Rate &mdash; Unlimited Sites</div>
-                <div className="flex items-end justify-center gap-1 mb-1">
-                  <span className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white">$199</span>
-                  <div className="text-blue-200 text-base mb-3">/month</div>
+            {!hasUsedFreeWatch && (
+              <div className="max-w-2xl mx-auto flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <span className="text-emerald-600 text-sm font-bold">1</span>
                 </div>
-                <p className="text-blue-200 text-sm">Unlimited job sites. Unlimited watches. No per-user fees.</p>
-              </div>
-
-              <div className="px-4 py-6 sm:px-8 sm:py-8">
-                <div className="grid grid-cols-1 gap-y-2.5 mb-8">
-                  {includedFeatures.map((f) => (
-                    <div key={f} className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">&#10003;</div>
-                      <span className="text-slate-700 text-sm">{f}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => startCheckout()}
-                  disabled={loading || statusLoading}
-                  className="w-full py-4 px-8 rounded-xl bg-blue-700 hover:bg-blue-600 disabled:bg-slate-300 text-white font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 disabled:translate-y-0"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Redirecting to checkout&hellip;
-                    </span>
-                  ) : (
-                    'Subscribe \u2014 $199/mo \u2192'
-                  )}
-                </button>
-                <p className="text-center text-slate-500 text-xs mt-3">
-                  Secured by Stripe &middot; Cancel any time{refundEligible ? <> &middot; 30-day money-back guarantee</> : null}
+                <p className="text-emerald-800 text-sm font-medium">
+                  Your first watch is <strong>free</strong> — try DutyProof with all features before you subscribe.
                 </p>
               </div>
+            )}
+
+            {/* 3-tier grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {plans.map((plan) => {
+                const isHighlight = plan.highlight
+                const isEnterprise = plan.id === 'enterprise'
+                return (
+                  <div
+                    key={plan.id}
+                    className={`rounded-3xl border-2 overflow-hidden flex flex-col transition-all ${
+                      isHighlight
+                        ? 'border-blue-300 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-100 md:-translate-y-2'
+                        : 'border-slate-200 bg-gradient-to-b from-slate-50 to-white shadow-xl'
+                    }`}
+                  >
+                    {/* Header */}
+                    <div className={`px-5 py-6 sm:px-6 sm:py-7 text-center ${
+                      isHighlight ? 'bg-blue-700' : isEnterprise ? 'bg-slate-800' : 'bg-slate-700'
+                    }`}>
+                      {isHighlight && (
+                        <div className="inline-block px-3 py-1 rounded-full bg-white/15 text-white text-[10px] font-bold tracking-widest uppercase mb-3">
+                          Most Popular
+                        </div>
+                      )}
+                      <div className="text-white/70 text-xs font-bold tracking-widest uppercase mb-2">{plan.name}</div>
+                      <div className="flex items-end justify-center gap-1 mb-1">
+                        <span className={`font-extrabold text-white ${plan.price === 'Custom' ? 'text-3xl sm:text-4xl' : 'text-4xl sm:text-5xl'}`}>
+                          {plan.price}
+                        </span>
+                        {plan.period && <span className="text-white/60 text-base mb-1">{plan.period}</span>}
+                      </div>
+                      <p className="text-white/60 text-sm mt-1">{plan.description}</p>
+                    </div>
+
+                    {/* Features */}
+                    <div className="px-5 py-6 sm:px-6 flex-1">
+                      <div className="space-y-2.5">
+                        {plan.features.map((f) => (
+                          <div key={f} className="flex items-start gap-2.5">
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5 ${
+                              isHighlight ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                            }`}>&#10003;</div>
+                            <span className="text-slate-700 text-sm">{f}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="px-5 pb-6 sm:px-6">
+                      {isEnterprise ? (
+                        <a
+                          href="mailto:sales@dutyproof.com?subject=Enterprise%20Plan%20Inquiry"
+                          className={`block w-full py-3.5 px-6 rounded-xl text-center font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-[0.97] bg-slate-800 hover:bg-slate-700 text-white shadow-lg`}
+                        >
+                          Contact Us &#8594;
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => startCheckout(plan.id as 'contractor' | 'professional')}
+                          disabled={loading !== null || statusLoading}
+                          className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:bg-slate-300 disabled:text-white active:scale-[0.97] shadow-lg ${
+                            isHighlight
+                              ? 'bg-blue-700 hover:bg-blue-600 text-white shadow-blue-200'
+                              : 'bg-slate-700 hover:bg-slate-600 text-white'
+                          }`}
+                        >
+                          {loading === plan.id ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Loading&hellip;
+                            </span>
+                          ) : (
+                            <>{plan.cta} — {plan.price}/mo &#8594;</>
+                          )}
+                        </button>
+                      )}
+                      <p className="text-center text-slate-400 text-xs mt-2.5">
+                        {isEnterprise ? 'We\'ll get back to you within 24 hours.' : `Secured by Stripe · Cancel any time${refundEligible ? ' · 30-day money-back' : ''}`}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
@@ -515,7 +632,7 @@ export default function BillingPage() {
                       </div>
                       <div>
                         <div className="font-semibold text-slate-800 text-sm">Verified check-ins logged</div>
-                        <div className="text-slate-500 text-xs">GPS-stamped, server-verified, immutable</div>
+                        <div className="text-slate-500 text-xs">GPS-stamped, server-verified, locked down</div>
                       </div>
                     </div>
                     {complianceRate !== null && (
@@ -543,7 +660,7 @@ export default function BillingPage() {
 
                 {!usage && (
                   <div className="text-center py-6 text-slate-400 text-sm">
-                    You haven&apos;t created any watches yet — give DutyProof a real try before canceling.
+                    You haven&apos;t run any watches yet — give DutyProof a real try before canceling.
                   </div>
                 )}
 
@@ -573,17 +690,17 @@ export default function BillingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-extrabold text-slate-900 mb-1">Here&apos;s what changes</h2>
-                  <p className="text-slate-500 text-sm">If you cancel, these stop immediately at the end of your billing period.</p>
+                  <h2 className="text-xl font-extrabold text-slate-900 mb-1">Here&apos;s what stops</h2>
+                  <p className="text-slate-500 text-sm">If you cancel, these go away at the end of your billing period.</p>
                 </div>
 
                 <div className="space-y-2.5 mb-6">
                   {[
-                    { label: 'Active watches will stop running', desc: 'No more automated check-in scheduling or monitoring' },
-                    { label: 'Missed check-in alerts disabled', desc: 'Supervisors won\'t be notified when a watcher misses' },
-                    { label: 'No new watches or check-ins', desc: 'You can\'t start new fire watches or log check-ins' },
-                    { label: 'PDF report generation locked', desc: 'Existing reports stay for 12 months, but no new ones' },
-                    { label: 'Audit trail becomes read-only', desc: 'Your compliance history is preserved but frozen' },
+                    { label: 'All active watches shut down', desc: 'No more automated check-in scheduling or monitoring' },
+                    { label: 'Missed check-in alerts stop', desc: 'Supervisors won\'t get notified when someone misses' },
+                    { label: 'Can\'t start new watches', desc: 'You won\'t be able to start new fire watches or log check-ins' },
+                    { label: 'PDF reports locked', desc: 'Existing reports stay for 12 months, but you can\'t generate new ones' },
+                    { label: 'Audit trail goes read-only', desc: 'Your compliance history is preserved but frozen' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-start gap-3 bg-red-50 rounded-xl p-3.5">
                       <div className="w-5 h-5 rounded-full bg-red-200 text-red-600 flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">&times;</div>
@@ -599,8 +716,8 @@ export default function BillingPage() {
                   <div className="flex items-start gap-3">
                     <span className="text-amber-500 text-lg flex-shrink-0 mt-0.5">&#9888;</span>
                     <div>
-                      <div className="font-semibold text-slate-800 text-sm">OSHA compliance gap</div>
-                      <div className="text-slate-600 text-xs mt-0.5">Without automated fire watch documentation, your crew returns to paper logs — the #1 citation source in OSHA hot work audits.</div>
+                      <div className="font-semibold text-slate-800 text-sm">Back to paper logs</div>
+                      <div className="text-slate-600 text-xs mt-0.5">Without automated documentation, your crew goes back to clipboards — the #1 citation source in OSHA hot work audits.</div>
                     </div>
                   </div>
                 </div>
@@ -633,8 +750,8 @@ export default function BillingPage() {
                   </div>
                   <h2 className="text-xl font-extrabold text-slate-900 mb-1">We&apos;d hate to see you go</h2>
                   <p className="text-slate-500 text-sm">
-                    If something isn&apos;t working right, we&apos;d love to fix it.
-                    Email us at <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline font-medium">support@dutyproof.com</a> and we&apos;ll respond within 24 hours.
+                    If something isn&apos;t working right, let us know.
+                    Email <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline font-medium">support@dutyproof.com</a> and we&apos;ll get back to you within 24 hours.
                   </p>
                 </div>
 
@@ -645,7 +762,7 @@ export default function BillingPage() {
                   </div>
                 ) : (
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-center">
-                    <div className="text-slate-500 text-xs">Need help? Email <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline">support@dutyproof.com</a> and we&apos;ll respond within 24 hours.</div>
+                    <div className="text-slate-500 text-xs">Need help? Email <a href="mailto:support@dutyproof.com" className="text-blue-600 hover:underline">support@dutyproof.com</a> and we&apos;ll get back to you within 24 hours.</div>
                   </div>
                 )}
 

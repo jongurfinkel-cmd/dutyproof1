@@ -566,13 +566,13 @@ export default function CreateWatchForm() {
           Subscribe to start more watches
         </h3>
         <p className="text-slate-500 text-sm max-w-sm mx-auto mb-8 leading-relaxed">
-          You&apos;ve used your free watch. Subscribe for $199/mo to run unlimited watches across all your job sites.
+          You&apos;ve used your free watch. Pick a plan to keep running watches across your job sites.
         </p>
         <a
           href="/billing"
           className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-200/60 hover:-translate-y-0.5"
         >
-          Subscribe Now
+          See Plans
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
         </a>
       </div>

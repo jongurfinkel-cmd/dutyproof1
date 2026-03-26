@@ -8,6 +8,7 @@ export interface Profile {
   trial_ends_at: string | null
   current_period_end: string | null
   is_admin: boolean
+  plan_tier: 'contractor' | 'professional' | null
 }
 
 export interface Facility {
