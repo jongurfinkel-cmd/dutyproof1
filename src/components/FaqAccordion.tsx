@@ -5,7 +5,7 @@ import { useState } from 'react'
 const FAQS: { q: string; a: string; bold: string }[] = [
   {
     q: 'How much does DutyProof cost?',
-    a: 'Contractor plan is $199/month — 10 watches per month and 3 job sites. Professional is $499/month for unlimited watches and sites. Enterprise pricing available for large operations. No per-user fees, no setup costs. 30-day money-back guarantee.',
+    a: 'Contractor plan is $199/month — 10 watches per month, unlimited job sites. Professional is $499/month for unlimited watches. Enterprise pricing available for large operations. No per-user fees, no setup costs. 30-day money-back guarantee.',
     bold: 'Contractor plan is $199/month',
   },
   {

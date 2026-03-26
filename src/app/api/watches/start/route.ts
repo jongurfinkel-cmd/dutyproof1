@@ -37,34 +37,22 @@ export async function POST(req: NextRequest) {
       // First watch — allow without subscription
     }
 
-    // Enforce Contractor plan limits (10 watches/month, 3 job sites)
+    // Enforce Contractor plan limits (10 watches/month)
     if (hasSubscription && !profile?.is_admin && profile?.plan_tier === 'contractor') {
       const adminCheck = createAdminClient()
       const monthStart = new Date()
       monthStart.setDate(1)
       monthStart.setHours(0, 0, 0, 0)
 
-      const [{ count: monthlyCount }, { count: facilityCount }] = await Promise.all([
-        adminCheck
-          .from('watches')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id)
-          .gte('created_at', monthStart.toISOString()),
-        adminCheck
-          .from('facilities')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id),
-      ])
+      const { count: monthlyCount } = await adminCheck
+        .from('watches')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .gte('created_at', monthStart.toISOString())
 
       if ((monthlyCount ?? 0) >= 10) {
         return NextResponse.json(
           { error: 'You\'ve hit your 10-watch monthly limit on the Contractor plan. Upgrade to Professional for unlimited watches.' },
-          { status: 403 }
-        )
-      }
-      if ((facilityCount ?? 0) > 3) {
-        return NextResponse.json(
-          { error: 'Contractor plan supports up to 3 job sites. Upgrade to Professional for unlimited sites.' },
           { status: 403 }
         )
       }

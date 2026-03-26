@@ -39,7 +39,7 @@ const plans: {
     description: 'For crews running a few jobs a month.',
     features: [
       'Up to 10 watches per month',
-      '3 job sites',
+      'Unlimited job sites',
       'SMS check-ins & missed alerts',
       'Safety checklists with photos',
       'GPS-verified check-ins',
@@ -320,7 +320,7 @@ export default function BillingPage() {
                 <p className="text-green-200 text-sm mt-1">
                   {planTier === 'professional'
                     ? 'Unlimited job sites · Unlimited watches'
-                    : 'Up to 3 job sites · 10 watches per month'}
+                    : 'Unlimited job sites · 10 watches per month'}
                 </p>
               </div>
 

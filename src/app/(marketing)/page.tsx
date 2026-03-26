@@ -53,7 +53,7 @@ const pricingPlans = [
     description: 'For crews running a few jobs a month.',
     features: [
       'Up to 10 watches per month',
-      '3 job sites',
+      'Unlimited job sites',
       'SMS check-ins & missed alerts',
       'Safety checklists with photos',
       'GPS-verified check-ins',
@@ -162,7 +162,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'How much does DutyProof cost?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Contractor plan is $199/month (10 watches/mo, 3 job sites). Professional is $499/month (unlimited everything). Enterprise pricing available for large operations. No per-user fees, no setup costs. 30-day money-back guarantee.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Contractor plan is $199/month (10 watches/mo, unlimited job sites). Professional is $499/month (unlimited watches). Enterprise pricing available for large operations. No per-user fees, no setup costs. 30-day money-back guarantee.' },
       },
       {
         '@type': 'Question',
