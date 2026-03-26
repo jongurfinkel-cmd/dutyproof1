@@ -236,7 +236,7 @@ export default function IndustriesPage() {
             Get Started Free →
           </Link>
           <p className="mt-4 text-slate-500 text-xs">
-            Plans from $199/mo · Cancel any time · First watch free
+            Plans from $199/mo · First watch free
           </p>
         </RevealOnScroll>
       </section>

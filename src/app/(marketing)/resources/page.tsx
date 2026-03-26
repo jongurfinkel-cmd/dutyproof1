@@ -112,7 +112,7 @@ export default function ResourcesPage() {
           >
             Start Your First Watch →
           </Link>
-          <p className="mt-3 text-slate-400 text-xs">Plans from $199/mo · First watch free · Cancel any time</p>
+          <p className="mt-3 text-slate-400 text-xs">Plans from $199/mo · First watch free</p>
         </div>
       </section>
     </>

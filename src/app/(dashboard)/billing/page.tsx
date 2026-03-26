@@ -296,7 +296,7 @@ export default function BillingPage() {
           </h1>
           <p className="text-slate-500 max-w-lg mx-auto">
             {isActive
-              ? `You're on the ${activePlanLabel} plan. Manage or cancel any time.`
+              ? `You're on the ${activePlanLabel} plan.`
               : isPastDue
               ? 'There\'s an issue with your payment — update to keep your watches running.'
               : 'Automated fire watch compliance. Pick the plan that fits your operation.'}
@@ -549,7 +549,7 @@ export default function BillingPage() {
                         </button>
                       )}
                       <p className="text-center text-slate-400 text-xs mt-2.5">
-                        {isEnterprise ? 'We\'ll get back to you within 24 hours.' : `Secured by Stripe · Cancel any time${refundEligible ? ' · 30-day money-back' : ''}`}
+                        {isEnterprise ? 'We\'ll get back to you within 24 hours.' : `Secured by Stripe${refundEligible ? ' · 30-day money-back guarantee' : ''}`}
                       </p>
                     </div>
                   </div>

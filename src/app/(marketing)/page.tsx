@@ -162,7 +162,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'How much does DutyProof cost?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Contractor plan is $199/month (10 watches/mo, 3 job sites). Professional is $499/month (unlimited everything). Enterprise pricing available for large operations. No per-user fees, no setup costs. Cancel any time — 30-day money-back guarantee.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Contractor plan is $199/month (10 watches/mo, 3 job sites). Professional is $499/month (unlimited everything). Enterprise pricing available for large operations. No per-user fees, no setup costs. 30-day money-back guarantee.' },
       },
       {
         '@type': 'Question',
@@ -202,7 +202,7 @@ const jsonLd = [
       {
         '@type': 'Question',
         name: 'Is there a contract or long-term commitment?',
-        acceptedAnswer: { '@type': 'Answer', text: 'No contracts. Plans start at $199/month. Cancel any time from your account settings — no questions asked, no cancellation fee. Records retained for the life of your account.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Plans start at $199/month. No per-user fees. Records retained for the life of your account.' },
       },
     ],
   },
@@ -508,7 +508,7 @@ export default function LandingPage() {
                       </Link>
                     )}
                     <p className="text-center text-slate-400 text-xs mt-2.5">
-                      {isEnterprise ? 'We\'ll get back to you within 24 hours.' : '30-day money-back guarantee · Cancel any time'}
+                      {isEnterprise ? 'We\'ll get back to you within 24 hours.' : '30-day money-back guarantee · No setup fees'}
                     </p>
                   </div>
                 </RevealOnScroll>
@@ -640,7 +640,7 @@ export default function LandingPage() {
             </Link>
           </div>
           <p className="mt-4 text-slate-400 text-sm">
-            Plans from $199/mo · 30-day money-back guarantee · Cancel any time
+            Plans from $199/mo · 30-day money-back guarantee
           </p>
           <p className="mt-3 text-slate-500 text-xs">
             Dedicated onboarding included.{' '}

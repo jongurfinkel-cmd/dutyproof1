@@ -27,7 +27,7 @@ export default function CostCalculator() {
         <p className="text-3xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
           ${MONTHLY_COST}<span className="text-base font-bold text-slate-500">/mo</span>
         </p>
-        <p className="text-slate-500 text-[11px] mt-0.5">flat rate · unlimited sites · cancel any time</p>
+        <p className="text-slate-500 text-[11px] mt-0.5">from $199/mo · first watch free</p>
       </div>
 
       {/* ROI table */}
