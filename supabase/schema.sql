@@ -376,6 +376,7 @@ create index if not exists idx_facilities_owner_id on public.facilities(owner_id
 create index if not exists idx_check_ins_status_escalation on public.check_ins(status, escalation_sent_at);
 create index if not exists idx_check_ins_ack_token on public.check_ins(ack_token);
 create index if not exists idx_check_ins_watch_id_status on public.check_ins(watch_id, status);
+create index if not exists idx_profiles_stripe_customer_id on public.profiles(stripe_customer_id) where stripe_customer_id is not null;
 
 -- ============================================================
 -- SAFETY CHECKLIST TABLES

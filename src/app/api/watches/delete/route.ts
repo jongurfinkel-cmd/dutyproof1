@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // Never allow deletion of an active watch — must end it first
+    if (watch.status === 'active') {
+      return NextResponse.json(
+        { error: 'Cannot delete an active watch. End the watch first.' },
+        { status: 409 }
+      )
+    }
+
     // Only allow deletion if checklist hasn't been started
     // (i.e., no checklist at all, or checklist exists but not yet completed)
     // AND no check-ins have been completed

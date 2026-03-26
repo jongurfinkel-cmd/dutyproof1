@@ -3,9 +3,17 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendCheckInSMS, sendChecklistSMS } from '@/lib/sms'
 import { generateToken } from '@/lib/tokens'
 import { addMinutes } from 'date-fns'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
-  const { token } = await req.json()
+  const limited = rateLimit(req, { limit: 10, windowSec: 60, prefix: 'sms-confirm' })
+  if (limited) return limited
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any
+  try { body = await req.json() } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+  const { token } = body
   if (!token || typeof token !== 'string') {
     return NextResponse.json({ error: 'Missing token' }, { status: 400 })
   }
@@ -32,15 +40,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Already confirmed', code: 'already_confirmed' }, { status: 409 })
   }
 
-  // Mark consent as confirmed
-  const { error: updateErr } = await admin
+  // Mark consent as confirmed — atomic: only update if still null (prevents race condition)
+  const { data: updated, error: updateErr } = await admin
     .from('watches')
     .update({ sms_consent_confirmed_at: new Date().toISOString() })
     .eq('id', watch.id)
+    .is('sms_consent_confirmed_at', null)
+    .select('id')
 
   if (updateErr) {
     console.error('Failed to confirm SMS consent:', updateErr)
     return NextResponse.json({ error: 'Failed to confirm consent' }, { status: 500 })
+  }
+
+  // Another request confirmed first — race condition caught
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: 'Already confirmed', code: 'already_confirmed' }, { status: 409 })
   }
 
   // Get facility name for SMS

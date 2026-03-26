@@ -85,6 +85,12 @@ export async function POST(req: NextRequest) {
     const oldName = watch.assigned_name
     const oldPhone = watch.assigned_phone
 
+    // Block handoff to the same person (same name AND same/default phone)
+    const effectiveNewPhone = new_assigned_phone || oldPhone
+    if (trimmedName === oldName && effectiveNewPhone === oldPhone) {
+      return NextResponse.json({ error: 'New watcher must be a different person' }, { status: 400 })
+    }
+
     // 1. Cancel all pending check-ins
     const { error: cancelError } = await admin.rpc('cancel_watch_checkins', { p_watch_id: watchId })
     if (cancelError) {

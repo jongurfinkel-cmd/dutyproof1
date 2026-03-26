@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
       console.error('Missing NEXT_PUBLIC_APP_URL')
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
-    const checkInUrl = `${appUrl}/checkin/${checkIn.token}`
+    const checkInUrl = watch.session_token
+      ? `${appUrl}/checkin/${watch.session_token}`
+      : `${appUrl}/checkin/${checkIn.token}`
 
     // Only send SMS if watcher has confirmed consent
     if (!watch.sms_consent_confirmed_at) {

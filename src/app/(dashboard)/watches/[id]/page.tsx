@@ -434,7 +434,16 @@ export default function WatchDetailPage() {
     )
   }
 
-  if (!watch) return null
+  if (!watch) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
+      <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2 className="text-lg font-bold text-slate-800 mb-1">Watch not found</h2>
+      <p className="text-sm text-slate-500 mb-4">This watch may have been deleted or you don&apos;t have access.</p>
+      <a href="/dashboard" className="text-sm text-blue-600 hover:text-blue-500 font-medium">Back to Dashboard</a>
+    </div>
+  )
 
   const completed = checkIns.filter((c) => c.status === 'completed')
   const missed = checkIns.filter((c) => c.status === 'missed')

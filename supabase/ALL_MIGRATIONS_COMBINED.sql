@@ -325,5 +325,15 @@ CREATE INDEX IF NOT EXISTS idx_watches_sms_consent_token
 
 
 -- ════════════════════════════════════════════════════════════
+-- MIGRATION v10: Performance Indexes
+-- ════════════════════════════════════════════════════════════
+
+-- Speed up Stripe webhook lookups by customer ID
+CREATE INDEX IF NOT EXISTS idx_profiles_stripe_customer_id
+  ON public.profiles(stripe_customer_id)
+  WHERE stripe_customer_id IS NOT NULL;
+
+
+-- ════════════════════════════════════════════════════════════
 -- DONE — All migrations applied.
 -- ════════════════════════════════════════════════════════════

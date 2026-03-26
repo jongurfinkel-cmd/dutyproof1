@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import toast from 'react-hot-toast'
 import AddressSearch from '@/components/AddressSearch'
 
 interface LocationPickerProps {
@@ -117,7 +118,7 @@ export default function LocationPicker({ latitude, longitude, radius, onChange }
 
   function handleUseMyLocation() {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.')
+      toast.error('Geolocation is not supported by your browser.')
       return
     }
     navigator.geolocation.getCurrentPosition(
@@ -125,7 +126,7 @@ export default function LocationPicker({ latitude, longitude, radius, onChange }
         onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
       },
       (err) => {
-        alert(`Unable to get location: ${err.message}`)
+        toast.error(`Unable to get location: ${err.message}`)
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
