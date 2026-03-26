@@ -59,7 +59,7 @@ create table if not exists public.watches (
   check_interval_min int not null,        -- 1-1440 minutes
   start_time timestamptz not null,
   assigned_name text not null,
-  assigned_phone text not null,
+  assigned_phone text,
   reason text,
   location text,
   escalation_phone text,

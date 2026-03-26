@@ -196,7 +196,7 @@ function SignupForm() {
 
           {/* Form */}
           <div className="px-8 sm:px-10 pb-9">
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4" method="post" action="/signup">
               {/* Name + Email row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -286,11 +286,12 @@ function SignupForm() {
                 <label htmlFor="email" className={labelClass}>Work Email</label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete="username email"
                   className={inputClass}
                   placeholder="you@company.com"
                 />
@@ -302,6 +303,7 @@ function SignupForm() {
                 <div className="relative">
                   <input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

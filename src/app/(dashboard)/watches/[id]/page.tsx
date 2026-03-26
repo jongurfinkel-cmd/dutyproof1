@@ -580,14 +580,14 @@ export default function WatchDetailPage() {
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={() => setConfirmingDelete(false)}
-                className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-all"
+                className="px-4 py-2.5 min-h-[44px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl transition-all active:scale-[0.97]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteWatch}
                 disabled={deleting}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                className="px-4 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-500 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-[0.97]"
               >
                 {deleting ? 'Deleting...' : 'Yes, Delete Watch'}
               </button>
@@ -611,14 +611,14 @@ export default function WatchDetailPage() {
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={() => setConfirmingStopWork(false)}
-                className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-all"
+                className="px-4 py-2.5 min-h-[44px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl transition-all active:scale-[0.97]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => { setConfirmingStopWork(false); handleStopWork() }}
                 disabled={stoppingWork}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-300 text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                className="px-4 py-2.5 min-h-[44px] bg-amber-600 hover:bg-amber-500 disabled:bg-amber-300 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-[0.97]"
               >
                 {stoppingWork ? 'Stopping…' : 'Yes, Stop Work'}
               </button>

@@ -88,7 +88,7 @@ function StepIndicator({ current, total, labels, icons }: {
               }`}>
                 {isDone ? <CheckIcon size={14} /> : icons[i]}
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+              <span className={`text-[11px] font-bold uppercase tracking-wide transition-colors ${
                 isDone ? 'text-green-400' : isActive ? 'text-blue-400' : 'text-slate-600'
               }`}>{label}</span>
             </div>
@@ -618,7 +618,7 @@ export default function ChecklistPage() {
                         <img
                           src={currentPhotoComp.photo_url || currentPhotoComp.localPreview!}
                           alt={`Photo: ${currentPhotoItem.label}`}
-                          className="w-full h-48 object-cover"
+                          className="w-full h-40 sm:h-48 object-cover"
                         />
                         {currentPhotoComp.uploading && (
                           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">

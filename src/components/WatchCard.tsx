@@ -273,7 +273,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
             </span>
           )}
           {watch.reason && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full truncate max-w-[140px]">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full truncate max-w-[120px] sm:max-w-[140px]">
               <IconFire className="w-2.5 h-2.5 shrink-0" />
               {watch.reason}
             </span>
@@ -285,7 +285,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
       <div className="border-t-2 border-slate-50 px-4 py-3 flex gap-2">
         <Link
           href={`/watches/${watch.id}`}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 min-h-[44px] text-sm font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 active:scale-[0.97]"
         >
           <IconEye className="w-4 h-4" />
           View Details
@@ -298,7 +298,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
             <button
               onClick={() => { onEnd(watch.id); setConfirmingEnd(false) }}
               disabled={ending}
-              className="flex-1 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-xl transition-all duration-200"
+              className="flex-1 py-3 min-h-[44px] text-sm font-bold text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-xl transition-all duration-200 active:scale-[0.97]"
             >
               {ending ? (
                 <span className="flex items-center justify-center gap-1.5">
@@ -310,7 +310,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
             <button
               onClick={() => setConfirmingEnd(false)}
               disabled={ending}
-              className="px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+              className="px-4 py-3 min-h-[44px] text-sm font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors active:scale-[0.97]"
             >
               No
             </button>
@@ -319,7 +319,7 @@ export default memo(function WatchCard({ watch, lastCheckIn, pendingTokenExpires
           <button
             onClick={() => setConfirmingEnd(true)}
             disabled={ending}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold text-red-500 hover:text-red-600 hover:bg-red-50 disabled:text-slate-300 rounded-xl transition-all duration-200"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 min-h-[44px] text-sm font-bold text-red-500 hover:text-red-600 hover:bg-red-50 disabled:text-slate-300 rounded-xl transition-all duration-200 active:scale-[0.97]"
           >
             <IconSquare className="w-3.5 h-3.5" />
             End Watch

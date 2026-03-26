@@ -128,18 +128,19 @@ function LoginForm() {
 
           {/* Form */}
           <div className="px-8 sm:px-10 pb-9">
-            <form onSubmit={handleLogin} className="space-y-5" noValidate>
+            <form onSubmit={handleLogin} className="space-y-5" noValidate method="post" action="/login">
               <div>
                 <label htmlFor="email" className="block text-[11px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-2">
                   Email address
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(null) }}
                   required
-                  autoComplete="email"
+                  autoComplete="username email"
                   autoFocus
                   className="w-full px-4 py-3.5 bg-slate-800/60 border-2 border-slate-700/60 rounded-xl text-white text-sm
                     placeholder:text-slate-600
@@ -164,6 +165,7 @@ function LoginForm() {
                 <div className="relative">
                   <input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(null) }}

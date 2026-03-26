@@ -476,9 +476,9 @@ export default function HistoryPage() {
                   {search && (
                     <button
                       onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
                     >
-                      <IconX className="w-3 h-3 text-slate-400" />
+                      <IconX className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                   )}
                 </div>
@@ -507,7 +507,7 @@ export default function HistoryPage() {
                       return !o
                     })
                   }}
-                  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border-2 transition-all duration-200 ${
+                  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2.5 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                     dateFrom || dateTo
                       ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'
                       : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200 hover:text-slate-500'
@@ -521,7 +521,7 @@ export default function HistoryPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-2.5 min-h-[44px] rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
                   >
                     <IconX className="w-3 h-3" />
                     Clear filters
@@ -760,21 +760,21 @@ export default function HistoryPage() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-100 disabled:text-slate-200 transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-100 disabled:text-slate-200 transition-colors active:scale-[0.97]"
                       >
-                        <IconChevron className="w-3.5 h-3.5" direction="left" />
+                        <IconChevron className="w-4 h-4" direction="left" />
                         Prev
                       </button>
-                      <span className="text-xs font-medium text-slate-400">
+                      <span className="text-sm font-medium text-slate-400">
                         {page} of {totalPages}
                       </span>
                       <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-100 disabled:text-slate-200 transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-100 disabled:text-slate-200 transition-colors active:scale-[0.97]"
                       >
                         Next
-                        <IconChevron className="w-3.5 h-3.5" direction="right" />
+                        <IconChevron className="w-4 h-4" direction="right" />
                       </button>
                     </div>
                   )}

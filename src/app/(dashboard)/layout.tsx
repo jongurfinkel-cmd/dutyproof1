@@ -239,7 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
+                  className={`group flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
                     active
                       ? 'bg-white/10 text-white shadow-sm'
                       : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
@@ -272,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
+                  className={`group flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold transition-all duration-200 relative ${
                     active
                       ? 'bg-white/10 text-white shadow-sm'
                       : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-200'
@@ -308,7 +308,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <button
               onClick={handleLogout}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all duration-200"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all duration-200"
               title="Sign out"
             >
               <IconLogOut className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             ref={hamburgerRef}
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors active:scale-[0.95]"
             aria-label="Open menu"
           >
             <IconMenu className="w-5 h-5 text-slate-600" />

@@ -563,8 +563,9 @@ export default function DashboardPage() {
         {/* ── Mobile FAB ────────────────────────────────── */}
         <Link
           href="/watches/new"
-          className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl shadow-xl shadow-blue-300/50
-            flex items-center justify-center transition-all duration-200 hover:scale-105 z-50"
+          className="sm:hidden fixed right-6 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl shadow-xl shadow-blue-300/50
+            flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 z-50"
+          style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
         >
           <IconPlus className="w-6 h-6" />
         </Link>

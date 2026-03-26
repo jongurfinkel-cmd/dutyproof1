@@ -2017,21 +2017,21 @@ function WatchingView({
                   <p className="text-orange-400/80 text-xs text-center leading-relaxed">
                     This will start the {postWorkMin}-minute post-work monitoring period. Your supervisor will be notified.
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowStopConfirm(false)}
-                      className="flex-1 px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-colors"
-                    >
-                      Cancel
-                    </button>
+                  <div className="flex flex-col gap-2">
                     <button
                       type="button"
                       onClick={() => { onStopWork(); setShowStopConfirm(false) }}
                       disabled={stoppingWork}
-                      className="flex-1 px-3 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-800 text-white text-xs font-bold transition-colors"
+                      className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:bg-orange-800 text-white text-sm font-bold transition-colors active:scale-[0.97]"
                     >
                       {stoppingWork ? 'Stopping...' : 'Confirm Stop'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowStopConfirm(false)}
+                      className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors active:scale-[0.97]"
+                    >
+                      Cancel
                     </button>
                   </div>
                 </div>
@@ -2118,7 +2118,7 @@ function NotesInput({ notes, onChange, show, onToggle }: {
           maxLength={1000}
           rows={2}
           placeholder="Site conditions, observations, concerns..."
-          className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+          className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-base text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
         />
       )}
     </div>
@@ -2369,7 +2369,7 @@ function GraceView({
           <div className="px-6 py-6 text-center">
             <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-2">Overdue By</p>
             <p
-              className="text-red-300 text-5xl font-black tracking-tight"
+              className="text-red-300 text-4xl sm:text-5xl font-black tracking-tight"
               style={{ fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}
             >
               {String(overdueMin).padStart(2, '0')}:{String(overdueSecs).padStart(2, '0')}

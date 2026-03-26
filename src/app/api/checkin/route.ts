@@ -61,6 +61,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
+    // Gate: safety checklist must be completed before any check-ins
+    if (watch.checklist_token && !watch.checklist_completed_at) {
+      return NextResponse.json(
+        { error: 'Safety checklist must be completed before checking in.', code: 'checklist_pending' },
+        { status: 409 }
+      )
+    }
+
     // If already completed, reject
     if (checkIn.status === 'completed') {
       return NextResponse.json({ error: 'This check-in has already been recorded.' }, { status: 409 })
@@ -249,7 +257,8 @@ export async function POST(req: NextRequest) {
         nextToken = undefined
       } else if (nextCheckIn) {
         // Send next SMS (only if watcher has confirmed SMS consent)
-        if (watch.sms_consent_confirmed_at) {
+        // Session-token watches: watcher already has the persistent link, skip SMS
+        if (watch.sms_consent_confirmed_at && !watch.session_token) {
           const twilioSid = await sendCheckInSMS(
             watch.assigned_phone,
             displayName,

@@ -85,7 +85,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <Toaster
-          position="top-right"
+          position="top-center"
           toastOptions={{
             duration: 4000,
             style: { fontSize: '14px' },

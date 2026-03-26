@@ -235,7 +235,7 @@ export async function GET(req: NextRequest) {
             }
           } else {
             // Watcher is OFFLINE — send one-time offline alert on first miss only
-            if ((watch.consecutive_misses ?? 0) === 0) {
+            if (newConsecutive === 1) {
               if (watch.escalation_phone) {
                 const offlineSid = await sendOfflineAlertSMS(
                   watch.escalation_phone,

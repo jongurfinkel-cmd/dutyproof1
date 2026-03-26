@@ -27,6 +27,15 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Safe area insets for notched phones (iPhone X+) */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Prevent iOS auto-zoom on form focus (font < 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* ── Scroll-triggered reveal ── */

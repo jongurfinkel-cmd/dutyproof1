@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendCheckInSMS, sendChecklistSMS } from '@/lib/sms'
-import { generateToken } from '@/lib/tokens'
-import { addMinutes } from 'date-fns'
 import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
@@ -113,5 +111,5 @@ export async function POST(req: NextRequest) {
     delivery_status: 'delivered',
   })
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, hasChecklist: !!watch.checklist_token })
 }

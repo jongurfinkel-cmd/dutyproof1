@@ -7,6 +7,7 @@ import Link from 'next/link'
 export default function SmsConfirmPage() {
   const { token } = useParams<{ token: string }>()
   const [status, setStatus] = useState<'idle' | 'confirming' | 'confirmed' | 'error' | 'already'>('idle')
+  const [hasChecklist, setHasChecklist] = useState(false)
 
   async function confirm() {
     setStatus('confirming')
@@ -25,6 +26,7 @@ export default function SmsConfirmPage() {
         }
         return
       }
+      setHasChecklist(!!data.hasChecklist)
       setStatus('confirmed')
     } catch {
       setStatus('error')
@@ -42,10 +44,21 @@ export default function SmsConfirmPage() {
             </svg>
           </div>
           <h1 className="text-xl text-white font-extrabold mb-2">SMS Confirmed</h1>
-          <p className="text-slate-400 text-sm leading-relaxed mb-6">
-            You will now receive fire watch check-in reminders via text message. Reply <strong className="text-slate-300">STOP</strong> at any time to opt out.
-          </p>
-          <p className="text-slate-500 text-xs">You can close this page.</p>
+          {hasChecklist ? (
+            <>
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                Check your texts — complete your <strong className="text-slate-300">safety checklist</strong> first, then you&apos;ll start receiving check-in reminders.
+              </p>
+              <p className="text-slate-500 text-xs">Reply <strong className="text-slate-400">STOP</strong> at any time to opt out.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                You will now receive fire watch check-in reminders via text message. Reply <strong className="text-slate-300">STOP</strong> at any time to opt out.
+              </p>
+              <p className="text-slate-500 text-xs">You can close this page.</p>
+            </>
+          )}
         </div>
       </div>
     )
@@ -63,7 +76,7 @@ export default function SmsConfirmPage() {
           </div>
           <h1 className="text-xl text-white font-extrabold mb-2">Already Confirmed</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            You already confirmed SMS consent for this watch. Check-in reminders are active.
+            You already confirmed SMS consent for this watch. Check your texts for next steps.
           </p>
         </div>
       </div>
@@ -87,7 +100,7 @@ export default function SmsConfirmPage() {
           </p>
           <button
             onClick={() => setStatus('idle')}
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+            className="min-h-[44px] px-6 py-3 text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors rounded-xl hover:bg-slate-800 active:scale-[0.97]"
           >
             Try Again
           </button>

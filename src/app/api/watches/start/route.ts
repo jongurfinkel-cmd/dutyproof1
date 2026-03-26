@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
         reason: reason || null,
         check_interval_min,
         assigned_name,
-        assigned_phone,
+        assigned_phone: assigned_phone || null,
         escalation_phone: escalation_phone || null,
         escalation_delay_min: escalation_delay_min ?? 0,
         start_time,
@@ -292,7 +292,10 @@ export async function POST(req: NextRequest) {
 
     if (checkInError || !checkIn) {
       console.error('Check-in creation error:', checkInError)
-      return NextResponse.json({ error: 'Failed to create check-in' }, { status: 500 })
+      // Cleanup orphaned watch and checklist items
+      await admin.from('watch_checklist_items').delete().eq('watch_id', watch.id)
+      await admin.from('watches').delete().eq('id', watch.id)
+      return NextResponse.json({ error: 'Failed to create watch' }, { status: 500 })
     }
 
     // Send SMS: either consent request (double opt-in) or direct check-in

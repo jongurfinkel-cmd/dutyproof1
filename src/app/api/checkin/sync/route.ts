@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Validate the session token belongs to an active (or recently completed) watch
   const { data: watch, error: watchError } = await admin
     .from('watches')
-    .select('id, status, check_interval_min, assigned_name, start_time, planned_end_time, escalation_phone, secondary_escalation_phone, compliance_status, consecutive_misses, location, facilities(name)')
+    .select('id, status, check_interval_min, assigned_name, start_time, planned_end_time, escalation_phone, secondary_escalation_phone, compliance_status, consecutive_misses, location, checklist_token, checklist_completed_at, facilities(name)')
     .eq('session_token', session_token)
     .single()
 
@@ -64,6 +64,14 @@ export async function POST(req: NextRequest) {
     if (!endedAt || endedAt < oneHourAgo) {
       return NextResponse.json({ error: 'Watch is no longer active' }, { status: 410 })
     }
+  }
+
+  // Gate: safety checklist must be completed before any check-ins
+  if (watch.checklist_token && !watch.checklist_completed_at) {
+    return NextResponse.json(
+      { error: 'Safety checklist must be completed before checking in.', code: 'checklist_pending' },
+      { status: 409 }
+    )
   }
 
   let created = 0
@@ -217,9 +225,9 @@ export async function POST(req: NextRequest) {
       const facilityName = facility?.name ?? 'Unknown Facility'
       const displayName = watch.location ? `${facilityName} — ${watch.location}` : facilityName
       const totalSynced = created + reconciled
-      // All synced check-ins were completed, but some may have been reconciled from "missed" — count those as late
-      const onTime = created + reconciled - failed
-      const late = reconciled // reconciled means they were marked missed but completed offline
+      // created = new on-time check-ins, reconciled = were marked missed but completed offline (late)
+      const onTime = created
+      const late = reconciled
 
       try {
         const resolvedSid = await sendOnlineResolvedSMS(
@@ -227,7 +235,7 @@ export async function POST(req: NextRequest) {
           watch.assigned_name,
           displayName,
           totalSynced,
-          onTime > 0 ? onTime : totalSynced,
+          onTime,
           late
         )
 
@@ -248,7 +256,7 @@ export async function POST(req: NextRequest) {
             watch.assigned_name,
             displayName,
             totalSynced,
-            onTime > 0 ? onTime : totalSynced,
+            onTime,
             late
           )
           await admin.from('alerts').insert({
