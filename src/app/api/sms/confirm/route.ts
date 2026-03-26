@@ -61,11 +61,12 @@ export async function POST(req: NextRequest) {
   // Get facility name for SMS
   const { data: facility } = await admin
     .from('facilities')
-    .select('name')
+    .select('name, timezone')
     .eq('id', watch.facility_id)
     .single()
 
   const facilityName = facility?.name ?? 'your job site'
+  const tz = facility?.timezone ?? 'America/New_York'
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dutyproof.com'
 
   // Now send the first operational SMS (checklist or check-in)
@@ -95,7 +96,8 @@ export async function POST(req: NextRequest) {
         facilityName,
         watch.assigned_name,
         checkInUrl,
-        new Date(pendingCheckIn.scheduled_time)
+        new Date(pendingCheckIn.scheduled_time),
+        tz
       )
     }
   }

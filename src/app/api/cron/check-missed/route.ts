@@ -134,6 +134,7 @@ export async function GET(req: NextRequest) {
 
       const facility = watch.facilities
       const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+      const tz = facility.timezone ?? 'America/New_York'
 
       try {
         // Mark as missed via DB function
@@ -180,7 +181,8 @@ export async function GET(req: NextRequest) {
                 checkIn.assigned_name,
                 displayName,
                 new Date(checkIn.scheduled_time),
-                ackUrl
+                ackUrl,
+                tz
               )
 
               const { error: escAlertErr } = await admin.from('alerts').insert({
@@ -302,7 +304,8 @@ export async function GET(req: NextRequest) {
             checkIn.assigned_name,
             displayName,
             new Date(checkIn.scheduled_time),
-            ackUrl
+            ackUrl,
+            tz
           )
 
           const { error: escAlertErr } = await admin.from('alerts').insert({
@@ -382,7 +385,8 @@ export async function GET(req: NextRequest) {
             displayName,
             checkIn.assigned_name,
             nextCheckInUrl,
-            nextScheduledTime
+            nextScheduledTime,
+            tz
           )
 
           const { error: nextAlertErr } = await admin.from('alerts').insert({
@@ -430,6 +434,7 @@ export async function GET(req: NextRequest) {
       try {
         const facility = watch.facilities
         const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+        const escalationTz = facility.timezone ?? 'America/New_York'
         const ackToken = generateToken()
         const ackUrl = `${appUrl}/ack/${ackToken}`
 
@@ -438,7 +443,8 @@ export async function GET(req: NextRequest) {
           ci.assigned_name,
           displayName,
           new Date(ci.scheduled_time),
-          ackUrl
+          ackUrl,
+          escalationTz
         )
 
         // Only mark as escalated if SMS actually sent
@@ -509,14 +515,15 @@ export async function GET(req: NextRequest) {
       try {
         const facility = watch.facilities
         const displayName = watch.location ? `${facility.name} — ${watch.location}` : facility.name
+        const secTz = facility.timezone ?? 'America/New_York'
 
         const secondarySid = await sendAlertSMS(
           watch.secondary_escalation_phone,
           ci.assigned_name,
           displayName,
           new Date(ci.scheduled_time),
-          // Reuse the existing ack URL since ack_token is already set
-          `${appUrl}/ack/${ci.ack_token}`
+          `${appUrl}/ack/${ci.ack_token}`,
+          secTz
         )
 
         const { error: secAlertErr } = await admin.from('alerts').insert({

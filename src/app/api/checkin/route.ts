@@ -255,7 +255,8 @@ export async function POST(req: NextRequest) {
             displayName,
             checkIn.assigned_name,
             nextCheckInUrl,
-            nextScheduledTime
+            nextScheduledTime,
+            facility.timezone ?? 'America/New_York'
           )
 
           const { error: alertError } = await admin.from('alerts').insert({

@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
       watch.facilities.name,
       watch.assigned_name,
       checkInUrl,
-      new Date(checkIn.scheduled_time)
+      new Date(checkIn.scheduled_time),
+      watch.facilities.timezone ?? 'America/New_York'
     )
 
     // Log the resend in alerts

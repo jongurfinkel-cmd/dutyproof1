@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 
 // Twilio SMS API via REST (no SDK dependency needed)
 
@@ -50,9 +50,10 @@ export async function sendCheckInSMS(
   facilityName: string,
   assignedName: string,
   checkInUrl: string,
-  scheduledTime: Date
+  scheduledTime: Date,
+  tz = 'America/New_York'
 ): Promise<string | null> {
-  const timeStr = format(scheduledTime, 'h:mm a')
+  const timeStr = formatInTimeZone(scheduledTime, tz, 'h:mm a')
   return sendSMS(
     to,
     `DutyProof: ${assignedName}, your fire watch check-in at ${facilityName} is due at ${timeStr}. Tap to check in: ${checkInUrl} Reply STOP to opt out.`
@@ -64,9 +65,10 @@ export async function sendAlertSMS(
   assignedName: string,
   facilityName: string,
   missedTime: Date,
-  ackUrl?: string
+  ackUrl?: string,
+  tz = 'America/New_York'
 ): Promise<string | null> {
-  const timeStr = format(missedTime, 'h:mm a')
+  const timeStr = formatInTimeZone(missedTime, tz, 'h:mm a')
   const message = ackUrl
     ? `DUTYPROOF ALERT: ${assignedName} missed their ${timeStr} check-in at ${facilityName}. Tap to acknowledge: ${ackUrl} Reply STOP to opt out.`
     : `DUTYPROOF ALERT: ${assignedName} missed their ${timeStr} check-in at ${facilityName}. Check your dashboard immediately. Reply STOP to opt out.`
