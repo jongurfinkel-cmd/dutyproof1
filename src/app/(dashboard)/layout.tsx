@@ -170,11 +170,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login')
   }
 
+  const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
   const navLinks: { href: string; label: string; icon: typeof IconFire; badge: number }[] = [
     { href: '/dashboard', label: 'Active Watches', icon: IconFire, badge: criticalCount },
     { href: '/history', label: 'Watch History', icon: IconClipboard, badge: 0 },
     { href: '/facilities', label: 'Job Sites', icon: IconBuilding, badge: 0 },
-    { href: '/billing', label: 'Billing', icon: IconCreditCard, badge: 0 },
+    ...(!isBeta ? [{ href: '/billing', label: 'Billing', icon: IconCreditCard, badge: 0 }] : []),
   ]
 
   const initials = userDisplayName

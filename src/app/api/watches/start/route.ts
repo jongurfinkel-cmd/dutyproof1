@@ -17,44 +17,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify subscription or free first watch
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_status, is_admin, plan_tier')
-      .eq('id', user.id)
-      .single()
+    // Beta mode — skip all subscription/plan checks
+    const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
 
-    const activeStatuses = ['trialing', 'active']
-    const hasSubscription = profile?.is_admin || activeStatuses.includes(profile?.subscription_status ?? '')
+    if (!isBeta) {
+      // Verify subscription or free first watch
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, is_admin, plan_tier')
+        .eq('id', user.id)
+        .single()
 
-    if (!hasSubscription) {
-      // Check if this is their first watch (free)
-      const adminCheck = createAdminClient()
-      const { count } = await adminCheck.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
-      if ((count ?? 0) > 0) {
-        return NextResponse.json({ error: 'Subscribe to start more watches. Your first watch was free — pick a plan to keep going.' }, { status: 403 })
+      const activeStatuses = ['trialing', 'active']
+      const hasSubscription = profile?.is_admin || activeStatuses.includes(profile?.subscription_status ?? '')
+
+      if (!hasSubscription) {
+        // Check if this is their first watch (free)
+        const adminCheck = createAdminClient()
+        const { count } = await adminCheck.from('watches').select('id', { count: 'exact', head: true }).eq('owner_id', user.id)
+        if ((count ?? 0) > 0) {
+          return NextResponse.json({ error: 'Subscribe to start more watches. Your first watch was free — pick a plan to keep going.' }, { status: 403 })
+        }
+        // First watch — allow without subscription
       }
-      // First watch — allow without subscription
-    }
 
-    // Enforce Contractor plan limits (10 watches/month)
-    if (hasSubscription && !profile?.is_admin && profile?.plan_tier === 'contractor') {
-      const adminCheck = createAdminClient()
-      const monthStart = new Date()
-      monthStart.setDate(1)
-      monthStart.setHours(0, 0, 0, 0)
+      // Enforce Contractor plan limits (10 watches/month)
+      if (hasSubscription && !profile?.is_admin && profile?.plan_tier === 'contractor') {
+        const adminCheck = createAdminClient()
+        const monthStart = new Date()
+        monthStart.setDate(1)
+        monthStart.setHours(0, 0, 0, 0)
 
-      const { count: monthlyCount } = await adminCheck
-        .from('watches')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', user.id)
-        .gte('created_at', monthStart.toISOString())
+        const { count: monthlyCount } = await adminCheck
+          .from('watches')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .gte('created_at', monthStart.toISOString())
 
-      if ((monthlyCount ?? 0) >= 10) {
-        return NextResponse.json(
-          { error: 'You\'ve hit your 10-watch monthly limit on the Contractor plan. Upgrade to Professional for unlimited watches.' },
-          { status: 403 }
-        )
+        if ((monthlyCount ?? 0) >= 10) {
+          return NextResponse.json(
+            { error: 'You\'ve hit your 10-watch monthly limit on the Contractor plan. Upgrade to Professional for unlimited watches.' },
+            { status: 403 }
+          )
+        }
       }
     }
 

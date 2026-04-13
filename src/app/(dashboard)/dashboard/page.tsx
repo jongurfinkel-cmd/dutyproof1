@@ -272,11 +272,12 @@ export default function DashboardPage() {
   }
 
   const criticalWatches = watches.filter(isCritical)
+  const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
   const noSubscription = subscriptionStatus === null && !isAdmin
   const hasUsedFreeWatch = (totalWatchCount ?? 0) > 0
-  const showFreeWatchBanner = noSubscription && !hasUsedFreeWatch
-  const showUpgradeBanner = noSubscription && hasUsedFreeWatch
-  const showPastDueBanner = subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid'
+  const showFreeWatchBanner = !isBeta && noSubscription && !hasUsedFreeWatch
+  const showUpgradeBanner = !isBeta && noSubscription && hasUsedFreeWatch
+  const showPastDueBanner = !isBeta && (subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid')
 
   // Onboarding progress
   const hasSites = facilityCount !== null && facilityCount > 0

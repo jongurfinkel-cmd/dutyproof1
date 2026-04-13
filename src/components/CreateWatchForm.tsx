@@ -554,7 +554,8 @@ export default function CreateWatchForm() {
   function getPostWorkLabel(): string { return form.post_work_duration_min === 'custom' ? `${customPostWork} min` : `${form.post_work_duration_min} min` }
 
   // Block form if user needs subscription (used free watch already, no subscription)
-  if (isFirstWatch === false && !hasSubscription) {
+  const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
+  if (!isBeta && isFirstWatch === false && !hasSubscription) {
     return (
       <div className="text-center py-12 px-4">
         <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-xl shadow-blue-200/50">
@@ -581,13 +582,18 @@ export default function CreateWatchForm() {
 
   return (
     <div>
-      {/* Free first watch badge */}
-      {isFirstWatch && !hasSubscription && (
+      {/* Beta / Free first watch badge */}
+      {isBeta ? (
+        <div className="mb-5 flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Beta</span>
+          <span className="text-sm font-semibold text-blue-800">All features unlocked during beta — no payment required</span>
+        </div>
+      ) : isFirstWatch && !hasSubscription ? (
         <div className="mb-5 flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
           <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
           <span className="text-sm font-semibold text-emerald-800">Your first watch is on us — full features, no card required</span>
         </div>
-      )}
+      ) : null}
       <StepIndicator current={step} total={TOTAL_STEPS} labels={stepLabels} onStepClick={goToStep} />
 
       {/* ================================================================ */}

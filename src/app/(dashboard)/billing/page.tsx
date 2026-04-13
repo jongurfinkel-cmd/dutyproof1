@@ -256,6 +256,40 @@ export default function BillingPage() {
     return Math.max(0, days)
   })()
 
+  const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
+
+  if (isBeta) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        <div className="text-center mb-10">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 mb-2">Beta Access</h1>
+          <p className="text-slate-500">All features unlocked — no payment required during beta.</p>
+        </div>
+        <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden shadow-xl mb-6">
+          <div className="bg-blue-700 px-4 py-8 sm:px-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-white text-xs font-bold tracking-widest uppercase mb-3">
+              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+              Beta
+            </div>
+            <p className="text-blue-200 text-sm mt-1">Unlimited watches · Unlimited job sites · All features</p>
+          </div>
+          <div className="px-4 py-6 sm:px-8 text-center">
+            <p className="text-slate-600 text-sm mb-1">You have full access to DutyProof during the beta period.</p>
+            <p className="text-slate-400 text-xs">Paid plans will be available when beta ends.</p>
+          </div>
+        </div>
+        <div className="text-center mt-8">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-slate-500 hover:text-slate-600 text-sm transition-colors"
+          >
+            &larr; Back to dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (isAdmin) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
